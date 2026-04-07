@@ -61,6 +61,18 @@ export function ApiTestLab() {
   >("normalized");
   const [showMappingTable, setShowMappingTable] = useState(false);
 
+  const IUCN_CATEGORY_LABELS: Record<string, string> = {
+    NE: "Not Evaluated",
+    DD: "Data Deficient",
+    LC: "Least Concern",
+    NT: "Near Threatened",
+    VU: "Vulnerable",
+    EN: "Endangered",
+    CR: "Critically Endangered",
+    EW: "Extinct in the Wild",
+    EX: "Extinct",
+  };
+
   const fetchGBIFChecklistOnly = async (scientificName: string) => {
     setLoading((prev) => ({ ...prev, gbif: true }));
     setErrors((prev) => ({ ...prev, gbif: null }));
@@ -149,7 +161,7 @@ export function ApiTestLab() {
           method: "GET",
           headers: {
             accept: "application/json",
-            Authorization: "PASTE_YOUR_TOKEN_HERE", // Replace with actual IUCN API token
+            Authorization: "PLACE_YOUR_TOKEN_HERE", // Replace with actual IUCN API token
           },
         },
       );
@@ -374,7 +386,14 @@ export function ApiTestLab() {
   // Normalize data from all sources
   const getNormalizedData = () => {
     const gbifChecklistData = apiData.gbif?.malaysia?.results?.[0] || {};
-    const iucnData = apiData.iucn?.mockData || {};
+    const latestAssessment =
+      apiData.iucn?.assessments?.find((a: any) => a?.latest) ||
+      apiData.iucn?.assessments?.[0] ||
+      null;
+
+    const iucnStatusCode = latestAssessment?.red_list_category_code || "NE";
+    const iucnStatusLabel =
+      IUCN_CATEGORY_LABELS[iucnStatusCode] || "Not Evaluated";
 
     const semantyfishSpecies =
       apiData.semantyfish?.selectedSpecies ??
@@ -450,12 +469,13 @@ export function ApiTestLab() {
 
       inMalaysiaChecklist: apiData.gbif?.malaysia?.count > 0,
 
-      iucnStatus: iucnData.category || "Not Evaluated",
-      populationTrend: iucnData.populationTrend || "Unknown",
+      iucnStatus: iucnStatusCode,
+      iucnStatusLabel,
+      populationTrend: apiData.iucn?.populationTrend || "Unknown",
 
       habitat:
         semantyfishData?.preferred_environment ||
-        iucnData.habitat ||
+        apiData.iucn?.habitat ||
         gbifChecklistData?.habitat ||
         "N/A",
 
@@ -912,7 +932,7 @@ export function ApiTestLab() {
                     IUCN Red List:
                   </span>
                   <span className="text-stone-900 font-bold">
-                    {normalized.iucnStatus}
+                    {normalized.iucnStatus} | {normalized.iucnStatusLabel}
                   </span>
                 </div>
                 <div className="flex justify-between">
