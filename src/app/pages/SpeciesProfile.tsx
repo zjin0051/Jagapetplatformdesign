@@ -114,7 +114,7 @@ export function SpeciesProfile() {
       {/* Hero Header */}
       <div className="relative h-[450px] md:h-[550px] w-full bg-stone-900 overflow-hidden">
         <div className="absolute top-6 left-6 right-6 z-20 flex justify-between items-center max-w-7xl mx-auto">
-          <Link to="/care-guides" className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all flex items-center shadow-lg group">
+          <Link to="/" className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all flex items-center shadow-lg group">
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           </Link>
           

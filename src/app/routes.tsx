@@ -1,3 +1,4 @@
+import React from "react";
 import { createBrowserRouter } from "react-router";
 import { MainLayout } from "./layouts/MainLayout";
 import { Home } from "./pages/Home";
@@ -6,24 +7,24 @@ import { IdentifyPet } from "./pages/IdentifyPet";
 import { Quiz } from "./pages/Quiz";
 import { QuizResults } from "./pages/QuizResults";
 import { SafeExit } from "./pages/SafeExit";
-import { CareGuides } from "./pages/CareGuides";
 import { Compare } from "./pages/Compare";
 import { SearchResults } from "./pages/SearchResults";
+import { ApiTestLab } from "./pages/ApiTestLab";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: MainLayout,
+    element: <MainLayout />,
     children: [
-      { index: true, Component: Home },
-      { path: "species/:id", Component: SpeciesProfile },
-      { path: "identify", Component: IdentifyPet },
-      { path: "quiz", Component: Quiz },
-      { path: "quiz-results", Component: QuizResults },
-      { path: "safe-exit", Component: SafeExit },
-      { path: "care-guides", Component: CareGuides },
-      { path: "compare", Component: Compare },
-      { path: "search", Component: SearchResults },
+      { index: true, element: <Home /> },
+      { path: "species/:id", element: <SpeciesProfile /> },
+      { path: "identify", element: <IdentifyPet /> },
+      { path: "quiz", element: <Quiz /> },
+      { path: "quiz-results", element: <QuizResults /> },
+      { path: "safe-exit", element: <SafeExit /> },
+      { path: "compare", element: <Compare /> },
+      { path: "search", element: <SearchResults /> },
+      { path: "api-test-lab", element: <ApiTestLab /> },
     ],
   },
 ]);

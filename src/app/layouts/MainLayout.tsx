@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router';
 import { Fish, Menu, X, MessageCircleQuestion, HelpCircle, Scale } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
+import logoImage from '../../imports/image-0.jpg';
 
 export function MainLayout() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,7 +14,6 @@ export function MainLayout() {
     { name: 'Home', path: '/' },
     { name: 'Identify Pet', path: '/identify' },
     { name: 'Compatibility Quiz', path: '/quiz' },
-    { name: 'Care Guides', path: '/care-guides' },
     { name: 'Need to Rehome?', path: '/safe-exit' },
   ];
 
@@ -23,9 +23,13 @@ export function MainLayout() {
       <header className="bg-white border-b border-stone-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center gap-2 text-emerald-700 hover:text-emerald-800 transition">
-              <Fish className="h-8 w-8" />
-              <span className="text-xl font-bold tracking-tight">JagaPet</span>
+            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
+              <img
+                src={logoImage}
+                alt="JagaPet MY Logo"
+                className="h-12 w-12 object-cover rounded-full mix-blend-multiply"
+              />
+              <span className="text-xl font-bold tracking-tight text-emerald-700">JagaPet MY</span>
             </Link>
 
             {/* Desktop Nav */}
@@ -105,9 +109,13 @@ export function MainLayout() {
       <footer className="bg-emerald-900 text-emerald-50 py-12 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <Fish className="h-6 w-6 text-emerald-400" />
-              <span className="text-xl font-bold">JagaPet Malaysia</span>
+            <div className="flex items-center gap-3 mb-4">
+              <img
+                src={logoImage}
+                alt="JagaPet MY Logo"
+                className="h-10 w-10 object-cover rounded-full brightness-110"
+              />
+              <span className="text-xl font-bold">JagaPet MY</span>
             </div>
             <p className="text-emerald-200 text-sm leading-relaxed max-w-xs">
               Empowering Malaysians to make safe, responsible choices for non-native pets. Protect our biodiversity, one pet at a time.
@@ -128,6 +136,11 @@ export function MainLayout() {
               <li>PERHILITAN Hotline: 1-800-88-5151</li>
               <li>Department of Fisheries Malaysia</li>
               <li className="text-xs mt-4 opacity-70">Releasing non-native species into public waterways is illegal under Malaysian law.</li>
+              <li className="mt-4 pt-4 border-t border-emerald-700">
+                <Link to="/api-test-lab" className="hover:text-white transition text-xs opacity-60 hover:opacity-100">
+                  🔬 API Test Lab (Dev)
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -140,7 +153,7 @@ export function MainLayout() {
             <div className="bg-emerald-700 p-4 text-white flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <HelpCircle className="h-5 w-5" />
-                <h3 className="font-semibold">JagaPet Assistant</h3>
+                <h3 className="font-semibold">JagaPet MY Assistant</h3>
               </div>
               <button onClick={() => setIsChatOpen(false)} className="text-emerald-200 hover:text-white">
                 <X className="h-5 w-5" />
@@ -148,7 +161,7 @@ export function MainLayout() {
             </div>
             <div className="flex-1 p-4 overflow-y-auto bg-stone-50 space-y-4 text-sm">
               <div className="bg-emerald-100 text-emerald-900 p-3 rounded-2xl rounded-tl-sm self-start max-w-[85%]">
-                Hi! I'm your JagaPet Assistant. Do you have questions about caring for a specific species, or need advice on rehoming a pet you can no longer keep?
+                Hi! I'm your JagaPet MY Assistant. Do you have questions about caring for a specific species, or need advice on rehoming a pet you can no longer keep?
               </div>
               {/* Fake conversation for prototype */}
               <div className="bg-white border border-stone-200 text-stone-800 p-3 rounded-2xl rounded-tr-sm self-end max-w-[85%] ml-auto shadow-sm">

@@ -24,7 +24,7 @@ export function SearchResults() {
       <div className="bg-white border-b border-stone-200">
         <div className="max-w-5xl mx-auto px-4 py-8">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/')}
             className="flex items-center gap-2 text-stone-600 hover:text-emerald-600 transition mb-6 group"
           >
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition" />

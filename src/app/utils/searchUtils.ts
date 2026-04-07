@@ -51,7 +51,7 @@ export function getBestMatch(query: string): Species | null {
  * Check if query has good matches (for autocomplete)
  */
 export function getAutocompleteResults(query: string, limit: number = 5): SearchResult[] {
-  if (query.length < 2) {
+  if (query.length < 1) {
     return [];
   }
 

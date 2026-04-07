@@ -22,16 +22,17 @@ export function Home() {
     <div className="flex flex-col gap-12 pb-24 font-sans bg-stone-50 text-stone-900 overflow-hidden">
       
       {/* Hero Section */}
-      <section className="relative w-full h-[600px] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-emerald-900/60 z-10"></div>
-        <img 
-          src="https://images.unsplash.com/photo-1764175760954-e99714c7dd98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBwbGFudGVkJTIwYXF1YXJpdW0lMjB0YW5rfGVufDF8fHx8MTc3NDcxODU3Mnww&ixlib=rb-4.1.0&q=80&w=1080"
-          alt="Beautiful planted aquarium" 
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        
+      <section className="relative w-full min-h-[600px] pb-32 flex items-center justify-center">
+        <div className="absolute inset-0 bg-emerald-900/60 z-10 overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1764175760954-e99714c7dd98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBwbGFudGVkJTIwYXF1YXJpdW0lMjB0YW5rfGVufDF8fHx8MTc3NDcxODU3Mnww&ixlib=rb-4.1.0&q=80&w=1080"
+            alt="Beautiful planted aquarium"
+            className="absolute inset-0 w-full h-full object-cover -z-10"
+          />
+        </div>
+
         <div className="relative z-20 max-w-4xl mx-auto px-4 text-center">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -40,8 +41,8 @@ export function Home() {
             <AlertTriangle className="w-4 h-4" />
             Never Release Non-Native Pets Into the Wild
           </motion.div>
-          
-          <motion.h1 
+
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -49,8 +50,8 @@ export function Home() {
           >
             Responsible Pet Ownership Starts Here
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -58,12 +59,12 @@ export function Home() {
           >
             Explore species profiles, check lifestyle compatibility, and learn how to safely manage your ornamental fish and pet turtles in Malaysia.
           </motion.p>
-          
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="max-w-xl mx-auto shadow-2xl rounded-full overflow-visible"
+            className="max-w-xl mx-auto shadow-2xl"
           >
             <SearchAutocomplete />
           </motion.div>
@@ -71,7 +72,7 @@ export function Home() {
       </section>
 
       {/* Quick Action Cards */}
-      <section className="max-w-7xl mx-auto px-4 w-full -mt:50 relative z-30">
+      <section className="max-w-7xl mx-auto px-4 w-full mt-16 relative">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Link to="/quiz" className="bg-white rounded-2xl p-6 shadow-xl border border-stone-100 hover:-translate-y-1 transition-all group overflow-hidden relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-150"></div>
@@ -226,9 +227,6 @@ export function Home() {
             <div className="flex flex-wrap gap-4">
               <Link to="/safe-exit" className="bg-white text-stone-900 hover:bg-emerald-50 px-6 py-3 rounded-full font-bold transition shadow-md">
                 Find Alternative Rehoming
-              </Link>
-              <Link to="/care-guides" className="bg-transparent border-2 border-stone-500 text-white hover:border-emerald-400 hover:text-emerald-400 px-6 py-3 rounded-full font-bold transition">
-                Learn Proper Tank Care
               </Link>
             </div>
           </div>

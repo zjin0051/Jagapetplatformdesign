@@ -27,7 +27,7 @@ export function Compare() {
         <p className="text-stone-600 mb-8 max-w-md text-lg">
           Add species to your list to compare their care requirements, costs, and biodiversity risks side-by-side.
         </p>
-        <Link to="/care-guides" className="bg-emerald-600 text-white px-8 py-4 rounded-full font-bold hover:bg-emerald-700 transition shadow-lg inline-flex items-center gap-2">
+        <Link to="/" className="bg-emerald-600 text-white px-8 py-4 rounded-full font-bold hover:bg-emerald-700 transition shadow-lg inline-flex items-center gap-2">
           Browse Species <ArrowRight className="w-5 h-5" />
         </Link>
       </div>
@@ -183,8 +183,8 @@ export function Compare() {
             </AnimatePresence>
 
             {compareSpecies.length < 4 && (
-              <Link 
-                to="/care-guides" 
+              <Link
+                to="/" 
                 className="w-[320px] shrink-0 border-4 border-dashed border-stone-200 rounded-3xl flex flex-col items-center justify-center text-stone-400 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 transition-all min-h-[500px]"
               >
                 <div className="bg-white p-4 rounded-full shadow-sm mb-4">

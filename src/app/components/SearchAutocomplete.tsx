@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import { Search, X } from 'lucide-react';
-import { getAutocompleteResults, getBestMatch } from '../utils/searchUtils';
+import { getAutocompleteResults } from '../utils/searchUtils';
 import { motion, AnimatePresence } from 'motion/react';
 import type { SearchResult } from '../utils/searchUtils';
 
@@ -23,7 +23,7 @@ export function SearchAutocomplete({
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (searchQuery.length >= 2) {
+    if (searchQuery.length >= 1) {
       const results = getAutocompleteResults(searchQuery, 6);
       setSuggestions(results);
       setShowSuggestions(true);
@@ -49,26 +49,17 @@ export function SearchAutocomplete({
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!searchQuery.trim()) {
       return;
     }
 
-    const bestMatch = getBestMatch(searchQuery);
-
-    if (bestMatch) {
-      // If there's a good match, go directly to species page
-      navigate(`/species/${bestMatch.id}`);
-      setSearchQuery('');
-      setShowSuggestions(false);
-      onSearch?.();
-    } else {
-      // Go to search results page with the query
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery('');
-      setShowSuggestions(false);
-      onSearch?.();
-    }
+    // Always go to search results page when pressing Enter
+    // User must click a suggestion or a card to open species profile
+    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    setSearchQuery('');
+    setShowSuggestions(false);
+    onSearch?.();
   };
 
   const handleSuggestionClick = (speciesId: string) => {
@@ -84,15 +75,15 @@ export function SearchAutocomplete({
   };
 
   return (
-    <div ref={wrapperRef} className={`relative ${className}`}>
+    <div ref={wrapperRef} className={`relative z-50 ${className}`}>
       <form onSubmit={handleSearch} className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 w-6 h-6 pointer-events-none z-10" />
-        <input 
-          type="text" 
+        <input
+          type="text"
           placeholder={placeholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
+          onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
           className="w-full bg-white/95 backdrop-blur py-5 pl-14 pr-32 text-lg text-stone-800 focus:outline-none focus:ring-4 focus:ring-emerald-400 transition-all rounded-full border-none"
         />
         {searchQuery && (
@@ -120,9 +111,13 @@ export function SearchAutocomplete({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden z-50"
+            className="absolute top-full left-0 right-0 mt-4 bg-white rounded-2xl shadow-2xl border border-stone-300 overflow-hidden z-[9999]"
+            style={{
+              maxHeight: '400px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05)'
+            }}
           >
-            <div className="py-2">
+            <div className="py-2 max-h-[340px] overflow-y-auto">
               {suggestions.map((result) => (
                 <button
                   key={result.species.id}
@@ -130,8 +125,8 @@ export function SearchAutocomplete({
                   className="w-full px-6 py-3 flex items-center gap-4 hover:bg-emerald-50 transition text-left group"
                 >
                   <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 bg-stone-100">
-                    <img 
-                      src={result.species.imageUrl} 
+                    <img
+                      src={result.species.imageUrl}
                       alt={result.species.name}
                       className="w-full h-full object-cover"
                     />
