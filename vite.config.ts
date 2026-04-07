@@ -25,16 +25,11 @@ export default defineConfig({
         rewrite: (path) =>
           path.replace(/^\/api\/semantyfish/, "/semantyfish-api"),
       },
-    },
-  },
-  server: {
-    proxy: {
-      '/api/semantyfish': {
-        target: 'https://demos.isl.ics.forth.gr',
+      "/api/iucn": {
+        target: "https://api.iucnredlist.org",
         changeOrigin: true,
         secure: true,
-        rewrite: (path) =>
-          path.replace(/^\/api\/semantyfish/, '/semantyfish-api'),
+        rewrite: (path) => path.replace(/^\/api\/iucn/, ""),
       },
     },
   },

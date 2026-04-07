@@ -126,33 +126,44 @@ export function ApiTestLab() {
     setErrors((prev) => ({ ...prev, iucn: null }));
 
     try {
-      // Parse scientific name into genus and species
-      const parts = scientificName.split(" ");
+      const parts = scientificName.trim().split(/\s+/);
       const genus = parts[0] || "";
       const species = parts[1] || "";
       const infra = parts.slice(2).join(" ");
 
-      // Note: Using placeholder for API key - in production, this should be handled by backend
-      const apiKey = "YOUR_IUCN_API_KEY_HERE";
+      if (!genus || !species) {
+        throw new Error(
+          "Scientific name must include at least genus and species.",
+        );
+      }
 
       let url = `https://api.iucnredlist.org/api/v4/taxa/scientific_name?genus_name=${encodeURIComponent(genus)}&species_name=${encodeURIComponent(species)}`;
+
       if (infra) {
         url += `&infra_name=${encodeURIComponent(infra)}`;
       }
 
-      // Mock response for now since we don't have a real API key
-      setApiData((prev) => ({
-        ...prev,
-        iucn: {
-          note: "IUCN API requires authentication. In production, use backend proxy with API key.",
-          requestUrl: url,
-          mockData: {
-            category: "Least Concern",
-            populationTrend: "Stable",
-            habitat: "Freshwater",
-            message: "Replace with actual IUCN API call",
+      const response = await fetch(
+        `/api/iucn/api/v4/taxa/scientific_name?genus_name=${encodeURIComponent(genus)}&species_name=${encodeURIComponent(species)}`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+            Authorization: "PASTE_YOUR_TOKEN_HERE", // Replace with actual IUCN API token
           },
         },
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`IUCN request failed: ${response.status} ${text}`);
+      }
+
+      const data = await response.json();
+
+      setApiData((prev) => ({
+        ...prev,
+        iucn: data,
       }));
     } catch (error) {
       setErrors((prev) => ({
