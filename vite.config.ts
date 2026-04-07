@@ -16,7 +16,17 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-
+  server: {
+    proxy: {
+      '/api/semantyfish': {
+        target: 'https://demos.isl.ics.forth.gr',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) =>
+          path.replace(/^\/api\/semantyfish/, '/semantyfish-api'),
+      },
+    },
+  },
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 })
