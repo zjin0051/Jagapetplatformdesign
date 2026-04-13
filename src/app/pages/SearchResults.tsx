@@ -1,163 +1,263 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router';
-import { Search, Fish, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
-import { searchSpecies } from '../utils/searchUtils';
-import type { SearchResult } from '../utils/searchUtils';
-import { motion } from 'motion/react';
+import { useEffect, useState } from 'react'
+import { useSearchParams, Link, useNavigate } from 'react-router'
+import { Search, Fish, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react'
+import { motion } from 'motion/react'
+import { supabase } from '../../lib/supabase'
+
+type PetSearchResult = {
+  pet_id: string
+  pet_scientific_name: string | null
+  pet_vernacular_name: string | null
+  pet_genus: string | null
+  pet_family: string | null
+  pet_body_shape: string | null
+  pet_traits: string | null
+  pet_max_length: number | null
+  pet_max_weight: number | null
+  pet_longevity: number | null
+  pet_temperature: string | null
+  pet_migration_type: string | null
+  pet_danger: string | null
+  pet_is_native: string | null
+  pet_comments: string | null
+  pet_common: boolean | null
+}
+
+function displayText(value: string | null | undefined, fallback = 'Unknown') {
+  if (value == null || value.trim() === '') return fallback
+  return value
+}
+
+function normalizeDangerBadge(value: string | null | undefined) {
+  const text = (value ?? '').toLowerCase()
+
+  if (
+    text.includes('high') ||
+    text.includes('dangerous') ||
+    text.includes('venom') ||
+    text.includes('poison') ||
+    text.includes('aggressive')
+  ) {
+    return 'High'
+  }
+
+  if (
+    text.includes('medium') ||
+    text.includes('moderate') ||
+    text.includes('caution')
+  ) {
+    return 'Medium'
+  }
+
+  if (
+    text.includes('low') ||
+    text.includes('harmless') ||
+    text.includes('safe') ||
+    text.includes('none')
+  ) {
+    return 'Low'
+  }
+
+  return 'Unknown'
+}
 
 export function SearchResults() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const query = searchParams.get('q') || '';
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const query = searchParams.get('q') || ''
+
+  const [results, setResults] = useState<PetSearchResult[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (query) {
-      const searchResults = searchSpecies(query);
-      setResults(searchResults);
+    async function runSearch() {
+      if (!query.trim()) {
+        setResults([])
+        return
+      }
+
+      setLoading(true)
+      setError(null)
+
+      const escapedQuery = query.trim()
+
+      const { data, error } = await supabase
+        .from('pet')
+        .select('*')
+        .or(
+          [
+            `pet_vernacular_name.ilike.%${escapedQuery}%`,
+            `pet_scientific_name.ilike.%${escapedQuery}%`,
+            `pet_genus.ilike.%${escapedQuery}%`,
+            `pet_family.ilike.%${escapedQuery}%`,
+          ].join(','),
+        )
+        .limit(24)
+
+      if (error) {
+        setError(error.message)
+        setResults([])
+      } else {
+        setResults(data ?? [])
+      }
+
+      setLoading(false)
     }
-  }, [query]);
+
+    runSearch()
+  }, [query])
 
   return (
-    <div className="min-h-screen bg-stone-50 pb-24">
-      {/* Header */}
-      <div className="bg-white border-b border-stone-200">
-        <div className="max-w-5xl mx-auto px-4 py-8">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-stone-600 hover:text-emerald-600 transition mb-6 group"
-          >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition" />
-            <span className="font-semibold">Back</span>
-          </button>
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50 px-4 py-10">
+      <div className="mx-auto max-w-6xl">
+        <button
+          onClick={() => navigate('/')}
+          className="group mb-6 flex items-center gap-2 text-stone-600 transition hover:text-emerald-600"
+        >
+          <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" />
+          Back
+        </button>
 
-          <div className="flex items-center gap-3 mb-2">
-            <Search className="w-8 h-8 text-emerald-600" />
-            <h1 className="text-3xl font-bold text-stone-900">Search Results</h1>
+        <div className="mb-8 rounded-[2rem] bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 p-8 text-white shadow-xl">
+          <div className="mb-3 flex items-center gap-3">
+            <Search className="h-7 w-7" />
+            <h1 className="text-3xl font-black tracking-tight">Search Results</h1>
           </div>
-          <p className="text-stone-600 text-lg">
-            Searching for: <span className="font-semibold text-stone-900">"{query}"</span>
+          <p className="text-emerald-50">
+            Searching for: <span className="font-semibold">"{query}"</span>
           </p>
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        {results.length > 0 ? (
+        {loading ? (
+          <div className="rounded-3xl border border-stone-200 bg-white p-8 shadow-sm">
+            <p className="text-stone-600">Searching pets...</p>
+          </div>
+        ) : error ? (
+          <div className="rounded-3xl border border-red-200 bg-red-50 p-8 shadow-sm">
+            <div className="mb-3 flex items-center gap-2 text-red-700">
+              <AlertCircle className="h-5 w-5" />
+              <h2 className="text-xl font-bold">Search error</h2>
+            </div>
+            <p className="text-red-800">{error}</p>
+          </div>
+        ) : results.length > 0 ? (
           <>
-            {/* Did you mean section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
-            >
-              <div className="flex items-center gap-2 mb-6">
-                <Sparkles className="w-6 h-6 text-emerald-600" />
-                <h2 className="text-2xl font-bold text-stone-900">
-                  Did you mean one of these species?
-                </h2>
+            <div className="mb-6 rounded-3xl border border-emerald-100 bg-emerald-50 p-6">
+              <div className="mb-2 flex items-center gap-2 text-emerald-700">
+                <Sparkles className="h-5 w-5" />
+                <h2 className="text-xl font-bold">Matching pets</h2>
               </div>
-              <p className="text-stone-600 mb-8">
-                We found {results.length} {results.length === 1 ? 'species' : 'species'} that closely match your search. Click on a species to view its full profile.
+              <p className="text-stone-700">
+                We found {results.length} matching result
+                {results.length === 1 ? '' : 's'} for your search.
               </p>
-            </motion.div>
+            </div>
 
-            {/* Results Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {results.map((result, index) => (
-                <motion.div
-                  key={result.species.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link
-                    to={`/species/${result.species.id}`}
-                    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer h-full"
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {results.map((pet, index) => {
+                const danger = normalizeDangerBadge(pet.pet_danger)
+
+                return (
+                  <motion.div
+                    key={pet.pet_id}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04 }}
                   >
-                    <div className="relative h-64 overflow-hidden">
-                      <img 
-                        src={result.species.imageUrl} 
-                        alt={result.species.name} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      />
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide backdrop-blur-md shadow-sm ${
-                          result.species.biodiversityRisk === 'High' ? 'bg-rose-500/90 text-white' :
-                          result.species.biodiversityRisk === 'Medium' ? 'bg-amber-500/90 text-white' :
-                          'bg-emerald-500/90 text-white'
-                        }`}>
-                          {result.species.biodiversityRisk} Risk
+                    <Link
+                      to={`/species/${pet.pet_id}`}
+                      className="block h-full rounded-[1.75rem] border border-stone-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-md"
+                    >
+                      <div className="mb-4 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
+                          {danger} Risk
                         </span>
-                        <span className="bg-white/90 text-stone-800 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md flex items-center gap-1 shadow-sm">
-                          {result.species.category === 'fish' ? <Fish className="w-3 h-3"/> : null} 
-                          {result.species.careDifficulty} Care
+                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">
+                          {displayText(pet.pet_family)}
                         </span>
-                      </div>
-                      {result.score !== undefined && result.score < 0.2 && (
-                        <div className="absolute top-4 right-4">
-                          <span className="bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" />
-                            Best Match
+                        {pet.pet_common && (
+                          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                            Common
                           </span>
+                        )}
+                      </div>
+
+                      <div className="mb-4 flex items-start gap-3">
+                        <div className="rounded-2xl bg-emerald-100 p-3 text-emerald-700">
+                          <Fish className="h-6 w-6" />
                         </div>
-                      )}
-                    </div>
-                    <div className="p-6 flex-1 flex flex-col">
-                      <h3 className="text-xl font-bold text-stone-900 mb-1 group-hover:text-emerald-700 transition">
-                        {result.species.name}
-                      </h3>
-                      <p className="text-sm text-stone-500 italic mb-4 font-serif">
-                        {result.species.scientificName}
-                      </p>
-                      <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
-                        {result.species.shortDesc}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                          View Profile & Care Guide →
+                        <div>
+                          <h3 className="text-xl font-bold text-stone-900">
+                            {displayText(pet.pet_vernacular_name, pet.pet_id)}
+                          </h3>
+                          <p className="mt-1 text-sm italic text-stone-600">
+                            {displayText(pet.pet_scientific_name)}
+                          </p>
                         </div>
                       </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+
+                      <div className="space-y-2 text-sm text-stone-700">
+                        <p>
+                          <span className="font-semibold">Genus:</span>{' '}
+                          {displayText(pet.pet_genus)}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Temperature:</span>{' '}
+                          {displayText(pet.pet_temperature)}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Longevity:</span>{' '}
+                          {pet.pet_longevity != null
+                            ? `${pet.pet_longevity} years`
+                            : 'Unknown'}
+                        </p>
+                      </div>
+
+                      <p className="mt-4 line-clamp-3 text-sm leading-6 text-stone-600">
+                        {displayText(
+                          pet.pet_comments,
+                          'No description is available for this pet yet.',
+                        )}
+                      </p>
+
+                      <div className="mt-5 font-semibold text-emerald-700">
+                        View Profile & Care Guide →
+                      </div>
+                    </Link>
+                  </motion.div>
+                )
+              })}
             </div>
           </>
         ) : (
-          /* No Results */
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-20"
-          >
-            <div className="flex justify-center mb-6">
-              <div className="w-24 h-24 rounded-full bg-stone-100 flex items-center justify-center">
-                <AlertCircle className="w-12 h-12 text-stone-400" />
-              </div>
+          <div className="rounded-[2rem] border border-stone-200 bg-white p-10 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-stone-100">
+              <AlertCircle className="h-7 w-7 text-stone-500" />
             </div>
-            <h2 className="text-2xl font-bold text-stone-900 mb-4">
-              No species found
-            </h2>
-            <p className="text-stone-600 mb-8 max-w-md mx-auto">
-              We couldn't find any species matching "{query}". Try searching with different keywords or check the spelling.
+            <h2 className="text-2xl font-bold text-stone-900">No pets found</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-stone-600">
+              We could not find any pets matching "{query}". Try a scientific
+              name, vernacular name, genus, or family.
             </p>
-            <div className="flex gap-4 justify-center">
+
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link
                 to="/"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-semibold transition shadow-md"
+                className="rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700"
               >
-                Browse All Species
+                Browse Home
               </Link>
               <button
                 onClick={() => navigate(-1)}
-                className="bg-white border-2 border-stone-300 hover:border-emerald-600 text-stone-700 hover:text-emerald-700 px-6 py-3 rounded-full font-semibold transition"
+                className="rounded-full border-2 border-stone-300 px-6 py-3 font-semibold text-stone-700 transition hover:border-emerald-600 hover:text-emerald-700"
               >
                 Go Back
               </button>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>
-  );
+  )
 }
