@@ -29,12 +29,16 @@ type Pet = {
   pet_max_length: number | null
   pet_max_weight: number | null
   pet_longevity: number | null
+  pet_habitat: string | null
   pet_temperature: string | null
+  pet_ph_range: string | null
+  pet_water_hardness: string | null
+  pet_tank_size: string | null
   pet_migration_type: string | null
   pet_danger: string | null
   pet_is_native: string | null
   pet_comments: string | null
-  pet_common: boolean | null
+  pet_aquarium: boolean | null
 }
 
 function displayText(value: string | null | undefined, fallback = 'Unknown') {
@@ -241,7 +245,7 @@ export function SpeciesProfile() {
                 Danger: {dangerLevel}
               </span>
               <span className="rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
-                {pet.pet_common ? 'Common in trade' : 'Not marked common'}
+                {pet.pet_aquarium ? 'Common aquarium species' : 'Not marked common'}
               </span>
             </div>
 
@@ -305,6 +309,26 @@ export function SpeciesProfile() {
 
               <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2 text-emerald-700">
+                  <Clock className="h-5 w-5" />
+                  <h3 className="font-bold">Tank Size</h3>
+                </div>
+                <p className="text-lg font-semibold text-stone-900">
+                  {displayText(pet.pet_tank_size, ' gallons')}
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+                <div className="mb-3 flex items-center gap-2 text-emerald-700">
+                  <Clock className="h-5 w-5" />
+                  <h3 className="font-bold">pH</h3>
+                </div>
+                <p className="text-lg font-semibold text-stone-900">
+                  {displayText(pet.pet_ph_range, '')}
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+                <div className="mb-3 flex items-center gap-2 text-emerald-700">
                   <Thermometer className="h-5 w-5" />
                   <h3 className="font-bold">Temperature</h3>
                 </div>
@@ -313,6 +337,8 @@ export function SpeciesProfile() {
                 </p>
               </div>
             </div>
+
+            
 
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
@@ -473,7 +499,7 @@ export function SpeciesProfile() {
                     Common in trade
                   </p>
                   <div className="mt-1 flex items-center gap-2 text-stone-800">
-                    {pet.pet_common ? (
+                    {pet.pet_aquarium ? (
                       <>
                         <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                         Yes
