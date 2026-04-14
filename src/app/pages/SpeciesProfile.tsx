@@ -14,6 +14,9 @@ import {
   MessageSquareText,
   CheckCircle2,
   XCircle,
+  TestTubeDiagonal,
+  Expand,
+  Droplet,
 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { supabase } from '../../lib/supabase'
@@ -42,7 +45,7 @@ type Pet = {
 }
 
 function displayText(value: string | null | undefined, fallback = 'Unknown') {
-  if (value == null || value.trim() === '') return fallback
+  if (value == null || value.trim() === '' || value == undefined) return fallback
   return value
 }
 
@@ -295,56 +298,66 @@ export function SpeciesProfile() {
               <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2 text-emerald-700">
                   <Ruler className="h-5 w-5" />
-                  <h3 className="font-bold">Max Length</h3>
+                  <h3 className="font-bold">Max Length (cm)</h3>
                 </div>
                 <p className="text-lg font-semibold text-stone-900">
-                  {displayNumber(pet.pet_max_length, ' cm')}
+                  {displayNumber(pet.pet_max_length)}
                 </p>
               </div>
 
               <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2 text-emerald-700">
                   <Scale className="h-5 w-5" />
-                  <h3 className="font-bold">Max Weight</h3>
+                  <h3 className="font-bold">Max Weight (kg)</h3>
                 </div>
                 <p className="text-lg font-semibold text-stone-900">
-                  {displayNumber(pet.pet_max_weight, ' g')}
+                  {displayNumber(pet.pet_max_weight)}
                 </p>
               </div>
 
               <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2 text-emerald-700">
                   <Clock className="h-5 w-5" />
-                  <h3 className="font-bold">Longevity</h3>
+                  <h3 className="font-bold">Longevity (Years)</h3>
                 </div>
                 <p className="text-lg font-semibold text-stone-900">
-                  {displayNumber(pet.pet_longevity, ' years')}
+                  {displayNumber(pet.pet_longevity)}
                 </p>
               </div>
 
               <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Clock className="h-5 w-5" />
-                  <h3 className="font-bold">Tank Size</h3>
+                  <Expand className="h-5 w-5" />
+                  <h3 className="font-bold">Tank Size (Gallons)</h3>
                 </div>
                 <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_tank_size, ' gallons')}
+                  {displayText(pet.pet_tank_size)}
                 </p>
               </div>
 
               <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Clock className="h-5 w-5" />
+                  <TestTubeDiagonal className="h-5 w-5" />
                   <h3 className="font-bold">pH</h3>
                 </div>
                 <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_ph_range, '')}
+                  {displayText(pet.pet_ph_range)}
                 </p>
               </div>
 
               <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Thermometer className="h-5 w-5" />
+                  <Droplet />
+                  <h3 className="font-bold">Water Hardness</h3>
+                </div>
+                <p className="text-lg font-semibold text-stone-900">
+                  {displayText(pet.pet_water_hardness)}
+                </p>
+              </div>
+
+              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+                <div className="mb-3 flex items-center gap-2 text-emerald-700">
+                  <Thermometer />
                   <h3 className="font-bold">Temperature</h3>
                 </div>
                 <p className="text-lg font-semibold text-stone-900">
