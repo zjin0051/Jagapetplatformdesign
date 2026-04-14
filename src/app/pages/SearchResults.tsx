@@ -20,7 +20,7 @@ type PetSearchResult = {
   pet_danger: string | null
   pet_is_native: string | null
   pet_comments: string | null
-  pet_common: boolean | null
+  pet_aquarium: boolean | null
 }
 
 function displayText(value: string | null | undefined, fallback = 'Unknown') {
@@ -32,33 +32,35 @@ function normalizeDangerBadge(value: string | null | undefined) {
   const text = (value ?? '').toLowerCase()
 
   if (
-    text.includes('high') ||
-    text.includes('dangerous') ||
-    text.includes('venom') ||
-    text.includes('poison') ||
-    text.includes('aggressive')
+    text.includes('aggressive') ||
+    text.includes('venomous') ||
+    text.includes('poisonous') ||
+    text.includes('strongly')
   ) {
     return 'High'
   }
 
   if (
-    text.includes('medium') ||
-    text.includes('moderate') ||
-    text.includes('caution')
-  ) {
-    return 'Medium'
-  }
-
-  if (
-    text.includes('low') ||
     text.includes('harmless') ||
-    text.includes('safe') ||
-    text.includes('none')
+    text.includes('weakly') ||
+    text.includes('electrosensing') ||
+    text.includes('special')
   ) {
     return 'Low'
   }
 
   return 'Unknown'
+}
+
+function getDangerBadgeClasses(danger: string) {
+  switch (danger) {
+    case 'High':
+      return 'rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700'
+    case 'Low':
+      return 'rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700'
+    default:
+      return 'rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700'
+  }
 }
 
 export function SearchResults() {
@@ -170,13 +172,13 @@ export function SearchResults() {
                       className="block h-full rounded-[1.75rem] border border-stone-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-md"
                     >
                       <div className="mb-4 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
-                          {danger} Risk
+                        <span className={getDangerBadgeClasses(danger)}>
+                          {danger} Danger
                         </span>
                         <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">
                           {displayText(pet.pet_family)}
                         </span>
-                        {pet.pet_common && (
+                        {pet.pet_aquarium && (
                           <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
                             Common
                           </span>

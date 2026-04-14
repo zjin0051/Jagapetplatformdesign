@@ -169,6 +169,11 @@ export function SpeciesProfile() {
     [pet?.pet_danger],
   )
 
+  const isInvasive = useMemo(
+    () => pet?.pet_is_native?.toLowerCase() === 'invasive',
+    [pet?.pet_is_native],
+  )
+
   const traits = useMemo(() => splitTraits(pet?.pet_traits), [pet?.pet_traits])
 
   if (loading) {
@@ -218,6 +223,16 @@ export function SpeciesProfile() {
             <AlertTriangle className="h-5 w-5" />
             Warning: this pet may pose a higher danger risk. Review handling and
             safety information carefully.
+          </div>
+        </div>
+      )}
+
+      {isInvasive && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
+            <AlertTriangle className="h-5 w-5" />
+            Notice: this species is considered invasive. Avoid release into local
+            waterways and follow regional regulations.
           </div>
         </div>
       )}
@@ -496,7 +511,7 @@ export function SpeciesProfile() {
 
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Common in trade
+                    Common aquarium species
                   </p>
                   <div className="mt-1 flex items-center gap-2 text-stone-800">
                     {pet.pet_aquarium ? (
