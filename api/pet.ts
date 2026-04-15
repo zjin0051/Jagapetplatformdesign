@@ -11,27 +11,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const petRows = await sql`
-      select
-        pet_id,
-        pet_scientific_name,
-        pet_vernacular_name,
-        pet_genus,
-        pet_family,
-        pet_body_shape,
-        pet_traits,
-        pet_max_length,
-        pet_max_weight,
-        pet_longevity,
-        pet_habitat,
-        pet_temperature,
-        pet_ph_range,
-        pet_water_hardness,
-        pet_tank_size,
-        pet_migration_type,
-        pet_danger,
-        pet_is_native,
-        pet_comments,
-        pet_aquarium
+      select *
       from public.pet
       where pet_id = ${id}
       limit 1
@@ -45,36 +25,20 @@ export default async function handler(req: any, res: any) {
 
     let relatedPets: any[] = []
 
-    if (pet.pet_genus || pet.pet_family) {
+    if (pet.pet_genus) {
       relatedPets = await sql`
-        select
-          pet_id,
-          pet_scientific_name,
-          pet_vernacular_name,
-          pet_genus,
-          pet_family,
-          pet_body_shape,
-          pet_traits,
-          pet_max_length,
-          pet_max_weight,
-          pet_longevity,
-          pet_habitat,
-          pet_temperature,
-          pet_ph_range,
-          pet_water_hardness,
-          pet_tank_size,
-          pet_migration_type,
-          pet_danger,
-          pet_is_native,
-          pet_comments,
-          pet_aquarium
+        select *
         from public.pet
         where pet_id <> ${id}
-          and (
-            (${pet.pet_genus} is not null and pet_genus = ${pet.pet_genus})
-            or
-            (${pet.pet_family} is not null and pet_family = ${pet.pet_family})
-          )
+          and pet_genus = ${pet.pet_genus}
+        limit 3
+      `
+    } else if (pet.pet_family) {
+      relatedPets = await sql`
+        select *
+        from public.pet
+        where pet_id <> ${id}
+          and pet_family = ${pet.pet_family}
         limit 3
       `
     }
