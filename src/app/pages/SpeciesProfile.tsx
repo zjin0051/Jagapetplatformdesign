@@ -19,7 +19,7 @@ import {
   Droplet,
 } from 'lucide-react'
 import { motion } from 'motion/react'
-import { supabase } from '../../lib/supabase'
+
 
 type Pet = {
   pet_id: string
@@ -122,44 +122,19 @@ export function SpeciesProfile() {
       setLoading(true)
       setError(null)
 
-      const { data, error } = await supabase
-        .from('pet')
-        .select('*')
-        .eq('pet_id', id)
-        .single()
+      const response = await fetch(`/api/pet?id=${encodeURIComponent(id)}`)
+      const data = await response.json()
 
-      if (error) {
+      if (!response.ok) {
         setPet(null)
         setRelatedPets([])
-        setError(error.message)
+        setError(data.error || 'Failed to load pet')
         setLoading(false)
         return
       }
 
-      setPet(data)
-
-      const genus = data?.pet_genus
-      const family = data?.pet_family
-
-      if (genus || family) {
-        const { data: matches } = await supabase
-          .from('pet')
-          .select('*')
-          .neq('pet_id', id)
-          .or(
-            [
-              genus ? `pet_genus.eq.${genus}` : null,
-              family ? `pet_family.eq.${family}` : null,
-            ]
-              .filter(Boolean)
-              .join(','),
-          )
-          .limit(3)
-
-        setRelatedPets(matches ?? [])
-      } else {
-        setRelatedPets([])
-      }
+      setPet(data.pet ?? data)
+      setRelatedPets(data.relatedPets ?? [])
 
       setLoading(false)
     }

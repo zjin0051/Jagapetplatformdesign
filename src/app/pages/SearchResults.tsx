@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router'
 import { Search, Fish, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react'
 import { motion } from 'motion/react'
-import { supabase } from '../../lib/supabase'
 
 type PetSearchResult = {
   pet_id: string
@@ -82,26 +81,18 @@ export function SearchResults() {
       setLoading(true)
       setError(null)
 
-      const escapedQuery = query.trim()
+      try {
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}`)
+        const data = await response.json()
 
-      const { data, error } = await supabase
-        .from('pet')
-        .select('*')
-        .or(
-          [
-            `pet_vernacular_name.ilike.%${escapedQuery}%`,
-            `pet_scientific_name.ilike.%${escapedQuery}%`,
-            `pet_genus.ilike.%${escapedQuery}%`,
-            `pet_family.ilike.%${escapedQuery}%`,
-          ].join(','),
-        )
-        .limit(24)
+        if (!response.ok) {
+          throw new Error(data.error || 'Search failed')
+        }
 
-      if (error) {
-        setError(error.message)
-        setResults([])
-      } else {
         setResults(data ?? [])
+      } catch (err: any) {
+        setError(err.message || 'Search failed')
+        setResults([])
       }
 
       setLoading(false)

@@ -1,0 +1,47 @@
+import { neon } from '@neondatabase/serverless'
+
+const sql = neon(process.env.DATABASE_URL!)
+
+export default async function handler(req: any, res: any) {
+  try {
+    const q = String(req.query.q || '').trim()
+
+    if (!q) {
+      return res.status(200).json([])
+    }
+
+    const pattern = `%${q}%`
+
+    const rows = await sql`
+      select
+        pet_id,
+        pet_scientific_name,
+        pet_vernacular_name,
+        pet_genus,
+        pet_family,
+        pet_body_shape,
+        pet_traits,
+        pet_max_length,
+        pet_max_weight,
+        pet_longevity,
+        pet_temperature,
+        pet_migration_type,
+        pet_danger,
+        pet_is_native,
+        pet_comments,
+        pet_aquarium
+      from public.pet
+      where
+        pet_vernacular_name ilike ${pattern}
+        or pet_scientific_name ilike ${pattern}
+        or pet_genus ilike ${pattern}
+        or pet_family ilike ${pattern}
+      limit 24
+    `
+
+    return res.status(200).json(rows)
+  } catch (error) {
+    console.error(error)
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+}
