@@ -174,7 +174,7 @@ export function SearchResults() {
                               )}
                             >
                               <ShieldAlert className="w-3 h-3" />
-                              {pet.pet_invasive_risk} Risk
+                              {pet.pet_invasive_risk} Biodiversity Risk
                             </span>
                           )}
                           {pet.pet_care_level && (
@@ -184,17 +184,7 @@ export function SearchResults() {
                               )}
                             >
                               <HandHeart className="w-3 h-3" />
-                              {pet.pet_care_level}
-                            </span>
-                          )}
-                          {pet.pet_is_native && (
-                            <span
-                              className={getNativeBadgeClasses(
-                                pet.pet_is_native,
-                              )}
-                            >
-                              <Fish className="w-3 h-3" />
-                              {pet.pet_is_native}
+                              {pet.pet_care_level} Care
                             </span>
                           )}
                         </div>
@@ -218,6 +208,16 @@ export function SearchResults() {
                             <Skull className="w-3 h-3" />
                             {danger} Danger
                           </span>
+                          {pet.pet_is_native && (
+                            <span
+                              className={getNativeBadgeClasses(
+                                pet.pet_is_native,
+                              )}
+                            >
+                              <Fish className="w-3 h-3" />
+                              {pet.pet_is_native}
+                            </span>
+                          )}
                           {pet.pet_aquarium && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
                               <ScanEye className="w-3 h-3" />

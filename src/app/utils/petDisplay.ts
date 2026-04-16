@@ -29,16 +29,39 @@ export function displayText(
   return value;
 }
 
+export function displayNumber(
+  value: number | null | undefined,
+  suffix = "",
+  fallback = "Unknown",
+) {
+  if (value == null || Number.isNaN(value)) return fallback;
+  return `${value}${suffix}`;
+}
+
 export function normalizeDangerBadge(value: string | null | undefined) {
   const text = (value ?? "").toLowerCase();
 
   if (
+    text.includes("high") ||
+    text.includes("dangerous") ||
+    text.includes("venom") ||
+    text.includes("poison") ||
+    text.includes("aggressive") ||
+    text.includes("strongly") ||
     text.includes("aggressive") ||
     text.includes("venomous") ||
     text.includes("poisonous") ||
     text.includes("strongly")
   ) {
     return "High";
+  }
+
+  if (
+    text.includes("medium") ||
+    text.includes("moderate") ||
+    text.includes("caution")
+  ) {
+    return "Medium";
   }
 
   if (
