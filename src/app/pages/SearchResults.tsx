@@ -329,7 +329,13 @@ export function SearchResults() {
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50 px-4 py-10">
       <div className="mx-auto max-w-6xl">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/");
+            }
+          }}
           className="group mb-6 flex items-center gap-2 text-stone-600 transition hover:text-emerald-600"
         >
           <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" />
@@ -509,13 +515,13 @@ export function SearchResults() {
                             </span>
                           )}
                         </div>
-                        <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
+                        <p className="text-stone-600 text-sm mb-6 line-clamp-3">
                           {displayText(
                             pet.pet_comments,
                             "No description is available for this pet yet.",
                           )}
                         </p>
-                        <div className="flex items-center justify-between">
+                        <div className="mt-auto flex items-center justify-between">
                           <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
                             View Profile & Care Guide →
                           </div>

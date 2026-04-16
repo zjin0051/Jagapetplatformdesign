@@ -45,6 +45,7 @@ export default async function handler(req: any, res: any) {
         or pet_scientific_name ilike ${pattern}
         or pet_genus ilike ${pattern}
         or pet_family ilike ${pattern}
+      limit 50
     `;
 
     return res.status(200).json(rows);
