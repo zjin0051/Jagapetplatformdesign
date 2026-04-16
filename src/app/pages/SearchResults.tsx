@@ -297,7 +297,7 @@ export function SearchResults() {
                       </div>
                       <div className="p-6 flex-1 flex flex-col">
                         <h3 className="text-xl font-bold text-stone-900 mb-1 group-hover:text-emerald-700 transition">
-                          {pet.pet_vernacular_name}
+                          {pet.pet_vernacular_name ?? pet.pet_scientific_name}
                         </h3>
                         <p className="text-sm text-stone-500 italic mb-4 font-serif">
                           {pet.pet_scientific_name}
