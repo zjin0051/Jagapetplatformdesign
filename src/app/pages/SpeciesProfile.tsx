@@ -17,6 +17,7 @@ import {
   TestTubeDiagonal,
   Expand,
   Droplet,
+  HandHeart,
 } from "lucide-react";
 import { motion } from "motion/react";
 import type { Pet } from "../types/pet.types";
@@ -185,29 +186,22 @@ export function SpeciesProfile() {
 
       {/* Hero Header */}
       <div className="relative h-[450px] md:h-[550px] w-full bg-stone-900 overflow-hidden">
-        <div className="absolute top-6 left-6 right-6 z-20 flex justify-between items-center max-w-7xl mx-auto">
-          <Link
-            to="/"
-            className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all flex items-center shadow-lg group"
-          >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          </Link>
-          {/* 
-          <button
-            onClick={() => toggleWishlist(species.id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold transition-all shadow-lg backdrop-blur-md ${
-              inWishlist
-                ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                : "bg-white/20 text-white hover:bg-white/40 border border-white/30"
-            }`}
-          >
-            {inWishlist ? (
-              <Check className="w-5 h-5" />
-            ) : (
-              <Scale className="w-5 h-5" />
-            )}
-            {inWishlist ? "Added to Compare" : "Add to Compare"}
-          </button> */}
+        <div className="absolute top-6 inset-x-0 z-20">
+          <div className="mx-auto max-w-7xl px-8 md:px-12 flex justify-between items-center">
+            <button
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate("/");
+                }
+              }}
+              className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white px-3 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg group"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </button>
+          </div>
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/40 to-transparent z-10"></div>
@@ -225,59 +219,62 @@ export function SpeciesProfile() {
           className="absolute inset-0 w-full h-full object-cover"
         />
 
-        <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 z-20 max-w-7xl mx-auto">
-          <motion.div
-            key={`tags-${pet?.pet_id}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex items-center gap-3 mb-4 flex-wrap"
-          >
-            <span
-              className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider backdrop-blur-md shadow-lg ${
-                pet?.pet_invasive_risk === "High"
-                  ? "bg-rose-500/90 text-white border border-rose-400"
-                  : pet?.pet_invasive_risk === "Medium"
-                    ? "bg-amber-500/90 text-white border border-amber-400"
-                    : "bg-emerald-500/90 text-white border border-emerald-400"
-              }`}
+        <div className="absolute bottom-8 inset-x-0 z-20">
+          <div className="mx-auto max-w-7xl px-8 md:px-12 pb-8 md:pb-12">
+            <motion.div
+              key={`tags-${pet?.pet_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex items-center gap-3 mb-4 flex-wrap"
             >
-              {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
-            </span>
-            <span className="bg-stone-800/80 text-white px-4 py-1.5 rounded-full text-sm font-semibold backdrop-blur-md shadow-lg flex items-center gap-2 border border-stone-600">
-              <Thermometer className="w-4 h-4" />{" "}
-              {pet?.pet_care_level || "Unknown"} Care
-            </span>
-          </motion.div>
-          <motion.h1
-            key={`title-${pet?.pet_id}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
-          >
-            {primaryCommonName}
-          </motion.h1>
-          <motion.p
-            key={`subtitle-${pet?.pet_id}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="text-xl md:text-2xl text-stone-300 italic font-serif"
-          >
-            {pet?.pet_scientific_name}
-          </motion.p>
-          {otherCommonNames.length > 0 && (
+              <span
+                className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider backdrop-blur-md shadow-lg ${
+                  pet?.pet_invasive_risk === "High"
+                    ? "bg-rose-500/90 text-white border border-rose-400"
+                    : pet?.pet_invasive_risk === "Medium"
+                      ? "bg-amber-500/90 text-white border border-amber-400"
+                      : "bg-emerald-500/90 text-white border border-emerald-400"
+                }`}
+              >
+                {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
+              </span>
+              <span className="bg-stone-800/80 text-white px-4 py-1.5 rounded-full text-sm font-semibold backdrop-blur-md shadow-lg flex items-center gap-2 border border-stone-600">
+                <HandHeart className="w-4 h-4" />{" "}
+                {pet?.pet_care_level || "Unknown"} Care
+              </span>
+            </motion.div>
+            <motion.h1
+              key={`title-${pet?.pet_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
+            >
+              {primaryCommonName}
+            </motion.h1>
             <motion.p
               key={`subtitle-${pet?.pet_id}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="text-xl md:text-2xl text-stone-300 font-semibold font-serif"
+              className="text-xl md:text-2xl text-stone-300 italic font-serif"
             >
-              A.K.A: {otherCommonNames.join(", ")}
+              {pet?.pet_scientific_name}
             </motion.p>
-          )}
+            {otherCommonNames.length > 0 && (
+              <motion.p
+                key={`subtitle-${pet?.pet_id}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="text-xl md:text-2xl text-stone-300 font-serif"
+              >
+                <span className="font-semibold">A.K.A:</span>{" "}
+                {otherCommonNames.join(", ")}
+              </motion.p>
+            )}
+          </div>
         </div>
       </div>
 
