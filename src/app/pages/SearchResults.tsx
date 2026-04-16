@@ -186,6 +186,8 @@ export function SearchResults() {
   const query = searchParams.get("q") || "";
 
   const [results, setResults] = useState<PetSearchResult[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("aquarium");
@@ -221,6 +223,10 @@ export function SearchResults() {
 
     runSearch();
   }, [query]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query, sortBy]);
 
   const sortedResults = useMemo(() => {
     const items = [...results];
@@ -325,6 +331,13 @@ export function SearchResults() {
     return items;
   }, [results, sortBy]);
 
+  const totalPages = Math.ceil(sortedResults.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedResults = sortedResults.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50 px-4 py-10">
       <div className="mx-auto max-w-6xl">
@@ -368,7 +381,7 @@ export function SearchResults() {
           </div>
         ) : results.length > 0 ? (
           <>
-            <div className="mb-6 rounded-3xl border border-emerald-100 bg-emerald-50 p-6">
+            <div className="mb-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-6">
               <div className="mb-2 flex items-center gap-2 text-emerald-700">
                 <Sparkles className="h-5 w-5" />
                 <h2 className="text-xl font-bold">Matching pets</h2>
@@ -382,7 +395,7 @@ export function SearchResults() {
             <div className="mb-6 flex items-center gap-3">
               <label
                 htmlFor="sort"
-                className="text-sm font-semibold text-stone-700"
+                className="text-xl font-semibold text-emerald-700"
               >
                 Sort by:
               </label>
@@ -390,7 +403,7 @@ export function SearchResults() {
                 id="sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 shadow-sm outline-none transition focus:border-emerald-500"
+                className="rounded-full border border-stone-300 bg-white px-4 py-2 text-xl font-medium text-stone-700 shadow-sm outline-none transition focus:border-emerald-500"
               >
                 <option value="aquarium">Most Common</option>
                 <option value="alphabet_asc">Alphabet: A to Z</option>
@@ -418,8 +431,12 @@ export function SearchResults() {
               </select>
             </div>
 
+            <p className="mt-4 text-center text-sm text-stone-600">
+              Page {currentPage} of {totalPages}
+            </p>
+
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {sortedResults.map((pet, index) => {
+              {paginatedResults.map((pet, index) => {
                 const danger = normalizeDangerBadge(pet.pet_danger);
                 const vernacularNames = (pet.pet_vernacular_name ?? "")
                   .split(";")
@@ -532,6 +549,46 @@ export function SearchResults() {
                 );
               })}
             </div>
+
+            {totalPages > 1 && (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-emerald-500 hover:text-emerald-700"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                        currentPage === page
+                          ? "bg-emerald-600 text-white"
+                          : "border border-stone-300 bg-white text-stone-700 hover:border-emerald-500 hover:text-emerald-700"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-emerald-500 hover:text-emerald-700"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <div className="rounded-[2rem] border border-stone-200 bg-white p-10 text-center shadow-sm">
