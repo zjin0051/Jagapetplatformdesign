@@ -403,7 +403,7 @@ export function SearchResults() {
                 id="sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
-                className="rounded-full border border-stone-300 bg-white px-4 py-2 text-xl font-medium text-stone-700 shadow-sm outline-none transition focus:border-emerald-500"
+                className="rounded-full border border-stone-300 bg-white px-4 py-2 text-base font-medium text-stone-700 shadow-sm outline-none transition focus:border-emerald-500"
               >
                 <option value="aquarium">Most Common</option>
                 <option value="alphabet_asc">Alphabet: A to Z</option>
@@ -430,10 +430,6 @@ export function SearchResults() {
                 <option value="cost_asc">Cost: Low to High</option>
               </select>
             </div>
-
-            <p className="mt-4 text-center text-sm text-stone-600">
-              Page {currentPage} of {totalPages}
-            </p>
 
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {paginatedResults.map((pet, index) => {
@@ -549,6 +545,10 @@ export function SearchResults() {
                 );
               })}
             </div>
+
+            <p className="mt-4 text-center text-lg text-stone-600">
+              Page {currentPage} of {totalPages}
+            </p>
 
             {totalPages > 1 && (
               <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
