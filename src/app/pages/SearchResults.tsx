@@ -9,6 +9,7 @@ import {
   HandHeart,
   ShieldAlert,
   Skull,
+  ScanEye,
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -42,10 +43,16 @@ type PetSearchResult = {
 
 type SortOption =
   | "aquarium"
-  | "alphabet"
-  | "invasive_risk"
-  | "care_level"
-  | "native_status";
+  | "alphabet_asc"
+  | "alphabet_desc"
+  | "invasive_risk_desc"
+  | "invasive_risk_asc"
+  | "care_level_desc"
+  | "care_level_asc"
+  | "native_status_desc"
+  | "native_status_asc"
+  | "cost_desc"
+  | "cost_asc";
 
 function getInvasiveRiskRank(value: string | null | undefined) {
   switch ((value ?? "").toLowerCase()) {
@@ -84,6 +91,29 @@ function getNativeStatusRank(value: string | null | undefined) {
     default:
       return -1;
   }
+}
+
+function getPetDisplayName(pet: PetSearchResult) {
+  return (
+    pet.pet_vernacular_name ??
+    pet.pet_scientific_name ??
+    ""
+  ).toLowerCase();
+}
+
+function compareWithMissingLast(
+  aValue: number,
+  bValue: number,
+  direction: "asc" | "desc",
+) {
+  const aMissing = aValue < 0;
+  const bMissing = bValue < 0;
+
+  if (aMissing && bMissing) return 0;
+  if (aMissing) return 1;
+  if (bMissing) return -1;
+
+  return direction === "asc" ? aValue - bValue : bValue - aValue;
 }
 
 function displayText(value: string | null | undefined, fallback = "Unknown") {
@@ -200,86 +230,91 @@ export function SearchResults() {
         case "aquarium": {
           const aRank = a.pet_aquarium === true ? 1 : 0;
           const bRank = b.pet_aquarium === true ? 1 : 0;
-          return bRank - aRank;
-        }
-
-        case "alphabet": {
-          const aName = (
-            a.pet_vernacular_name ??
-            a.pet_scientific_name ??
-            ""
-          ).toLowerCase();
-
-          const bName = (
-            b.pet_vernacular_name ??
-            b.pet_scientific_name ??
-            ""
-          ).toLowerCase();
-
-          return aName.localeCompare(bName);
-        }
-
-        case "invasive_risk": {
-          const aRank = getInvasiveRiskRank(a.pet_invasive_risk);
-          const bRank = getInvasiveRiskRank(b.pet_invasive_risk);
 
           if (aRank !== bRank) return bRank - aRank;
-
-          const aName = (
-            a.pet_vernacular_name ??
-            a.pet_scientific_name ??
-            ""
-          ).toLowerCase();
-
-          const bName = (
-            b.pet_vernacular_name ??
-            b.pet_scientific_name ??
-            ""
-          ).toLowerCase();
-
-          return aName.localeCompare(bName);
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
         }
 
-        case "care_level": {
-          const aRank = getCareLevelRank(a.pet_care_level);
-          const bRank = getCareLevelRank(b.pet_care_level);
+        case "alphabet_asc":
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
 
-          if (aRank !== bRank) return bRank - aRank;
+        case "alphabet_desc":
+          return getPetDisplayName(b).localeCompare(getPetDisplayName(a));
 
-          const aName = (
-            a.pet_vernacular_name ??
-            a.pet_scientific_name ??
-            ""
-          ).toLowerCase();
-
-          const bName = (
-            b.pet_vernacular_name ??
-            b.pet_scientific_name ??
-            ""
-          ).toLowerCase();
-
-          return aName.localeCompare(bName);
+        case "invasive_risk_desc": {
+          const result = compareWithMissingLast(
+            getInvasiveRiskRank(a.pet_invasive_risk),
+            getInvasiveRiskRank(b.pet_invasive_risk),
+            "desc",
+          );
+          if (result !== 0) return result;
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
         }
 
-        case "native_status": {
-          const aRank = getNativeStatusRank(a.pet_is_native);
-          const bRank = getNativeStatusRank(b.pet_is_native);
+        case "invasive_risk_asc": {
+          const result = compareWithMissingLast(
+            getInvasiveRiskRank(a.pet_invasive_risk),
+            getInvasiveRiskRank(b.pet_invasive_risk),
+            "asc",
+          );
+          if (result !== 0) return result;
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
+        }
 
-          if (aRank !== bRank) return bRank - aRank;
+        case "care_level_desc": {
+          const result = compareWithMissingLast(
+            getCareLevelRank(a.pet_care_level),
+            getCareLevelRank(b.pet_care_level),
+            "desc",
+          );
+          if (result !== 0) return result;
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
+        }
 
-          const aName = (
-            a.pet_vernacular_name ??
-            a.pet_scientific_name ??
-            ""
-          ).toLowerCase();
+        case "care_level_asc": {
+          const result = compareWithMissingLast(
+            getCareLevelRank(a.pet_care_level),
+            getCareLevelRank(b.pet_care_level),
+            "asc",
+          );
+          if (result !== 0) return result;
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
+        }
 
-          const bName = (
-            b.pet_vernacular_name ??
-            b.pet_scientific_name ??
-            ""
-          ).toLowerCase();
+        case "native_status_desc": {
+          const result = compareWithMissingLast(
+            getNativeStatusRank(a.pet_is_native),
+            getNativeStatusRank(b.pet_is_native),
+            "desc",
+          );
+          if (result !== 0) return result;
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
+        }
 
-          return aName.localeCompare(bName);
+        case "native_status_asc": {
+          const result = compareWithMissingLast(
+            getNativeStatusRank(a.pet_is_native),
+            getNativeStatusRank(b.pet_is_native),
+            "asc",
+          );
+          if (result !== 0) return result;
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
+        }
+
+        case "cost_desc": {
+          const aCost = a.pet_cost ?? -1;
+          const bCost = b.pet_cost ?? -1;
+          const result = compareWithMissingLast(aCost, bCost, "desc");
+          if (result !== 0) return result;
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
+        }
+
+        case "cost_asc": {
+          const aCost = a.pet_cost ?? -1;
+          const bCost = b.pet_cost ?? -1;
+          const result = compareWithMissingLast(aCost, bCost, "asc");
+          if (result !== 0) return result;
+          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
         }
 
         default:
@@ -351,11 +386,29 @@ export function SearchResults() {
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
                 className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 shadow-sm outline-none transition focus:border-emerald-500"
               >
-                <option value="aquarium">Aquarium first</option>
-                <option value="alphabet">Alphabet</option>
-                <option value="invasive_risk">Invasive risk</option>
-                <option value="care_level">Care level</option>
-                <option value="native_status">Native status</option>
+                <option value="aquarium">Most Common</option>
+                <option value="alphabet_asc">Alphabet: A to Z</option>
+                <option value="alphabet_desc">Alphabet: Z to A</option>
+                <option value="invasive_risk_desc">
+                  Invasive risk: High to Low
+                </option>
+                <option value="invasive_risk_asc">
+                  Invasive risk: Low to High
+                </option>
+                <option value="care_level_desc">
+                  Care level: Advanced to Beginner
+                </option>
+                <option value="care_level_asc">
+                  Care level: Beginner to Advanced
+                </option>
+                <option value="native_status_desc">
+                  Native status: Invasive to Native
+                </option>
+                <option value="native_status_asc">
+                  Native status: Native to Invasive
+                </option>
+                <option value="cost_desc">Cost: High to Low</option>
+                <option value="cost_asc">Cost: Low to High</option>
               </select>
             </div>
 
@@ -432,12 +485,12 @@ export function SearchResults() {
                             <Skull className="w-3 h-3" />
                             {danger} Danger
                           </span>
-                          {/* {pet.pet_aquarium && (
+                          {pet.pet_aquarium && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
-                              <Fish className="w-3 h-3" />
+                              <ScanEye className="w-3 h-3" />
                               Common
                             </span>
-                          )} */}
+                          )}
                         </div>
                         <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
                           {displayText(
