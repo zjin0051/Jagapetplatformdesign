@@ -288,6 +288,9 @@ export function SearchResults() {
                           <span className={getDangerBadgeClasses(danger)}>
                             {danger} Danger
                           </span>
+                          <span className={getDangerBadgeClasses(danger)}>
+                            {pet.pet_image_ref}
+                          </span>
                           {pet.pet_aquarium && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
                               <Fish className="w-3 h-3" />
