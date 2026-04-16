@@ -288,9 +288,6 @@ export function SearchResults() {
                           <span className={getDangerBadgeClasses(danger)}>
                             {danger} Danger
                           </span>
-                          <span className={getDangerBadgeClasses(danger)}>
-                            {danger} Danger
-                          </span>
                           {pet.pet_aquarium && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
                               <Fish className="w-3 h-3" />
@@ -305,6 +302,9 @@ export function SearchResults() {
                         </h3>
                         <p className="text-sm text-stone-500 italic mb-4 font-serif">
                           {pet.pet_scientific_name}
+                        </p>
+                        <p className="text-sm text-stone-500 italic mb-4 font-serif">
+                          {pet.pet_image_ref}
                         </p>
                         <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
                           {displayText(
