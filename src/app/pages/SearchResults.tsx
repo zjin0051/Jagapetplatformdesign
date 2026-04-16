@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router";
-import { Search, Fish, AlertCircle, ArrowLeft, Sparkles } from "lucide-react";
+import {
+  Search,
+  Fish,
+  AlertCircle,
+  ArrowLeft,
+  Sparkles,
+  HandHeart,
+  ShieldAlert,
+  Skull,
+} from "lucide-react";
 import { motion } from "motion/react";
 
 type PetSearchResult = {
@@ -63,11 +72,22 @@ function normalizeDangerBadge(value: string | null | undefined) {
 function getDangerBadgeClasses(danger: string) {
   switch (danger) {
     case "High":
-      return "rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700";
+      return "inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700";
     case "Low":
-      return "rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
+      return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
     default:
-      return "rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700";
+      return "inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700";
+  }
+}
+
+function getCareBadgeClasses(careLevel: string) {
+  switch (careLevel) {
+    case "Advanced":
+      return "inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700";
+    case "Beginner":
+      return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
+    default:
+      return "inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700";
   }
 }
 
@@ -187,23 +207,25 @@ export function SearchResults() {
                           }
                           className="w-full h-full object-cover group-hover:scale1-105 transition duration-500"
                         />
-                        <div className="absolute top-4 left-4 flex flex-col gap-2">
-                          <span className={getDangerBadgeClasses(danger)}>
-                            {danger} Danger
-                          </span>
+                        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                           {pet.pet_invasive_risk && (
                             <span
                               className={getDangerBadgeClasses(
                                 pet.pet_invasive_risk,
                               )}
                             >
+                              <ShieldAlert className="w-3 h-3" />
                               {pet.pet_invasive_risk} Risk
                             </span>
                           )}
-                          {pet.pet_aquarium && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
-                              <Fish className="w-3 h-3" />
-                              Common
+                          {pet.pet_care_level && (
+                            <span
+                              className={getCareBadgeClasses(
+                                pet.pet_care_level,
+                              )}
+                            >
+                              <HandHeart className="w-3 h-3" />
+                              {pet.pet_care_level}
                             </span>
                           )}
                         </div>
@@ -221,6 +243,19 @@ export function SearchResults() {
                             "No description is available for this pet yet.",
                           )}
                         </p>
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          <span className={getDangerBadgeClasses(danger)}>
+                            <Skull className="w-3 h-3" />
+                            {danger} Danger
+                          </span>
+                          {pet.pet_aquarium && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                              <Fish className="w-3 h-3" />
+                              Common
+                            </span>
+                          )}
+                        </div>
+
                         <div className="flex items-center justify-between">
                           <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
                             View Profile & Care Guide →
