@@ -82,11 +82,11 @@ function getCareLevelRank(value: string | null | undefined) {
 
 function getNativeStatusRank(value: string | null | undefined) {
   switch ((value ?? "").toLowerCase()) {
-    case "native":
+    case "invasive":
       return 3;
     case "not native":
       return 2;
-    case "invasive":
+    case "native":
       return 1;
     default:
       return -1;
@@ -415,6 +415,17 @@ export function SearchResults() {
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {sortedResults.map((pet, index) => {
                 const danger = normalizeDangerBadge(pet.pet_danger);
+                const vernacularNames = (pet.pet_vernacular_name ?? "")
+                  .split(";")
+                  .map((name) => name.trim())
+                  .filter(Boolean);
+
+                const primaryCommonName =
+                  vernacularNames[0] ??
+                  pet.pet_scientific_name ??
+                  "Unknown Pet";
+
+                const otherCommonNames = vernacularNames.slice(1);
 
                 return (
                   <motion.div
@@ -475,11 +486,17 @@ export function SearchResults() {
 
                       <div className="p-6 flex-1 flex flex-col">
                         <h3 className="text-xl font-bold text-stone-900 mb-1 group-hover:text-emerald-700 transition">
-                          {pet.pet_vernacular_name ?? pet.pet_scientific_name}
+                          {primaryCommonName}
                         </h3>
                         <p className="text-sm text-stone-500 italic mb-2 font-serif">
                           {pet.pet_scientific_name}
                         </p>
+                        {otherCommonNames.length > 0 && (
+                          <p className="text-sm text-stone-500 mb-3">
+                            <span className="font-semibold">A.K.A:</span>{" "}
+                            {otherCommonNames.join(", ")}
+                          </p>
+                        )}
                         <div className="mb-4 flex flex-wrap gap-2">
                           <span className={getDangerBadgeClasses(danger)}>
                             <Skull className="w-3 h-3" />
