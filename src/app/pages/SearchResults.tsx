@@ -195,21 +195,21 @@ export function SearchResults() {
                         </div>
                       </div>
 
-                      <div className="mb-4 flex items-start gap-3">
+                      {/* <div className="mb-4 flex items-start gap-3">
                         <div className="rounded-2xl bg-emerald-100 p-3 text-emerald-700">
                           <Fish className="h-6 w-6" />
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-stone-900">
+                          <h3 className="text-xl font-bold text-stone-900 group-hover:text-emerald-700 transition">
                             {displayText(pet.pet_vernacular_name, pet.pet_id)}
                           </h3>
                           <p className="mt-1 text-sm italic text-stone-600">
                             {displayText(pet.pet_scientific_name)}
                           </p>
                         </div>
-                      </div>
+                      </div> */}
 
-                      <div className="space-y-2 text-sm text-stone-700">
+                      {/* <div className="space-y-2 text-sm text-stone-700">
                         <p>
                           <span className="font-semibold">Genus:</span>{" "}
                           {displayText(pet.pet_genus)}
@@ -235,6 +235,26 @@ export function SearchResults() {
 
                       <div className="mt-5 font-semibold text-emerald-700">
                         View Profile & Care Guide →
+                      </div> */}
+
+                      <div className="p-6 flex-1 flex flex-col">
+                        <h3 className="text-xl font-bold text-stone-900 mb-1 group-hover:text-emerald-700 transition">
+                          {pet.pet_vernacular_name}
+                        </h3>
+                        <p className="text-sm text-stone-500 italic mb-4 font-serif">
+                          {pet.pet_scientific_name}
+                        </p>
+                        <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
+                          {displayText(
+                            pet.pet_comments,
+                            "No description is available for this pet yet.",
+                          )}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                            View Profile & Care Guide →
+                          </div>
+                        </div>
                       </div>
                     </Link>
                   </motion.div>
