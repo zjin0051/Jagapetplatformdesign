@@ -288,7 +288,7 @@ export function SearchResults() {
                             {danger} Danger
                           </span>
                           {pet.pet_aquarium && (
-                            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
                               <Fish className="w-3 h-3" />
                               Common
                             </span>
