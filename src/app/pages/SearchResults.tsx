@@ -14,7 +14,6 @@ import {
 import { motion } from "motion/react";
 import type { Pet, SortOption } from "../types/pet.types";
 import {
-  getPetDisplayName,
   getPetCommonNames,
   displayText,
   normalizeDangerBadge,
@@ -22,66 +21,28 @@ import {
   getCareBadgeClasses,
   getNativeBadgeClasses,
 } from "../utils/petDisplay.ts";
-import { sortPets } from "../utils/petSort";
+import { usePetSearch } from "../hooks/usePetSearch";
+import { useSortedPets } from "../hooks/useSortedPets";
+import { usePagination } from "../hooks/usePagination";
 
 export function SearchResults() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const query = searchParams.get("q") || "";
 
-  const [results, setResults] = useState<Pet[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("aquarium");
 
-  useEffect(() => {
-    async function runSearch() {
-      if (!query.trim()) {
-        setResults([]);
-        return;
-      }
+  const { results, loading, error } = usePetSearch(query);
+  const sortedResults = useSortedPets(results, sortBy);
 
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(query.trim())}`,
-        );
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Search failed");
-        }
-
-        setResults(data ?? []);
-      } catch (err: any) {
-        setError(err.message || "Search failed");
-        setResults([]);
-      }
-
-      setLoading(false);
-    }
-
-    runSearch();
-  }, [query]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [query, sortBy]);
-
-  const sortedResults = useMemo(() => {
-    return sortPets(results, sortBy);
-  }, [results, sortBy]);
-
-  const totalPages = Math.ceil(sortedResults.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedResults = sortedResults.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems,
+    goToPage,
+    goNext,
+    goPrevious,
+  } = usePagination(sortedResults, 9, [query, sortBy]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50 px-4 py-10">
@@ -177,19 +138,10 @@ export function SearchResults() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {paginatedResults.map((pet, index) => {
+              {paginatedItems.map((pet, index) => {
                 const danger = normalizeDangerBadge(pet.pet_danger);
-                const vernacularNames = (pet.pet_vernacular_name ?? "")
-                  .split(";")
-                  .map((name) => name.trim())
-                  .filter(Boolean);
-
-                const primaryCommonName =
-                  vernacularNames[0] ??
-                  pet.pet_scientific_name ??
-                  "Unknown Pet";
-
-                const otherCommonNames = vernacularNames.slice(1);
+                const { primaryCommonName, otherCommonNames } =
+                  getPetCommonNames(pet);
 
                 return (
                   <motion.div
@@ -294,9 +246,7 @@ export function SearchResults() {
             {totalPages > 1 && (
               <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
                 <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
+                  onClick={goPrevious}
                   disabled={currentPage === 1}
                   className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-emerald-500 hover:text-emerald-700"
                 >
@@ -307,7 +257,7 @@ export function SearchResults() {
                   (page) => (
                     <button
                       key={page}
-                      onClick={() => setCurrentPage(page)}
+                      onClick={() => goToPage(page)}
                       className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                         currentPage === page
                           ? "bg-emerald-600 text-white"
@@ -320,9 +270,7 @@ export function SearchResults() {
                 )}
 
                 <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
+                  onClick={goNext}
                   disabled={currentPage === totalPages}
                   className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-emerald-500 hover:text-emerald-700"
                 >
