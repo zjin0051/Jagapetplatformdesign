@@ -107,6 +107,7 @@ export function SearchResults() {
     }
 
     runSearch();
+    console.log(results);
   }, [query]);
 
   return (
@@ -304,7 +305,7 @@ export function SearchResults() {
                           {pet.pet_scientific_name}
                         </p>
                         <p className="text-sm text-stone-500 italic mb-4 font-serif">
-                          {pet.pet_image_ref}
+                          {pet.pet_image_ref ?? "image not available"}
                         </p>
                         <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
                           {displayText(
