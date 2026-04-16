@@ -1,111 +1,119 @@
-import { useEffect, useState } from 'react'
-import { useSearchParams, Link, useNavigate } from 'react-router'
-import { Search, Fish, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react'
-import { motion } from 'motion/react'
+import { useEffect, useState } from "react";
+import { useSearchParams, Link, useNavigate } from "react-router";
+import { Search, Fish, AlertCircle, ArrowLeft, Sparkles } from "lucide-react";
+import { motion } from "motion/react";
 
 type PetSearchResult = {
-  pet_id: string
-  pet_scientific_name: string | null
-  pet_vernacular_name: string | null
-  pet_genus: string | null
-  pet_family: string | null
-  pet_body_shape: string | null
-  pet_traits: string | null
-  pet_max_length: number | null
-  pet_max_weight: number | null
-  pet_longevity: number | null
-  pet_temperature: string | null
-  pet_migration_type: string | null
-  pet_danger: string | null
-  pet_is_native: string | null
-  pet_comments: string | null
-  pet_aquarium: boolean | null
-}
+  pet_id: string;
+  pet_scientific_name: string | null;
+  pet_vernacular_name: string | null;
+  pet_genus: string | null;
+  pet_family: string | null;
+  pet_body_shape: string | null;
+  pet_traits: string | null;
+  pet_max_length: number | null;
+  pet_max_weight: number | null;
+  pet_longevity: number | null;
+  pet_habitat: string | null;
+  pet_temperature: string | null;
+  pet_ph_range: string | null;
+  pet_water_hardness: string | null;
+  pet_tank_size: string | null;
+  pet_cost: number | null;
+  pet_migration_type: string | null;
+  pet_danger: string | null;
+  pet_is_native: string | null;
+  pet_comments: string | null;
+  pet_aquarium: boolean | null;
+  pet_image_ref: string | null;
+};
 
-function displayText(value: string | null | undefined, fallback = 'Unknown') {
-  if (value == null || value.trim() === '') return fallback
-  return value
+function displayText(value: string | null | undefined, fallback = "Unknown") {
+  if (value == null || value.trim() === "") return fallback;
+  return value;
 }
 
 function normalizeDangerBadge(value: string | null | undefined) {
-  const text = (value ?? '').toLowerCase()
+  const text = (value ?? "").toLowerCase();
 
   if (
-    text.includes('aggressive') ||
-    text.includes('venomous') ||
-    text.includes('poisonous') ||
-    text.includes('strongly')
+    text.includes("aggressive") ||
+    text.includes("venomous") ||
+    text.includes("poisonous") ||
+    text.includes("strongly")
   ) {
-    return 'High'
+    return "High";
   }
 
   if (
-    text.includes('harmless') ||
-    text.includes('weakly') ||
-    text.includes('electrosensing') ||
-    text.includes('special')
+    text.includes("harmless") ||
+    text.includes("weakly") ||
+    text.includes("electrosensing") ||
+    text.includes("special")
   ) {
-    return 'Low'
+    return "Low";
   }
 
-  return 'Unknown'
+  return "Unknown";
 }
 
 function getDangerBadgeClasses(danger: string) {
   switch (danger) {
-    case 'High':
-      return 'rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700'
-    case 'Low':
-      return 'rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700'
+    case "High":
+      return "rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700";
+    case "Low":
+      return "rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
     default:
-      return 'rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700'
+      return "rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700";
   }
 }
 
 export function SearchResults() {
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const query = searchParams.get('q') || ''
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const query = searchParams.get("q") || "";
 
-  const [results, setResults] = useState<PetSearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [results, setResults] = useState<PetSearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function runSearch() {
       if (!query.trim()) {
-        setResults([])
-        return
+        setResults([]);
+        return;
       }
 
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(query.trim())}`)
-        const data = await response.json()
+        const response = await fetch(
+          `/api/search?q=${encodeURIComponent(query.trim())}`,
+        );
+        const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || 'Search failed')
+          throw new Error(data.error || "Search failed");
         }
 
-        setResults(data ?? [])
+        setResults(data ?? []);
       } catch (err: any) {
-        setError(err.message || 'Search failed')
-        setResults([])
+        setError(err.message || "Search failed");
+        setResults([]);
       }
 
-      setLoading(false)
+      setLoading(false);
     }
 
-    runSearch()
-  }, [query])
+    runSearch();
+  }, [query]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50 px-4 py-10">
       <div className="mx-auto max-w-6xl">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="group mb-6 flex items-center gap-2 text-stone-600 transition hover:text-emerald-600"
         >
           <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" />
@@ -115,7 +123,9 @@ export function SearchResults() {
         <div className="mb-8 rounded-[2rem] bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 p-8 text-white shadow-xl">
           <div className="mb-3 flex items-center gap-3">
             <Search className="h-7 w-7" />
-            <h1 className="text-3xl font-black tracking-tight">Search Results</h1>
+            <h1 className="text-3xl font-black tracking-tight">
+              Search Results
+            </h1>
           </div>
           <p className="text-emerald-50">
             Searching for: <span className="font-semibold">"{query}"</span>
@@ -143,13 +153,13 @@ export function SearchResults() {
               </div>
               <p className="text-stone-700">
                 We found {results.length} matching result
-                {results.length === 1 ? '' : 's'} for your search.
+                {results.length === 1 ? "" : "s"} for your search.
               </p>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
               {results.map((pet, index) => {
-                const danger = normalizeDangerBadge(pet.pet_danger)
+                const danger = normalizeDangerBadge(pet.pet_danger);
 
                 return (
                   <motion.div
@@ -162,18 +172,27 @@ export function SearchResults() {
                       to={`/species/${pet.pet_id}`}
                       className="block h-full rounded-[1.75rem] border border-stone-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-md"
                     >
-                      <div className="mb-4 flex flex-wrap gap-2">
-                        <span className={getDangerBadgeClasses(danger)}>
-                          {danger} Danger
-                        </span>
-                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">
-                          {displayText(pet.pet_family)}
-                        </span>
-                        {pet.pet_aquarium && (
-                          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
-                            Common
+                      <div className="relative h-64 overflow-hidden">
+                        <img
+                          src={pet.pet_image_ref ?? "/placeholder-image.png"}
+                          alt={
+                            pet.pet_scientific_name ?? "Pet Image Placeholder"
+                          }
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        />
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          <span className={getDangerBadgeClasses(danger)}>
+                            {danger} Danger
                           </span>
-                        )}
+                          <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">
+                            {displayText(pet.pet_family)}
+                          </span>
+                          {pet.pet_aquarium && (
+                            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                              Common
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="mb-4 flex items-start gap-3">
@@ -192,25 +211,25 @@ export function SearchResults() {
 
                       <div className="space-y-2 text-sm text-stone-700">
                         <p>
-                          <span className="font-semibold">Genus:</span>{' '}
+                          <span className="font-semibold">Genus:</span>{" "}
                           {displayText(pet.pet_genus)}
                         </p>
                         <p>
-                          <span className="font-semibold">Temperature:</span>{' '}
+                          <span className="font-semibold">Temperature:</span>{" "}
                           {displayText(pet.pet_temperature)}
                         </p>
                         <p>
-                          <span className="font-semibold">Longevity:</span>{' '}
+                          <span className="font-semibold">Longevity:</span>{" "}
                           {pet.pet_longevity != null
                             ? `${pet.pet_longevity} years`
-                            : 'Unknown'}
+                            : "Unknown"}
                         </p>
                       </div>
 
                       <p className="mt-4 line-clamp-3 text-sm leading-6 text-stone-600">
                         {displayText(
                           pet.pet_comments,
-                          'No description is available for this pet yet.',
+                          "No description is available for this pet yet.",
                         )}
                       </p>
 
@@ -219,7 +238,7 @@ export function SearchResults() {
                       </div>
                     </Link>
                   </motion.div>
-                )
+                );
               })}
             </div>
           </>
@@ -252,5 +271,5 @@ export function SearchResults() {
         )}
       </div>
     </div>
-  )
+  );
 }
