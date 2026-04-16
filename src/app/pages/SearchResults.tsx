@@ -275,13 +275,14 @@ export function SearchResults() {
                       <div className="relative h-64 overflow-hidden">
                         <img
                           src={
-                            pet.pet_image_ref ??
-                            "/pet_image/pet_placeholder.png"
+                            pet.pet_image_ref
+                              ? `${pet.pet_image_ref}`
+                              : "/pet_image/pet_placeholder.png"
                           }
                           alt={
                             pet.pet_vernacular_name ?? "Pet Image Placeholder"
                           }
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                          className="w-full h-full object-cover group-hover:scale1-105 transition duration-500"
                         />
                         <div className="absolute top-4 left-4 flex flex-col gap-2">
                           <span className={getDangerBadgeClasses(danger)}>
