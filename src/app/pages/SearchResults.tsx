@@ -176,7 +176,7 @@ export function SearchResults() {
                         <img
                           src={
                             pet.pet_image_ref
-                              ? `/pet_image/${pet.pet_image_ref}`
+                              ? `${pet.pet_image_ref}`
                               : "/pet_image/258f.jpg"
                           }
                           alt={
@@ -184,7 +184,7 @@ export function SearchResults() {
                           }
                           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                         />
-                        <div className="mb-4 flex flex-wrap gap-2">
+                        <div className="absolute top-4 left-4 mb-4 flex flex-wrap gap-2">
                           <span className={getDangerBadgeClasses(danger)}>
                             {danger} Danger
                           </span>
@@ -243,7 +243,7 @@ export function SearchResults() {
 
                       <div className="p-6 flex-1 flex flex-col">
                         <h3 className="text-xl font-bold text-stone-900 mb-1 group-hover:text-emerald-700 transition">
-                          {pet.pet_vernacular_name}
+                          {displayText(pet.pet_vernacular_name, pet.pet_id)}
                         </h3>
                         <p className="text-sm text-stone-500 italic mb-4 font-serif">
                           {pet.pet_scientific_name}
