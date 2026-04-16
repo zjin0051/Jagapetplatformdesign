@@ -107,7 +107,6 @@ export function SearchResults() {
     }
 
     runSearch();
-    console.log(results);
   }, [query]);
 
   return (
@@ -277,7 +276,7 @@ export function SearchResults() {
                         <img
                           src={
                             pet.pet_image_ref
-                              ? `/pet_image/${pet.pet_image_ref}`
+                              ? `/pet_image/${pet.pet_id}.jpg`
                               : "/pet_image/pet_placeholder.png"
                           }
                           alt={
@@ -306,6 +305,7 @@ export function SearchResults() {
                         </p>
                         <p className="text-sm text-stone-500 italic mb-4 font-serif">
                           {pet.pet_image_ref ?? "image not available"}
+                          <pre>{JSON.stringify(pet, null, 2)}</pre>
                         </p>
                         <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
                           {displayText(
