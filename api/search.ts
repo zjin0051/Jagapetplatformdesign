@@ -24,12 +24,21 @@ export default async function handler(req: any, res: any) {
         pet_max_length,
         pet_max_weight,
         pet_longevity,
+        pet_habitat,
         pet_temperature,
+        pet_ph_range,
+        pet_water_hardness,
+        pet_tank_size,
         pet_migration_type,
         pet_danger,
         pet_is_native,
         pet_comments,
-        pet_aquarium
+        pet_aquarium,
+        pet_cost,
+        pet_image_ref,
+        pet_banned,
+        pet_invasive_risk,
+        pet_care_level
       from public.pet
       where
         pet_vernacular_name ilike ${pattern}

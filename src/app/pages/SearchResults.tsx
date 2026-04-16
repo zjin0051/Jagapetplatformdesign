@@ -26,6 +26,9 @@ type PetSearchResult = {
   pet_comments: string | null;
   pet_aquarium: boolean | null;
   pet_image_ref: string | null;
+  pet_banned: boolean | null;
+  pet_invasive_risk: string | null;
+  pet_care_level: string | null;
 };
 
 function displayText(value: string | null | undefined, fallback = "Unknown") {
@@ -162,106 +165,6 @@ export function SearchResults() {
                 const danger = normalizeDangerBadge(pet.pet_danger);
 
                 return (
-                  // <motion.div
-                  //   key={pet.pet_id}
-                  //   initial={{ opacity: 0, y: 18 }}
-                  //   animate={{ opacity: 1, y: 0 }}
-                  //   transition={{ delay: index * 0.04 }}
-                  // >
-                  //   <Link
-                  //     to={`/species/${pet.pet_id}`}
-                  //     className="block h-full rounded-[1.75rem] border border-stone-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:border-emerald-300 hover:shadow-md"
-                  //   >
-                  //     <div className="relative h-64 overflow-hidden">
-                  //       <img
-                  //         src={
-                  //           pet.pet_image_ref
-                  //             ? `${pet.pet_image_ref}`
-                  //             : "/pet_image/258f.jpg"
-                  //         }
-                  //         alt={
-                  //           pet.pet_scientific_name ?? "Pet Image Placeholder"
-                  //         }
-                  //         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                  //       />
-                  // <div className="absolute top-4 left-4 mb-4 flex flex-wrap gap-2">
-                  //   <span className={getDangerBadgeClasses(danger)}>
-                  //     {danger} Danger
-                  //   </span>
-                  //   <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">
-                  //     {displayText(pet.pet_family)}
-                  //   </span>
-                  //   {pet.pet_aquarium && (
-                  //     <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
-                  //       Common
-                  //     </span>
-                  //   )}
-                  // </div>
-                  //     </div>
-
-                  //     {/* <div className="mb-4 flex items-start gap-3">
-                  //       <div className="rounded-2xl bg-emerald-100 p-3 text-emerald-700">
-                  //         <Fish className="h-6 w-6" />
-                  //       </div>
-                  //       <div>
-                  //         <h3 className="text-xl font-bold text-stone-900 group-hover:text-emerald-700 transition">
-                  //           {displayText(pet.pet_vernacular_name, pet.pet_id)}
-                  //         </h3>
-                  //         <p className="mt-1 text-sm italic text-stone-600">
-                  //           {displayText(pet.pet_scientific_name)}
-                  //         </p>
-                  //       </div>
-                  //     </div> */}
-
-                  //     {/* <div className="space-y-2 text-sm text-stone-700">
-                  //       <p>
-                  //         <span className="font-semibold">Genus:</span>{" "}
-                  //         {displayText(pet.pet_genus)}
-                  //       </p>
-                  //       <p>
-                  //         <span className="font-semibold">Temperature:</span>{" "}
-                  //         {displayText(pet.pet_temperature)}
-                  //       </p>
-                  //       <p>
-                  //         <span className="font-semibold">Longevity:</span>{" "}
-                  //         {pet.pet_longevity != null
-                  //           ? `${pet.pet_longevity} years`
-                  //           : "Unknown"}
-                  //       </p>
-                  //     </div>
-
-                  //     <p className="mt-4 line-clamp-3 text-sm leading-6 text-stone-600">
-                  //       {displayText(
-                  //         pet.pet_comments,
-                  //         "No description is available for this pet yet.",
-                  //       )}
-                  //     </p>
-
-                  //     <div className="mt-5 font-semibold text-emerald-700">
-                  //       View Profile & Care Guide →
-                  //     </div> */}
-
-                  //     <div className="p-6 flex-1 flex flex-col">
-                  //       <h3 className="text-xl font-bold text-stone-900 mb-1 group-hover:text-emerald-700 transition">
-                  //         {displayText(pet.pet_vernacular_name, pet.pet_id)}
-                  //       </h3>
-                  //       <p className="text-sm text-stone-500 italic mb-4 font-serif">
-                  //         {pet.pet_scientific_name}
-                  //       </p>
-                  //       <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
-                  //         {displayText(
-                  //           pet.pet_comments,
-                  //           "No description is available for this pet yet.",
-                  //         )}
-                  //       </p>
-                  //       <div className="flex items-center justify-between">
-                  //         <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                  //           View Profile & Care Guide →
-                  //         </div>
-                  //       </div>
-                  //     </div>
-                  //   </Link>
-                  // </motion.div>
                   <motion.div
                     key={pet.pet_id}
                     initial={{ opacity: 0, y: 20 }}
@@ -274,11 +177,11 @@ export function SearchResults() {
                     >
                       <div className="relative h-64 overflow-hidden">
                         <img
-                          src={`/pet_image/${pet.pet_id}.jpg`}
-                          onError={(e) => {
-                            e.currentTarget.src =
-                              "/pet_image/pet_placeholder.png";
-                          }}
+                          src={
+                            pet.pet_image_ref
+                              ? `/pet_image/${pet.pet_image_ref}`
+                              : "/pet_image/pet_placeholder.png"
+                          }
                           alt={
                             pet.pet_vernacular_name ?? "Pet Image Placeholder"
                           }
@@ -288,6 +191,15 @@ export function SearchResults() {
                           <span className={getDangerBadgeClasses(danger)}>
                             {danger} Danger
                           </span>
+                          {pet.pet_invasive_risk && (
+                            <span
+                              className={getDangerBadgeClasses(
+                                pet.pet_invasive_risk,
+                              )}
+                            >
+                              {pet.pet_invasive_risk} Risk
+                            </span>
+                          )}
                           {pet.pet_aquarium && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
                               <Fish className="w-3 h-3" />
@@ -302,10 +214,6 @@ export function SearchResults() {
                         </h3>
                         <p className="text-sm text-stone-500 italic mb-4 font-serif">
                           {pet.pet_scientific_name}
-                        </p>
-                        <p className="text-sm text-stone-500 italic mb-4 font-serif">
-                          {pet.pet_image_ref ?? "image not available"}
-                          <pre>{JSON.stringify(pet, null, 2)}</pre>
                         </p>
                         <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
                           {displayText(
