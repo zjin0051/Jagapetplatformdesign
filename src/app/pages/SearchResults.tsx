@@ -75,6 +75,8 @@ function getDangerBadgeClasses(danger: string) {
       return "inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700";
     case "Low":
       return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
+    case "Medium":
+      return "inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700";
     default:
       return "inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700";
   }
@@ -87,7 +89,7 @@ function getCareBadgeClasses(careLevel: string) {
     case "Beginner":
       return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
     default:
-      return "inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700";
+      return "inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700";
   }
 }
 
@@ -230,18 +232,13 @@ export function SearchResults() {
                           )}
                         </div>
                       </div>
+
                       <div className="p-6 flex-1 flex flex-col">
                         <h3 className="text-xl font-bold text-stone-900 mb-1 group-hover:text-emerald-700 transition">
                           {pet.pet_vernacular_name ?? pet.pet_scientific_name}
                         </h3>
-                        <p className="text-sm text-stone-500 italic mb-4 font-serif">
+                        <p className="text-sm text-stone-500 italic mb-2 font-serif">
                           {pet.pet_scientific_name}
-                        </p>
-                        <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
-                          {displayText(
-                            pet.pet_comments,
-                            "No description is available for this pet yet.",
-                          )}
                         </p>
                         <div className="mb-4 flex flex-wrap gap-2">
                           <span className={getDangerBadgeClasses(danger)}>
@@ -255,7 +252,12 @@ export function SearchResults() {
                             </span>
                           )}
                         </div>
-
+                        <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
+                          {displayText(
+                            pet.pet_comments,
+                            "No description is available for this pet yet.",
+                          )}
+                        </p>
                         <div className="flex items-center justify-between">
                           <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
                             View Profile & Care Guide →
