@@ -113,6 +113,19 @@ export function getCareBadgeClasses(careLevel: string) {
   }
 }
 
+export function getSpeciesCareBadgeClasses(careLevel: string) {
+  switch (careLevel) {
+    case "Advanced":
+      return "inline-flex items-center gap-1 rounded-full bg-red-100 px-4 py-1.5 text-sm font-semibold text-red-700";
+    case "Beginner":
+      return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-semibold text-emerald-700";
+    case "Intermediate":
+      return "inline-flex items-center gap-1 rounded-full bg-orange-100 px-4 py-1.5 text-sm font-semibold text-orange-700";
+    default:
+      return "inline-flex items-center gap-1 rounded-full bg-stone-100 px-4 py-1.5 text-sm font-semibold text-stone-700";
+  }
+}
+
 export function getNativeBadgeClasses(nativeStatus: string | null) {
   switch (nativeStatus) {
     case "Invasive":

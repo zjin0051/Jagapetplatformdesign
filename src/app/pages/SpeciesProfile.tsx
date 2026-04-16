@@ -29,6 +29,7 @@ import {
   getPetCommonNames,
   splitTraits,
   isInvasiveSpecies,
+  getSpeciesCareBadgeClasses,
 } from "../utils/petDisplay";
 
 export function SpeciesProfile() {
@@ -219,7 +220,7 @@ export function SpeciesProfile() {
           className="absolute inset-0 w-full h-full object-cover"
         />
 
-        <div className="absolute bottom-8 inset-x-0 z-20">
+        <div className="absolute bottom-0 inset-x-0 z-20">
           <div className="mx-auto max-w-7xl px-8 md:px-12 pb-8 md:pb-12">
             <motion.div
               key={`tags-${pet?.pet_id}`}
@@ -238,6 +239,14 @@ export function SpeciesProfile() {
                 }`}
               >
                 {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
+              </span>
+              <span
+                className={getSpeciesCareBadgeClasses(
+                  pet?.pet_care_level || "Unknown",
+                )}
+              >
+                <HandHeart className="w-3 h-3" />
+                {pet.pet_care_level} Care
               </span>
               <span className="bg-stone-800/80 text-white px-4 py-1.5 rounded-full text-sm font-semibold backdrop-blur-md shadow-lg flex items-center gap-2 border border-stone-600">
                 <HandHeart className="w-4 h-4" />{" "}
@@ -278,7 +287,7 @@ export function SpeciesProfile() {
         </div>
       </div>
 
-      <section className="px-4 pb-12">
+      <section className="px-4 py-12">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.6fr_1fr]">
           <div className="space-y-8">
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
