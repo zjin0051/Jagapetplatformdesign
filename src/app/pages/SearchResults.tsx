@@ -275,7 +275,7 @@ export function SearchResults() {
                       <div className="relative h-64 overflow-hidden">
                         <img
                           src={
-                            pet.pet_image_ref
+                            pet.pet_id
                               ? `/pet_image/${pet.pet_id}.jpg`
                               : "/pet_image/pet_placeholder.png"
                           }
