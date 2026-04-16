@@ -274,11 +274,11 @@ export function SearchResults() {
                     >
                       <div className="relative h-64 overflow-hidden">
                         <img
-                          src={
-                            pet.pet_id
-                              ? `/pet_image/${pet.pet_id}.jpg`
-                              : "/pet_image/pet_placeholder.png"
-                          }
+                          src={`/pet_image/${pet.pet_id}.jpg`}
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "/pet_image/pet_placeholder.png";
+                          }}
                           alt={
                             pet.pet_vernacular_name ?? "Pet Image Placeholder"
                           }
