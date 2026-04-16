@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router";
 import {
   Search,
@@ -39,6 +39,52 @@ type PetSearchResult = {
   pet_invasive_risk: string | null;
   pet_care_level: string | null;
 };
+
+type SortOption =
+  | "aquarium"
+  | "alphabet"
+  | "invasive_risk"
+  | "care_level"
+  | "native_status";
+
+function getInvasiveRiskRank(value: string | null | undefined) {
+  switch ((value ?? "").toLowerCase()) {
+    case "high":
+      return 3;
+    case "medium":
+      return 2;
+    case "low":
+      return 1;
+    default:
+      return -1; // missing/unknown goes last
+  }
+}
+
+function getCareLevelRank(value: string | null | undefined) {
+  switch ((value ?? "").toLowerCase()) {
+    case "advanced":
+      return 3;
+    case "intermediate":
+      return 2;
+    case "beginner":
+      return 1;
+    default:
+      return -1;
+  }
+}
+
+function getNativeStatusRank(value: string | null | undefined) {
+  switch ((value ?? "").toLowerCase()) {
+    case "native":
+      return 3;
+    case "not native":
+      return 2;
+    case "invasive":
+      return 1;
+    default:
+      return -1;
+  }
+}
 
 function displayText(value: string | null | undefined, fallback = "Unknown") {
   if (value == null || value.trim() === "") return fallback;
@@ -93,6 +139,17 @@ function getCareBadgeClasses(careLevel: string) {
   }
 }
 
+function getNativeBadgeClasses(nativeStatus: string | null) {
+  switch (nativeStatus) {
+    case "Invasive":
+      return "inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700";
+    case "Native":
+      return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
+    default:
+      return "inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700";
+  }
+}
+
 export function SearchResults() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -101,6 +158,7 @@ export function SearchResults() {
   const [results, setResults] = useState<PetSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>("aquarium");
 
   useEffect(() => {
     async function runSearch() {
@@ -133,6 +191,104 @@ export function SearchResults() {
 
     runSearch();
   }, [query]);
+
+  const sortedResults = useMemo(() => {
+    const items = [...results];
+
+    items.sort((a, b) => {
+      switch (sortBy) {
+        case "aquarium": {
+          const aRank = a.pet_aquarium === true ? 1 : 0;
+          const bRank = b.pet_aquarium === true ? 1 : 0;
+          return bRank - aRank;
+        }
+
+        case "alphabet": {
+          const aName = (
+            a.pet_vernacular_name ??
+            a.pet_scientific_name ??
+            ""
+          ).toLowerCase();
+
+          const bName = (
+            b.pet_vernacular_name ??
+            b.pet_scientific_name ??
+            ""
+          ).toLowerCase();
+
+          return aName.localeCompare(bName);
+        }
+
+        case "invasive_risk": {
+          const aRank = getInvasiveRiskRank(a.pet_invasive_risk);
+          const bRank = getInvasiveRiskRank(b.pet_invasive_risk);
+
+          if (aRank !== bRank) return bRank - aRank;
+
+          const aName = (
+            a.pet_vernacular_name ??
+            a.pet_scientific_name ??
+            ""
+          ).toLowerCase();
+
+          const bName = (
+            b.pet_vernacular_name ??
+            b.pet_scientific_name ??
+            ""
+          ).toLowerCase();
+
+          return aName.localeCompare(bName);
+        }
+
+        case "care_level": {
+          const aRank = getCareLevelRank(a.pet_care_level);
+          const bRank = getCareLevelRank(b.pet_care_level);
+
+          if (aRank !== bRank) return bRank - aRank;
+
+          const aName = (
+            a.pet_vernacular_name ??
+            a.pet_scientific_name ??
+            ""
+          ).toLowerCase();
+
+          const bName = (
+            b.pet_vernacular_name ??
+            b.pet_scientific_name ??
+            ""
+          ).toLowerCase();
+
+          return aName.localeCompare(bName);
+        }
+
+        case "native_status": {
+          const aRank = getNativeStatusRank(a.pet_is_native);
+          const bRank = getNativeStatusRank(b.pet_is_native);
+
+          if (aRank !== bRank) return bRank - aRank;
+
+          const aName = (
+            a.pet_vernacular_name ??
+            a.pet_scientific_name ??
+            ""
+          ).toLowerCase();
+
+          const bName = (
+            b.pet_vernacular_name ??
+            b.pet_scientific_name ??
+            ""
+          ).toLowerCase();
+
+          return aName.localeCompare(bName);
+        }
+
+        default:
+          return 0;
+      }
+    });
+
+    return items;
+  }, [results, sortBy]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50 px-4 py-10">
@@ -182,8 +338,29 @@ export function SearchResults() {
               </p>
             </div>
 
+            <div className="mb-6 flex items-center gap-3">
+              <label
+                htmlFor="sort"
+                className="text-sm font-semibold text-stone-700"
+              >
+                Sort by:
+              </label>
+              <select
+                id="sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 shadow-sm outline-none transition focus:border-emerald-500"
+              >
+                <option value="aquarium">Aquarium first</option>
+                <option value="alphabet">Alphabet</option>
+                <option value="invasive_risk">Invasive risk</option>
+                <option value="care_level">Care level</option>
+                <option value="native_status">Native status</option>
+              </select>
+            </div>
+
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-              {results.map((pet, index) => {
+              {sortedResults.map((pet, index) => {
                 const danger = normalizeDangerBadge(pet.pet_danger);
 
                 return (
@@ -230,6 +407,16 @@ export function SearchResults() {
                               {pet.pet_care_level}
                             </span>
                           )}
+                          {pet.pet_is_native && (
+                            <span
+                              className={getNativeBadgeClasses(
+                                pet.pet_is_native,
+                              )}
+                            >
+                              <Fish className="w-3 h-3" />
+                              {pet.pet_is_native}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -245,12 +432,12 @@ export function SearchResults() {
                             <Skull className="w-3 h-3" />
                             {danger} Danger
                           </span>
-                          {pet.pet_aquarium && (
+                          {/* {pet.pet_aquarium && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
                               <Fish className="w-3 h-3" />
                               Common
                             </span>
-                          )}
+                          )} */}
                         </div>
                         <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
                           {displayText(
