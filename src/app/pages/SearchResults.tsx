@@ -174,7 +174,11 @@ export function SearchResults() {
                     >
                       <div className="relative h-64 overflow-hidden">
                         <img
-                          src={pet.pet_image_ref ?? "/placeholder-image.png"}
+                          src={
+                            pet.pet_image_ref
+                              ? `/pet_image/${pet.pet_image_ref}`
+                              : "/pet_image/258f.jpg"
+                          }
                           alt={
                             pet.pet_scientific_name ?? "Pet Image Placeholder"
                           }
