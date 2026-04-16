@@ -276,7 +276,7 @@ export function SearchResults() {
                         <img
                           src={
                             pet.pet_image_ref
-                              ? `/${pet.pet_image_ref.replace(/^public\//, "")}`
+                              ? `${pet.pet_image_ref.replace(/^public\//, "")}`
                               : "/pet_image/pet_placeholder.png"
                           }
                           alt={
