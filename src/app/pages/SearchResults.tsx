@@ -12,180 +12,24 @@ import {
   ScanEye,
 } from "lucide-react";
 import { motion } from "motion/react";
-
-type PetSearchResult = {
-  pet_id: string;
-  pet_scientific_name: string | null;
-  pet_vernacular_name: string | null;
-  pet_genus: string | null;
-  pet_family: string | null;
-  pet_body_shape: string | null;
-  pet_traits: string | null;
-  pet_max_length: number | null;
-  pet_max_weight: number | null;
-  pet_longevity: number | null;
-  pet_habitat: string | null;
-  pet_temperature: string | null;
-  pet_ph_range: string | null;
-  pet_water_hardness: string | null;
-  pet_tank_size: string | null;
-  pet_cost: number | null;
-  pet_migration_type: string | null;
-  pet_danger: string | null;
-  pet_is_native: string | null;
-  pet_comments: string | null;
-  pet_aquarium: boolean | null;
-  pet_image_ref: string | null;
-  pet_banned: boolean | null;
-  pet_invasive_risk: string | null;
-  pet_care_level: string | null;
-};
-
-type SortOption =
-  | "aquarium"
-  | "alphabet_asc"
-  | "alphabet_desc"
-  | "invasive_risk_desc"
-  | "invasive_risk_asc"
-  | "care_level_desc"
-  | "care_level_asc"
-  | "native_status_desc"
-  | "native_status_asc"
-  | "cost_desc"
-  | "cost_asc";
-
-function getInvasiveRiskRank(value: string | null | undefined) {
-  switch ((value ?? "").toLowerCase()) {
-    case "high":
-      return 3;
-    case "medium":
-      return 2;
-    case "low":
-      return 1;
-    default:
-      return -1; // missing/unknown goes last
-  }
-}
-
-function getCareLevelRank(value: string | null | undefined) {
-  switch ((value ?? "").toLowerCase()) {
-    case "advanced":
-      return 3;
-    case "intermediate":
-      return 2;
-    case "beginner":
-      return 1;
-    default:
-      return -1;
-  }
-}
-
-function getNativeStatusRank(value: string | null | undefined) {
-  switch ((value ?? "").toLowerCase()) {
-    case "invasive":
-      return 3;
-    case "not native":
-      return 2;
-    case "native":
-      return 1;
-    default:
-      return -1;
-  }
-}
-
-function getPetDisplayName(pet: PetSearchResult) {
-  return (
-    pet.pet_vernacular_name ??
-    pet.pet_scientific_name ??
-    ""
-  ).toLowerCase();
-}
-
-function compareWithMissingLast(
-  aValue: number,
-  bValue: number,
-  direction: "asc" | "desc",
-) {
-  const aMissing = aValue < 0;
-  const bMissing = bValue < 0;
-
-  if (aMissing && bMissing) return 0;
-  if (aMissing) return 1;
-  if (bMissing) return -1;
-
-  return direction === "asc" ? aValue - bValue : bValue - aValue;
-}
-
-function displayText(value: string | null | undefined, fallback = "Unknown") {
-  if (value == null || value.trim() === "") return fallback;
-  return value;
-}
-
-function normalizeDangerBadge(value: string | null | undefined) {
-  const text = (value ?? "").toLowerCase();
-
-  if (
-    text.includes("aggressive") ||
-    text.includes("venomous") ||
-    text.includes("poisonous") ||
-    text.includes("strongly")
-  ) {
-    return "High";
-  }
-
-  if (
-    text.includes("harmless") ||
-    text.includes("weakly") ||
-    text.includes("electrosensing") ||
-    text.includes("special")
-  ) {
-    return "Low";
-  }
-
-  return "Unknown";
-}
-
-function getDangerBadgeClasses(danger: string) {
-  switch (danger) {
-    case "High":
-      return "inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700";
-    case "Low":
-      return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
-    case "Medium":
-      return "inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700";
-    default:
-      return "inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700";
-  }
-}
-
-function getCareBadgeClasses(careLevel: string) {
-  switch (careLevel) {
-    case "Advanced":
-      return "inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700";
-    case "Beginner":
-      return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
-    default:
-      return "inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700";
-  }
-}
-
-function getNativeBadgeClasses(nativeStatus: string | null) {
-  switch (nativeStatus) {
-    case "Invasive":
-      return "inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700";
-    case "Native":
-      return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700";
-    default:
-      return "inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700";
-  }
-}
+import type { Pet, SortOption } from "../types/pet.types";
+import {
+  getPetDisplayName,
+  getPetCommonNames,
+  displayText,
+  normalizeDangerBadge,
+  getDangerBadgeClasses,
+  getCareBadgeClasses,
+  getNativeBadgeClasses,
+} from "../utils/petDisplay.ts";
+import { sortPets } from "../utils/petSort";
 
 export function SearchResults() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const query = searchParams.get("q") || "";
 
-  const [results, setResults] = useState<PetSearchResult[]>([]);
+  const [results, setResults] = useState<Pet[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
   const [loading, setLoading] = useState(false);
@@ -229,106 +73,7 @@ export function SearchResults() {
   }, [query, sortBy]);
 
   const sortedResults = useMemo(() => {
-    const items = [...results];
-
-    items.sort((a, b) => {
-      switch (sortBy) {
-        case "aquarium": {
-          const aRank = a.pet_aquarium === true ? 1 : 0;
-          const bRank = b.pet_aquarium === true ? 1 : 0;
-
-          if (aRank !== bRank) return bRank - aRank;
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-        }
-
-        case "alphabet_asc":
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-
-        case "alphabet_desc":
-          return getPetDisplayName(b).localeCompare(getPetDisplayName(a));
-
-        case "invasive_risk_desc": {
-          const result = compareWithMissingLast(
-            getInvasiveRiskRank(a.pet_invasive_risk),
-            getInvasiveRiskRank(b.pet_invasive_risk),
-            "desc",
-          );
-          if (result !== 0) return result;
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-        }
-
-        case "invasive_risk_asc": {
-          const result = compareWithMissingLast(
-            getInvasiveRiskRank(a.pet_invasive_risk),
-            getInvasiveRiskRank(b.pet_invasive_risk),
-            "asc",
-          );
-          if (result !== 0) return result;
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-        }
-
-        case "care_level_desc": {
-          const result = compareWithMissingLast(
-            getCareLevelRank(a.pet_care_level),
-            getCareLevelRank(b.pet_care_level),
-            "desc",
-          );
-          if (result !== 0) return result;
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-        }
-
-        case "care_level_asc": {
-          const result = compareWithMissingLast(
-            getCareLevelRank(a.pet_care_level),
-            getCareLevelRank(b.pet_care_level),
-            "asc",
-          );
-          if (result !== 0) return result;
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-        }
-
-        case "native_status_desc": {
-          const result = compareWithMissingLast(
-            getNativeStatusRank(a.pet_is_native),
-            getNativeStatusRank(b.pet_is_native),
-            "desc",
-          );
-          if (result !== 0) return result;
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-        }
-
-        case "native_status_asc": {
-          const result = compareWithMissingLast(
-            getNativeStatusRank(a.pet_is_native),
-            getNativeStatusRank(b.pet_is_native),
-            "asc",
-          );
-          if (result !== 0) return result;
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-        }
-
-        case "cost_desc": {
-          const aCost = a.pet_cost ?? -1;
-          const bCost = b.pet_cost ?? -1;
-          const result = compareWithMissingLast(aCost, bCost, "desc");
-          if (result !== 0) return result;
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-        }
-
-        case "cost_asc": {
-          const aCost = a.pet_cost ?? -1;
-          const bCost = b.pet_cost ?? -1;
-          const result = compareWithMissingLast(aCost, bCost, "asc");
-          if (result !== 0) return result;
-          return getPetDisplayName(a).localeCompare(getPetDisplayName(b));
-        }
-
-        default:
-          return 0;
-      }
-    });
-
-    return items;
+    return sortPets(results, sortBy);
   }, [results, sortBy]);
 
   const totalPages = Math.ceil(sortedResults.length / itemsPerPage);
