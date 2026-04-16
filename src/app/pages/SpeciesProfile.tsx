@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import {
   ArrowLeft,
   AlertTriangle,
@@ -17,142 +17,43 @@ import {
   TestTubeDiagonal,
   Expand,
   Droplet,
-} from 'lucide-react'
-import { motion } from 'motion/react'
-
-
-type Pet = {
-  pet_id: string
-  pet_scientific_name: string | null
-  pet_vernacular_name: string | null
-  pet_genus: string | null
-  pet_family: string | null
-  pet_body_shape: string | null
-  pet_traits: string | null
-  pet_max_length: number | null
-  pet_max_weight: number | null
-  pet_longevity: number | null
-  pet_habitat: string | null
-  pet_temperature: string | null
-  pet_ph_range: string | null
-  pet_water_hardness: string | null
-  pet_tank_size: string | null
-  pet_migration_type: string | null
-  pet_danger: string | null
-  pet_is_native: string | null
-  pet_comments: string | null
-  pet_aquarium: boolean | null
-}
-
-function displayText(value: string | null | undefined, fallback = 'Unknown') {
-  if (value == null || value.trim() === '' || value == undefined) return fallback
-  return value
-}
-
-function displayNumber(
-  value: number | null | undefined,
-  suffix = '',
-  fallback = 'Unknown',
-) {
-  if (value == null || Number.isNaN(value)) return fallback
-  return `${value}${suffix}`
-}
-
-function normalizeDangerLevel(value: string | null | undefined) {
-  const text = (value ?? '').toLowerCase()
-
-  if (
-    text.includes('high') ||
-    text.includes('dangerous') ||
-    text.includes('venom') ||
-    text.includes('poison') ||
-    text.includes('aggressive')
-  ) {
-    return 'High'
-  }
-
-  if (
-    text.includes('medium') ||
-    text.includes('moderate') ||
-    text.includes('caution')
-  ) {
-    return 'Medium'
-  }
-
-  if (
-    text.includes('low') ||
-    text.includes('harmless') ||
-    text.includes('safe') ||
-    text.includes('none')
-  ) {
-    return 'Low'
-  }
-
-  return value ? 'Unknown' : 'Unknown'
-}
-
-function splitTraits(value: string | null | undefined) {
-  if (!value) return []
-
-  return value
-    .split(/[,;/|]/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
+} from "lucide-react";
+import { motion } from "motion/react";
+import type { Pet } from "../types/pet.types";
+import { usePetDetail } from "../hooks/usePetDetails";
+import {
+  displayText,
+  displayNumber,
+  normalizeDangerBadge,
+  getPetCommonNames,
+  splitTraits,
+  isInvasiveSpecies,
+} from "../utils/petDisplay";
 
 export function SpeciesProfile() {
-  const { id } = useParams<{ id: string }>()
-  const [pet, setPet] = useState<Pet | null>(null)
-  const [relatedPets, setRelatedPets] = useState<Pet[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const { pet, relatedPets, loading, error } = usePetDetail(id);
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [id])
-
-  useEffect(() => {
-    async function fetchPet() {
-      if (!id) {
-        setError('Missing pet id.')
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      setError(null)
-
-      const response = await fetch(`/api/pet?id=${encodeURIComponent(id)}`)
-      const data = await response.json()
-
-      if (!response.ok) {
-        setPet(null)
-        setRelatedPets([])
-        setError(data.error || 'Failed to load pet')
-        setLoading(false)
-        return
-      }
-
-      setPet(data.pet ?? data)
-      setRelatedPets(data.relatedPets ?? [])
-
-      setLoading(false)
-    }
-
-    fetchPet()
-  }, [id])
+    window.scrollTo(0, 0);
+  }, [id]);
 
   const dangerLevel = useMemo(
-    () => normalizeDangerLevel(pet?.pet_danger),
+    () => normalizeDangerBadge(pet?.pet_danger),
     [pet?.pet_danger],
-  )
+  );
 
   const isInvasive = useMemo(
-    () => pet?.pet_is_native?.toLowerCase() === 'invasive',
+    () => isInvasiveSpecies(pet?.pet_is_native),
     [pet?.pet_is_native],
-  )
+  );
 
-  const traits = useMemo(() => splitTraits(pet?.pet_traits), [pet?.pet_traits])
+  const traits = useMemo(() => splitTraits(pet?.pet_traits), [pet?.pet_traits]);
+
+  const { primaryCommonName, otherCommonNames } = pet
+    ? getPetCommonNames(pet)
+    : { primaryCommonName: "Unknown Pet", otherCommonNames: [] };
 
   if (loading) {
     return (
@@ -161,7 +62,7 @@ export function SpeciesProfile() {
           <p className="text-stone-600">Loading pet profile...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !pet) {
@@ -190,12 +91,12 @@ export function SpeciesProfile() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50">
-      {dangerLevel === 'High' && (
+      {dangerLevel === "High" && (
         <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-red-800">
           <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
             <AlertTriangle className="h-5 w-5" />
@@ -209,21 +110,27 @@ export function SpeciesProfile() {
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
           <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
             <AlertTriangle className="h-5 w-5" />
-            Notice: this species is considered invasive. Avoid release into local
-            waterways and follow regional regulations.
+            Notice: this species is considered invasive. Avoid release into
+            local waterways and follow regional regulations.
           </div>
         </div>
       )}
 
-      <section className="px-4 py-8">
+      {/* <section className="px-4 py-8">
         <div className="mx-auto max-w-6xl">
-          <Link
-            to="/"
-            className="mb-6 inline-flex items-center gap-2 text-stone-600 transition hover:text-emerald-700"
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate("/");
+              }
+            }}
+            className="group mb-6 flex items-center gap-2 text-stone-600 transition hover:text-emerald-600"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
-          </Link>
+          </button>
 
           <motion.div
             initial={{ opacity: 0, y: 14 }}
@@ -238,7 +145,9 @@ export function SpeciesProfile() {
                 Danger: {dangerLevel}
               </span>
               <span className="rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
-                {pet.pet_aquarium ? 'Common aquarium species' : 'Not marked common'}
+                {pet.pet_aquarium
+                  ? "Common aquarium species"
+                  : "Not marked common"}
               </span>
             </div>
 
@@ -249,22 +158,128 @@ export function SpeciesProfile() {
 
               <div>
                 <h1 className="text-4xl font-black tracking-tight">
-                  {displayText(pet.pet_vernacular_name, pet.pet_id)}
+                  {primaryCommonName}
                 </h1>
+
                 <p className="mt-2 text-lg italic text-emerald-50">
                   {displayText(pet.pet_scientific_name)}
                 </p>
+
+                {otherCommonNames.length > 0 && (
+                  <p className="mt-2 text-lg font-semibold text-emerald-50">
+                    A.K.A: {otherCommonNames.join(", ")}
+                  </p>
+                )}
+
                 <p className="mt-4 max-w-3xl text-sm leading-7 text-emerald-50/95">
                   {displayText(
                     pet.pet_comments,
-                    'No additional description is available for this pet yet.',
+                    "No additional description is available for this pet yet.",
                   )}
                 </p>
               </div>
             </div>
           </motion.div>
         </div>
-      </section>
+      </section> */}
+
+      {/* Hero Header */}
+      <div className="relative h-[450px] md:h-[550px] w-full bg-stone-900 overflow-hidden">
+        <div className="absolute top-6 left-6 right-6 z-20 flex justify-between items-center max-w-7xl mx-auto">
+          <Link
+            to="/"
+            className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all flex items-center shadow-lg group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          </Link>
+          {/* 
+          <button
+            onClick={() => toggleWishlist(species.id)}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold transition-all shadow-lg backdrop-blur-md ${
+              inWishlist
+                ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                : "bg-white/20 text-white hover:bg-white/40 border border-white/30"
+            }`}
+          >
+            {inWishlist ? (
+              <Check className="w-5 h-5" />
+            ) : (
+              <Scale className="w-5 h-5" />
+            )}
+            {inWishlist ? "Added to Compare" : "Add to Compare"}
+          </button> */}
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/40 to-transparent z-10"></div>
+        <motion.img
+          key={pet?.pet_id}
+          initial={{ scale: 1.05 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.8 }}
+          src={
+            pet.pet_image_ref
+              ? `/pet_image/${pet.pet_image_ref}`
+              : "/pet_image/pet_placeholder.png"
+          }
+          alt={pet.pet_vernacular_name ?? "Pet Image Placeholder"}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 z-20 max-w-7xl mx-auto">
+          <motion.div
+            key={`tags-${pet?.pet_id}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex items-center gap-3 mb-4 flex-wrap"
+          >
+            <span
+              className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider backdrop-blur-md shadow-lg ${
+                pet?.pet_invasive_risk === "High"
+                  ? "bg-rose-500/90 text-white border border-rose-400"
+                  : pet?.pet_invasive_risk === "Medium"
+                    ? "bg-amber-500/90 text-white border border-amber-400"
+                    : "bg-emerald-500/90 text-white border border-emerald-400"
+              }`}
+            >
+              {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
+            </span>
+            <span className="bg-stone-800/80 text-white px-4 py-1.5 rounded-full text-sm font-semibold backdrop-blur-md shadow-lg flex items-center gap-2 border border-stone-600">
+              <Thermometer className="w-4 h-4" />{" "}
+              {pet?.pet_care_level || "Unknown"} Care
+            </span>
+          </motion.div>
+          <motion.h1
+            key={`title-${pet?.pet_id}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
+          >
+            {primaryCommonName}
+          </motion.h1>
+          <motion.p
+            key={`subtitle-${pet?.pet_id}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="text-xl md:text-2xl text-stone-300 italic font-serif"
+          >
+            {pet?.pet_scientific_name}
+          </motion.p>
+          {otherCommonNames.length > 0 && (
+            <motion.p
+              key={`subtitle-${pet?.pet_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="text-xl md:text-2xl text-stone-300 font-semibold font-serif"
+            >
+              A.K.A: {otherCommonNames.join(", ")}
+            </motion.p>
+          )}
+        </div>
+      </div>
 
       <section className="px-4 pb-12">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.6fr_1fr]">
@@ -340,8 +355,6 @@ export function SpeciesProfile() {
                 </p>
               </div>
             </div>
-
-            
 
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
@@ -436,7 +449,7 @@ export function SpeciesProfile() {
               <p className="leading-7 text-stone-700">
                 {displayText(
                   pet.pet_comments,
-                  'No additional comments are available for this pet.',
+                  "No additional comments are available for this pet.",
                 )}
               </p>
             </div>
@@ -554,5 +567,5 @@ export function SpeciesProfile() {
         </div>
       </section>
     </div>
-  )
+  );
 }

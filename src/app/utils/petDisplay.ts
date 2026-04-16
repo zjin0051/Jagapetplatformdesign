@@ -38,6 +38,19 @@ export function displayNumber(
   return `${value}${suffix}`;
 }
 
+export function splitTraits(value: string | null | undefined) {
+  if (!value) return [];
+
+  return value
+    .split(/[,;/|]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+export function isInvasiveSpecies(value: string | null | undefined) {
+  return (value ?? "").toLowerCase() === "invasive";
+}
+
 export function normalizeDangerBadge(value: string | null | undefined) {
   const text = (value ?? "").toLowerCase();
 
