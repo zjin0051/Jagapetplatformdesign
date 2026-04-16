@@ -30,6 +30,7 @@ import {
   splitTraits,
   isInvasiveSpecies,
   getSpeciesCareBadgeClasses,
+  getSpeciesDangerBadgeClasses,
 } from "../utils/petDisplay";
 
 export function SpeciesProfile() {
@@ -199,8 +200,8 @@ export function SpeciesProfile() {
               }}
               className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white px-3 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg group"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
+              <ArrowLeft className="h-4 w-4 shadow-lg" />
+              <span className="shadow-lg">Back</span>
             </button>
           </div>
         </div>
@@ -230,14 +231,11 @@ export function SpeciesProfile() {
               className="flex items-center gap-3 mb-4 flex-wrap"
             >
               <span
-                className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider backdrop-blur-md shadow-lg ${
-                  pet?.pet_invasive_risk === "High"
-                    ? "bg-rose-500/90 text-white border border-rose-400"
-                    : pet?.pet_invasive_risk === "Medium"
-                      ? "bg-amber-500/90 text-white border border-amber-400"
-                      : "bg-emerald-500/90 text-white border border-emerald-400"
-                }`}
+                className={getSpeciesDangerBadgeClasses(
+                  pet?.pet_invasive_risk || "Unknown",
+                )}
               >
+                <ShieldAlert className="w-4 h-4" />
                 {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
               </span>
               <span
@@ -245,11 +243,7 @@ export function SpeciesProfile() {
                   pet?.pet_care_level || "Unknown",
                 )}
               >
-                <HandHeart className="w-3 h-3" />
-                {pet.pet_care_level} Care
-              </span>
-              <span className="bg-stone-800/80 text-white px-4 py-1.5 rounded-full text-sm font-semibold backdrop-blur-md shadow-lg flex items-center gap-2 border border-stone-600">
-                <HandHeart className="w-4 h-4" />{" "}
+                <HandHeart className="w-4 h-4" />
                 {pet?.pet_care_level || "Unknown"} Care
               </span>
             </motion.div>
@@ -267,7 +261,7 @@ export function SpeciesProfile() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              className="text-xl md:text-2xl text-stone-300 italic font-serif"
+              className="text-xl md:text-2xl text-stone-300 mb-2 italic font-serif"
             >
               {pet?.pet_scientific_name}
             </motion.p>

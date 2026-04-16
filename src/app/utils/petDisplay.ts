@@ -101,6 +101,18 @@ export function getDangerBadgeClasses(danger: string) {
       return "inline-flex items-center gap-1 rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700";
   }
 }
+export function getSpeciesDangerBadgeClasses(danger: string) {
+  switch (danger) {
+    case "High":
+      return "inline-flex items-center gap-1 rounded-full bg-red-100 px-4 py-1.5 text-sm font-semibold text-red-700";
+    case "Low":
+      return "inline-flex items-center gap-1 rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-semibold text-emerald-700";
+    case "Medium":
+      return "inline-flex items-center gap-1 rounded-full bg-orange-100 px-4 py-1.5 text-sm font-semibold text-orange-700";
+    default:
+      return "inline-flex items-center gap-1 rounded-full bg-stone-100 px-4 py-1.5 text-sm font-semibold text-stone-700";
+  }
+}
 
 export function getCareBadgeClasses(careLevel: string) {
   switch (careLevel) {
