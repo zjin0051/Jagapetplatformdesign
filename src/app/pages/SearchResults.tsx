@@ -451,7 +451,7 @@ export function SearchResults() {
                     key={pet.pet_id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: (startIndex + index) * 0.05 }}
+                    transition={{ delay: index * 0.1 }}
                   >
                     <Link
                       to={`/species/${pet.pet_id}`}
@@ -546,12 +546,8 @@ export function SearchResults() {
               })}
             </div>
 
-            <p className="mt-6 text-center text-base text-stone-600">
-              Page {currentPage} of {totalPages}
-            </p>
-
             {totalPages > 1 && (
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
                 <button
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
@@ -589,6 +585,9 @@ export function SearchResults() {
                 </button>
               </div>
             )}
+            <p className="mt-4 text-center text-base text-stone-600">
+              Page {currentPage} of {totalPages}
+            </p>
           </>
         ) : (
           <div className="rounded-[2rem] border border-stone-200 bg-white p-10 text-center shadow-sm">
