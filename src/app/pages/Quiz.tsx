@@ -75,12 +75,12 @@ export function Quiz() {
     }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < questions.length - 1) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
     } else {
-      setAnswers(formData as LifestyleAnswers);
-      navigate('/quiz-results');
+      await setAnswers(formData as LifestyleAnswers);
+      navigate("/quiz-results");
     }
   };
 

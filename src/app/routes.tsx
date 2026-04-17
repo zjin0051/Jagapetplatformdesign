@@ -10,6 +10,8 @@ import { SafeExit } from "./pages/SafeExit";
 import { Compare } from "./pages/Compare";
 import { SearchResults } from "./pages/SearchResults";
 import { ApiTestLab } from "./pages/ApiTestLab";
+import { Auth } from "./pages/Auth";
+import { Profile } from "./pages/Profile";
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +27,8 @@ export const router = createBrowserRouter([
       { path: "compare", element: <Compare /> },
       { path: "search", element: <SearchResults /> },
       { path: "api-test-lab", element: <ApiTestLab /> },
+      { path: "login", element: <Auth /> },
+      { path: "profile", element: <Profile /> },
     ],
   },
 ]);

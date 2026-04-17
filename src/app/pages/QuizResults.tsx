@@ -17,7 +17,7 @@ const riskLevel = { Low: 1, Medium: 2, High: 3 };
 
 export function QuizResults() {
   const { wishlist } = useWishlist();
-  const { answers } = useUser();
+  const { user, answers } = useUser();
 
   if (!answers) {
     return <Navigate to="/quiz" replace />;
@@ -119,6 +119,39 @@ export function QuizResults() {
               <HelpCircle className="w-5 h-5" /> Not sure what pet you have?
             </Link>
           </div>
+        </div>
+        <div className="text-center">
+          {!user ? (
+            <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+              <h3 className="text-lg font-semibold text-emerald-900 mb-2">
+                Save these results to your profile
+              </h3>
+              <p className="text-emerald-800 mb-4">
+                Create a profile or log in to keep your quiz answers and update them whenever you retake the quiz.
+              </p>
+              <div className="flex gap-3">
+                <Link
+                  to="/login"
+                  className="rounded-xl px-4 py-2 bg-emerald-600 text-white"
+                >
+                  Create profile / Log in
+                </Link>
+                <Link
+                  to="/quiz"
+                  className="rounded-xl px-4 py-2 border border-emerald-300 text-emerald-900"
+                >
+                  Retake quiz
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-6 rounded-2xl border border-stone-200 bg-white p-5">
+              <h3 className="text-lg font-semibold mb-2">Profile updated</h3>
+              <p className="text-stone-600">
+                Your latest quiz answers are saved to @{user.username}'s profile. Retaking the quiz will update them automatically.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Suitable Matches */}
