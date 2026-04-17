@@ -33,7 +33,7 @@ export function Home() {
   return (
     <div className="flex flex-col gap-12 pb-24 font-sans bg-stone-50 text-stone-900 overflow-hidden">
       {/* Hero Section */}
-      {/* <section className="relative w-full min-h-[600px] pb-32 flex items-center justify-center">
+      <section className="relative w-full min-h-[600px] pb-32 flex items-center justify-center">
         <div className="absolute inset-0 bg-emerald-900/60 z-10 overflow-hidden"></div>
         <img
           src="https://images.unsplash.com/photo-1764175760954-e99714c7dd98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBwbGFudGVkJTIwYXF1YXJpdW0lMjB0YW5rfGVufDF8fHx8MTc3NDcxODU3Mnww&ixlib=rb-4.1.0&q=80&w=1080"
@@ -77,56 +77,6 @@ export function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
             className="max-w-xl mx-auto shadow-2xl"
-          >
-            <SearchAutocomplete />
-          </motion.div>
-        </div>
-      </section> */}
-
-      <section className="relative w-full min-h-[600px] overflow-hidden">
-        <div className="absolute inset-0 bg-emerald-900/60 z-10" />
-        <img
-          src="https://images.unsplash.com/photo-1764175760954-e99714c7dd98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBwbGFudGVkJTIwYXF1YXJpdW0lMjB0YW5rfGVufDF8fHx8MTc3NDcxODU3Mnww&ixlib=rb-4.1.0&q=80&w=1080"
-          alt="Beautiful planted aquarium"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-
-        <div className="relative z-20 min-h-[600px] max-w-4xl mx-auto px-4 text-center flex flex-col items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="bg-rose-600 text-white px-4 py-2 rounded-full inline-flex items-center gap-2 text-sm font-semibold mb-6 shadow-lg uppercase tracking-wider"
-          >
-            <AlertTriangle className="w-4 h-4" />
-            Never Release Non-Native Pets Into the Wild
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl md:text-6xl font-extrabold text-white mb-6 drop-shadow-md leading-tight"
-          >
-            Responsible Pet Ownership Starts Here
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-lg md:text-xl text-emerald-50 mb-10 max-w-2xl mx-auto font-medium"
-          >
-            Explore species profiles, check lifestyle compatibility, and learn
-            how to safely manage your ornamental fish and pet turtles in
-            Malaysia.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="max-w-xl w-full mx-auto shadow-2xl"
           >
             <SearchAutocomplete />
           </motion.div>
