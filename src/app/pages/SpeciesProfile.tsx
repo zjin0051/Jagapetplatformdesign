@@ -112,7 +112,7 @@ export function SpeciesProfile() {
       )}
 
       {pet.pet_banned && (
-        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+        <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-red-800">
           <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
             <AlertTriangle className="h-5 w-5" />
             Warning: this species is prohibited in Malaysia. If you are caught
@@ -123,7 +123,7 @@ export function SpeciesProfile() {
       )}
 
       {isInvasive && (
-        <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-red-800">
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
           <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
             <AlertTriangle className="h-5 w-5" />
             Notice: this species is considered invasive. Avoid release into
