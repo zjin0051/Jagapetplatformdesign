@@ -123,7 +123,7 @@ export function SpeciesProfile() {
       )}
 
       {isInvasive && (
-        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+        <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-red-800">
           <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
             <AlertTriangle className="h-5 w-5" />
             Notice: this species is considered invasive. Avoid release into
@@ -378,61 +378,6 @@ export function SpeciesProfile() {
           </div>
 
           <aside className="space-y-6">
-            {/* <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center gap-2 text-emerald-800">
-                <ShieldAlert className="h-5 w-5" />
-                <h3 className="text-xl font-bold">Safety summary</h3>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Danger
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_danger)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Native status
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_is_native)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Legal Status
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_banned ? "Banned" : "Not banned")}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Common aquarium species
-                  </p>
-                  <div className="mt-1 flex items-center gap-2 text-stone-800">
-                    {pet.pet_aquarium ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        Yes
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="h-4 w-4 text-stone-400" />
-                        No / unknown
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div> */}
-
             <div className="rounded-3xl border border-rose-800 bg-gradient-to-br from-rose-950 via-red-950 to-stone-950 p-6 text-white shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-rose-100">
                 <ShieldAlert className="h-5 w-5 text-rose-300" />
