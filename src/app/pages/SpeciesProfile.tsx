@@ -34,6 +34,8 @@ import {
   isInvasiveSpecies,
   getSpeciesCareBadgeClasses,
   getSpeciesDangerBadgeClasses,
+  getDangerBadgeClasses,
+  getCareBadgeClasses,
 } from "../utils/petDisplay";
 import { useCompare } from "../context/CompareContext";
 import { useUser } from "../context/UserContext";
@@ -585,16 +587,29 @@ export function SpeciesProfile() {
                         {displayText(item.pet_scientific_name)}
                       </p>
 
-                      <p className="mt-3 text-sm text-stone-700">
-                        Family: {displayText(item.pet_family)}
-                      </p>
-
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
+                        {/* <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
                           Risk: {displayText(item.pet_invasive_risk)}
+                        </span> */}
+
+                        <span
+                          className={getDangerBadgeClasses(
+                            item.pet_invasive_risk!,
+                          )}
+                        >
+                          <ShieldAlert className="w-3 h-3" />
+                          {item.pet_invasive_risk} Biodiversity Risk
                         </span>
-                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
+
+                        {/* <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
                           Care: {displayText(item.pet_care_level)}
+                        </span> */}
+
+                        <span
+                          className={getCareBadgeClasses(item.pet_care_level!)}
+                        >
+                          <HandHeart className="w-3 h-3" />
+                          {item.pet_care_level} Care
                         </span>
                       </div>
                     </Link>
