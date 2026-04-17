@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import {
   ArrowLeft,
   AlertTriangle,
@@ -17,142 +17,50 @@ import {
   TestTubeDiagonal,
   Expand,
   Droplet,
-} from 'lucide-react'
-import { motion } from 'motion/react'
-
-
-type Pet = {
-  pet_id: string
-  pet_scientific_name: string | null
-  pet_vernacular_name: string | null
-  pet_genus: string | null
-  pet_family: string | null
-  pet_body_shape: string | null
-  pet_traits: string | null
-  pet_max_length: number | null
-  pet_max_weight: number | null
-  pet_longevity: number | null
-  pet_habitat: string | null
-  pet_temperature: string | null
-  pet_ph_range: string | null
-  pet_water_hardness: string | null
-  pet_tank_size: string | null
-  pet_migration_type: string | null
-  pet_danger: string | null
-  pet_is_native: string | null
-  pet_comments: string | null
-  pet_aquarium: boolean | null
-}
-
-function displayText(value: string | null | undefined, fallback = 'Unknown') {
-  if (value == null || value.trim() === '' || value == undefined) return fallback
-  return value
-}
-
-function displayNumber(
-  value: number | null | undefined,
-  suffix = '',
-  fallback = 'Unknown',
-) {
-  if (value == null || Number.isNaN(value)) return fallback
-  return `${value}${suffix}`
-}
-
-function normalizeDangerLevel(value: string | null | undefined) {
-  const text = (value ?? '').toLowerCase()
-
-  if (
-    text.includes('high') ||
-    text.includes('dangerous') ||
-    text.includes('venom') ||
-    text.includes('poison') ||
-    text.includes('aggressive')
-  ) {
-    return 'High'
-  }
-
-  if (
-    text.includes('medium') ||
-    text.includes('moderate') ||
-    text.includes('caution')
-  ) {
-    return 'Medium'
-  }
-
-  if (
-    text.includes('low') ||
-    text.includes('harmless') ||
-    text.includes('safe') ||
-    text.includes('none')
-  ) {
-    return 'Low'
-  }
-
-  return value ? 'Unknown' : 'Unknown'
-}
-
-function splitTraits(value: string | null | undefined) {
-  if (!value) return []
-
-  return value
-    .split(/[,;/|]/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-}
+  HandHeart,
+  Skull,
+  Ban,
+} from "lucide-react";
+import { motion } from "motion/react";
+import type { Pet } from "../types/pet.types";
+import { usePetDetail } from "../hooks/usePetDetails";
+import {
+  displayText,
+  displayNumber,
+  normalizeDangerBadge,
+  getPetCommonNames,
+  splitTraits,
+  isInvasiveSpecies,
+  getSpeciesCareBadgeClasses,
+  getSpeciesDangerBadgeClasses,
+} from "../utils/petDisplay";
+import { useCompare } from "../context/CompareContext";
 
 export function SpeciesProfile() {
-  const { id } = useParams<{ id: string }>()
-  const [pet, setPet] = useState<Pet | null>(null)
-  const [relatedPets, setRelatedPets] = useState<Pet[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const { toggleCompare, isInCompare, isCompareFull } = useCompare();
+  const { id } = useParams<{ id: string }>();
+  const { pet, relatedPets, loading, error } = usePetDetail(id);
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [id])
-
-  useEffect(() => {
-    async function fetchPet() {
-      if (!id) {
-        setError('Missing pet id.')
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-      setError(null)
-
-      const response = await fetch(`/api/pet?id=${encodeURIComponent(id)}`)
-      const data = await response.json()
-
-      if (!response.ok) {
-        setPet(null)
-        setRelatedPets([])
-        setError(data.error || 'Failed to load pet')
-        setLoading(false)
-        return
-      }
-
-      setPet(data.pet ?? data)
-      setRelatedPets(data.relatedPets ?? [])
-
-      setLoading(false)
-    }
-
-    fetchPet()
-  }, [id])
+    window.scrollTo(0, 0);
+  }, [id]);
 
   const dangerLevel = useMemo(
-    () => normalizeDangerLevel(pet?.pet_danger),
+    () => normalizeDangerBadge(pet?.pet_danger),
     [pet?.pet_danger],
-  )
+  );
 
   const isInvasive = useMemo(
-    () => pet?.pet_is_native?.toLowerCase() === 'invasive',
+    () => isInvasiveSpecies(pet?.pet_is_native),
     [pet?.pet_is_native],
-  )
+  );
 
-  const traits = useMemo(() => splitTraits(pet?.pet_traits), [pet?.pet_traits])
+  const traits = useMemo(() => splitTraits(pet?.pet_traits), [pet?.pet_traits]);
+
+  const { primaryCommonName, otherCommonNames } = pet
+    ? getPetCommonNames(pet)
+    : { primaryCommonName: "Unknown Pet", otherCommonNames: [] };
 
   if (loading) {
     return (
@@ -161,7 +69,7 @@ export function SpeciesProfile() {
           <p className="text-stone-600">Loading pet profile...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !pet) {
@@ -190,12 +98,15 @@ export function SpeciesProfile() {
           </Link>
         </div>
       </div>
-    )
+    );
   }
+
+  const inCompare = isInCompare(pet.pet_id);
+  const compareDisabled = isCompareFull && !inCompare;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50">
-      {dangerLevel === 'High' && (
+      {dangerLevel === "High" && (
         <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-red-800">
           <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
             <AlertTriangle className="h-5 w-5" />
@@ -205,144 +116,165 @@ export function SpeciesProfile() {
         </div>
       )}
 
-      {isInvasive && (
-        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+      {pet.pet_banned && (
+        <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-red-800">
           <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
             <AlertTriangle className="h-5 w-5" />
-            Notice: this species is considered invasive. Avoid release into local
-            waterways and follow regional regulations.
+            Warning: this species is prohibited in Malaysia. If you are caught
+            importing, selling, or keeping it, you can face a hefty fine or even
+            jail time.
           </div>
         </div>
       )}
 
-      <section className="px-4 py-8">
-        <div className="mx-auto max-w-6xl">
-          <Link
-            to="/"
-            className="mb-6 inline-flex items-center gap-2 text-stone-600 transition hover:text-emerald-700"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Link>
-
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 p-8 text-white shadow-xl"
-          >
-            <div className="mb-4 flex flex-wrap gap-3">
-              <span className="rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
-                {displayText(pet.pet_family)}
-              </span>
-              <span className="rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
-                Danger: {dangerLevel}
-              </span>
-              <span className="rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
-                {pet.pet_aquarium ? 'Common aquarium species' : 'Not marked common'}
-              </span>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="rounded-2xl bg-white/15 p-4 backdrop-blur">
-                <Fish className="h-10 w-10" />
-              </div>
-
-              <div>
-                <h1 className="text-4xl font-black tracking-tight">
-                  {displayText(pet.pet_vernacular_name, pet.pet_id)}
-                </h1>
-                <p className="mt-2 text-lg italic text-emerald-50">
-                  {displayText(pet.pet_scientific_name)}
-                </p>
-                <p className="mt-4 max-w-3xl text-sm leading-7 text-emerald-50/95">
-                  {displayText(
-                    pet.pet_comments,
-                    'No additional description is available for this pet yet.',
-                  )}
-                </p>
-              </div>
-            </div>
-          </motion.div>
+      {isInvasive && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
+            <AlertTriangle className="h-5 w-5" />
+            Notice: this species is considered invasive. Avoid release into
+            local waterways and follow regional regulations.
+          </div>
         </div>
-      </section>
+      )}
 
-      <section className="px-4 pb-12">
+      {/* Hero Header */}
+      <div className="relative h-[450px] md:h-[550px] w-full bg-stone-900 overflow-hidden">
+        <div className="absolute top-6 inset-x-0 z-20">
+          <div className="mx-auto max-w-7xl px-8 md:px-12 flex justify-between items-center">
+            <button
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate("/");
+                }
+              }}
+              className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-emerald-500 px-3 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg group"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </button>
+
+            {/* // Compare Button */}
+            <button
+              onClick={() => toggleCompare(pet)}
+              disabled={compareDisabled}
+              className={`flex items-center gap-2 rounded-full px-5 py-2.5 font-bold shadow-lg backdrop-blur-md transition-all ${
+                inCompare
+                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                  : compareDisabled
+                    ? "cursor-not-allowed border border-white/20 bg-white/10 text-white/70"
+                    : "border border-white/30 bg-white/20 text-white hover:bg-white/40"
+              }`}
+            >
+              {inCompare ? (
+                <CheckCircle2 className="h-5 w-5" />
+              ) : (
+                <Scale className="h-5 w-5" />
+              )}
+              <span>
+                {inCompare
+                  ? "Added to Compare"
+                  : compareDisabled
+                    ? "Compare Full"
+                    : "Add to Compare"}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/40 to-transparent z-10"></div>
+        <motion.img
+          key={pet?.pet_id}
+          initial={{ scale: 1.05 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.8 }}
+          src={
+            pet.pet_image_ref
+              ? `/pet_image/${pet.pet_image_ref}`
+              : "/pet_image/pet_placeholder.png"
+          }
+          alt={pet.pet_vernacular_name ?? "Pet Image Placeholder"}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        <div className="absolute bottom-0 inset-x-0 z-20">
+          <div className="mx-auto max-w-7xl px-8 md:px-12 pb-8 md:pb-12">
+            <motion.div
+              key={`tags-${pet?.pet_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex items-center gap-3 mb-4 flex-wrap"
+            >
+              <span
+                className={getSpeciesDangerBadgeClasses(
+                  pet?.pet_invasive_risk || "Unknown",
+                )}
+              >
+                <ShieldAlert className="w-4 h-4" />
+                {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
+              </span>
+              <span
+                className={getSpeciesCareBadgeClasses(
+                  pet?.pet_care_level || "Unknown",
+                )}
+              >
+                <HandHeart className="w-4 h-4" />
+                {pet?.pet_care_level || "Unknown"} Care
+              </span>
+              <span
+                className={getSpeciesDangerBadgeClasses(
+                  dangerLevel || "Unknown",
+                )}
+              >
+                <Skull className="w-4 h-4" />
+                {dangerLevel || "Unknown"} Danger
+              </span>
+              {pet.pet_banned && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-4 py-1.5 text-sm font-semibold text-red-700">
+                  <Ban className="w-4 h-4" />
+                  Banned in Malaysia
+                </span>
+              )}
+            </motion.div>
+            <motion.h1
+              key={`title-${pet?.pet_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
+            >
+              {primaryCommonName}
+            </motion.h1>
+            <motion.p
+              key={`subtitle-${pet?.pet_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="text-xl md:text-2xl text-stone-300 mb-2 italic font-serif"
+            >
+              {pet?.pet_scientific_name}
+            </motion.p>
+            {otherCommonNames.length > 0 && (
+              <motion.p
+                key={`subtitle-${pet?.pet_id}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="text-xl md:text-2xl text-stone-300 font-serif"
+              >
+                <span className="font-semibold">A.K.A:</span>{" "}
+                {otherCommonNames.join(", ")}
+              </motion.p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <section className="px-4 py-12">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.6fr_1fr]">
           <div className="space-y-8">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Ruler className="h-5 w-5" />
-                  <h3 className="font-bold">Max Length (cm)</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayNumber(pet.pet_max_length)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Scale className="h-5 w-5" />
-                  <h3 className="font-bold">Max Weight (kg)</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayNumber(pet.pet_max_weight)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Clock className="h-5 w-5" />
-                  <h3 className="font-bold">Longevity (Years)</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayNumber(pet.pet_longevity)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Expand className="h-5 w-5" />
-                  <h3 className="font-bold">Tank Size (Gallons)</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_tank_size)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <TestTubeDiagonal className="h-5 w-5" />
-                  <h3 className="font-bold">pH</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_ph_range)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Droplet />
-                  <h3 className="font-bold">Water Hardness</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_water_hardness)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Thermometer />
-                  <h3 className="font-bold">Temperature</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_temperature)}
-                </p>
-              </div>
-            </div>
-
-            
-
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
                 <Info className="h-5 w-5" />
@@ -436,7 +368,7 @@ export function SpeciesProfile() {
               <p className="leading-7 text-stone-700">
                 {displayText(
                   pet.pet_comments,
-                  'No additional comments are available for this pet.',
+                  "No additional comments are available for this pet.",
                 )}
               </p>
             </div>
@@ -456,7 +388,12 @@ export function SpeciesProfile() {
                       className="rounded-2xl border border-stone-200 p-4 transition hover:border-emerald-400 hover:bg-emerald-50"
                     >
                       <h3 className="font-bold text-stone-900">
-                        {displayText(item.pet_vernacular_name, item.pet_id)}
+                        {displayText(
+                          item.pet_vernacular_name,
+                          item.pet_scientific_name
+                            ? item.pet_scientific_name
+                            : "Unknown Species",
+                        )}
                       </h3>
                       <p className="mt-1 text-sm italic text-stone-600">
                         {displayText(item.pet_scientific_name)}
@@ -472,44 +409,53 @@ export function SpeciesProfile() {
           </div>
 
           <aside className="space-y-6">
-            <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center gap-2 text-emerald-800">
-                <ShieldAlert className="h-5 w-5" />
-                <h3 className="text-xl font-bold">Safety summary</h3>
+            <div className="rounded-3xl border border-rose-800 bg-gradient-to-br from-rose-950 via-red-950 to-stone-950 p-6 text-white shadow-sm">
+              <div className="mb-4 flex items-center gap-2 text-rose-100">
+                <ShieldAlert className="h-5 w-5 text-rose-300" />
+                <h3 className="text-xl font-bold">Safety Summary</h3>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                  <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">
                     Danger
                   </p>
-                  <p className="mt-1 text-stone-800">
+                  <p className="mt-1 text-rose-50">
                     {displayText(pet.pet_danger)}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Native status
+                  <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">
+                    Native Status
                   </p>
-                  <p className="mt-1 text-stone-800">
+                  <p className="mt-1 text-rose-50">
                     {displayText(pet.pet_is_native)}
                   </p>
                 </div>
 
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Common aquarium species
+                  <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">
+                    Legal Status
                   </p>
-                  <div className="mt-1 flex items-center gap-2 text-stone-800">
+                  <p className="mt-1 text-rose-50">
+                    {pet.pet_banned ? "Banned" : "Not banned"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">
+                    Common Aquarium Species
+                  </p>
+                  <div className="mt-1 flex items-center gap-2 text-rose-50">
                     {pet.pet_aquarium ? (
                       <>
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                         Yes
                       </>
                     ) : (
                       <>
-                        <XCircle className="h-4 w-4 text-stone-400" />
+                        <XCircle className="h-4 w-4 text-rose-300" />
                         No / unknown
                       </>
                     )}
@@ -518,35 +464,101 @@ export function SpeciesProfile() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-xl font-bold text-emerald-800">
-                Classification
+            {/* Care Tips */}
+            <div className="bg-emerald-900 text-white rounded-3xl p-8 shadow-sm sticky top-24">
+              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-emerald-50">
+                <Leaf className="w-6 h-6 text-emerald-400" /> Quick Facts
               </h3>
+              <div className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                    <div className="mb-3 flex items-center gap-2 text-emerald-200">
+                      <Ruler className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Max Length</h4>
+                    </div>
+                    <p className="text-2xl font-bold text-white">
+                      {pet.pet_max_length || "Unknown"}
+                    </p>
+                    <p className="mt-1 text-sm text-emerald-300">cm</p>
+                  </div>
 
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Pet ID
-                  </p>
-                  <p className="mt-1 break-all text-stone-800">{pet.pet_id}</p>
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <Scale className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Max Weight</h4>
+                    </div>
+                    <p className="text-2xl font-bold text-white">
+                      {pet.pet_max_weight || "Unknown"}
+                    </p>
+                    <p className="mt-1 text-sm text-emerald-300">kg</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <Clock className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Longevity</h4>
+                    </div>
+                    <p className="text-2xl font-bold text-white">
+                      {pet.pet_longevity || "Unknown"}
+                    </p>
+                    <p className="mt-1 text-sm text-emerald-300">years</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <Thermometer className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Temperature</h4>
+                    </div>
+                    <p className="text-2xl font-bold text-white">
+                      {displayText(pet.pet_temperature)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <TestTubeDiagonal className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">pH</h4>
+                    </div>
+                    <p className="text-2xl font-bold text-white">
+                      {displayText(pet.pet_ph_range)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <Droplet className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Water Hardness</h4>
+                    </div>
+                    <p className="text-2xl font-bold text-white">
+                      {displayText(pet.pet_water_hardness)}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Genus
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_genus)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Family
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_family)}
-                  </p>
+                <div className="bg-emerald-950 p-5 rounded-2xl border border-emerald-700 space-y-3">
+                  <h4 className="font-bold text-emerald-100 mb-2 border-b border-emerald-800 pb-2">
+                    Minimum Setup:
+                  </h4>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-400">Pet Price (RM)</span>
+                    <span className="font-semibold text-white capitalize">
+                      {pet.pet_cost || "Unknown"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-400">
+                      Tank Size (Gallons)
+                    </span>
+                    <span className="font-semibold text-white capitalize">
+                      {pet.pet_tank_size || "Unknown"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-400">Experience</span>
+                    <span className="font-semibold text-white capitalize">
+                      {pet.pet_care_level || "Unknown"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -554,5 +566,5 @@ export function SpeciesProfile() {
         </div>
       </section>
     </div>
-  )
+  );
 }
