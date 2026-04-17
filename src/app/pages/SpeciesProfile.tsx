@@ -226,78 +226,6 @@ export function SpeciesProfile() {
       <section className="px-4 py-12">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.6fr_1fr]">
           <div className="space-y-8">
-            {/* <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Ruler className="h-5 w-5" />
-                  <h3 className="font-bold">Max Length (cm)</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayNumber(pet.pet_max_length)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Scale className="h-5 w-5" />
-                  <h3 className="font-bold">Max Weight (kg)</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayNumber(pet.pet_max_weight)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Clock className="h-5 w-5" />
-                  <h3 className="font-bold">Longevity (Years)</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayNumber(pet.pet_longevity)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Expand className="h-5 w-5" />
-                  <h3 className="font-bold">Tank Size (Gallons)</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_tank_size)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <TestTubeDiagonal className="h-5 w-5" />
-                  <h3 className="font-bold">pH</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_ph_range)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Droplet />
-                  <h3 className="font-bold">Water Hardness</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_water_hardness)}
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <div className="mb-3 flex items-center gap-2 text-emerald-700">
-                  <Thermometer />
-                  <h3 className="font-bold">Temperature</h3>
-                </div>
-                <p className="text-lg font-semibold text-stone-900">
-                  {displayText(pet.pet_temperature)}
-                </p>
-              </div>
-            </div> */}
-
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
                 <Info className="h-5 w-5" />
@@ -480,62 +408,65 @@ export function SpeciesProfile() {
               </h3>
               <div className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
-                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Ruler className="h-5 w-5" />
-                      <h4 className="font-bold">Max Length (cm)</h4>
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4">
+                    <div className="mb-3 flex items-center gap-2 text-emerald-200">
+                      <Ruler className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Max Length</h4>
                     </div>
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-2xl font-bold text-white">
                       {pet.pet_max_length || "Unknown"}
                     </p>
+                    <p className="mt-1 text-xs text-emerald-300">cm</p>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Scale className="h-5 w-5" />
-                      <h4 className="font-bold">Max Weight (kg)</h4>
+                      <Scale className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Max Weight</h4>
                     </div>
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-2xl font-bold text-white">
                       {pet.pet_max_weight || "Unknown"}
                     </p>
+                    <p className="mt-1 text-xs text-emerald-300">kg</p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Ruler className="h-5 w-5" />
-                      <h4 className="font-bold">Longevity (years)</h4>
+                      <Ruler className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Longevity</h4>
                     </div>
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-2xl font-bold text-white">
                       {pet.pet_longevity || "Unknown"}
                     </p>
+                    <p className="mt-1 text-xs text-emerald-300">years</p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Thermometer className="h-5 w-5" />
-                      <h4 className="font-bold">Temperature</h4>
+                      <Thermometer className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Temperature</h4>
                     </div>
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-2xl font-bold text-white">
                       {displayText(pet.pet_temperature)}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <TestTubeDiagonal className="h-5 w-5" />
-                      <h4 className="font-bold">pH</h4>
+                      <TestTubeDiagonal className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">pH</h4>
                     </div>
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-2xl font-bold text-white">
                       {displayText(pet.pet_ph_range)}
                     </p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Droplet className="h-5 w-5" />
-                      <h4 className="font-bold">Water Hardness</h4>
+                      <Droplet className="h-4 w-4" />
+                      <h4 className="text-sm font-semibold">Water Hardness</h4>
                     </div>
-                    <p className="text-lg font-semibold text-white">
+                    <p className="text-2xl font-bold text-white">
                       {displayText(pet.pet_water_hardness)}
                     </p>
                   </div>
@@ -565,39 +496,6 @@ export function SpeciesProfile() {
                       {pet.pet_care_level || "Unknown"}
                     </span>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-xl font-bold text-emerald-800">
-                Classification
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Pet ID
-                  </p>
-                  <p className="mt-1 break-all text-stone-800">{pet.pet_id}</p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Genus
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_genus)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Family
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_family)}
-                  </p>
                 </div>
               </div>
             </div>
