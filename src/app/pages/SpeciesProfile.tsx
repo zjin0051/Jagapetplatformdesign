@@ -47,6 +47,12 @@ const experienceRank: Record<ExperienceLevel, number> = {
   advanced: 3,
 };
 
+const riskRank: Record<RiskLevel, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+};
+
 function normalizeCareLevel(
   value: string | null | undefined,
 ): ExperienceLevel | null {
@@ -114,6 +120,42 @@ export function SpeciesProfile() {
       reasons,
     };
   }, [answers, pet]);
+
+  const recommendedAlternatives = useMemo(() => {
+    if (!pet) return [];
+
+    const currentRisk = normalizeRiskLevel(pet.pet_invasive_risk);
+    const currentCare = normalizeCareLevel(pet.pet_care_level);
+
+    return relatedPets
+      .map((item) => {
+        const itemRisk = normalizeRiskLevel(item.pet_invasive_risk);
+        const itemCare = normalizeCareLevel(item.pet_care_level);
+
+        const hasLowerRisk =
+          !!currentRisk &&
+          !!itemRisk &&
+          riskRank[itemRisk] < riskRank[currentRisk];
+
+        const hasLowerCare =
+          !!currentCare &&
+          !!itemCare &&
+          experienceRank[itemCare] < experienceRank[currentCare];
+
+        return {
+          ...item,
+          hasLowerRisk,
+          hasLowerCare,
+        };
+      })
+      .filter((item) => item.hasLowerRisk || item.hasLowerCare)
+      .sort((a, b) => {
+        const aScore = (a.hasLowerRisk ? 1 : 0) + (a.hasLowerCare ? 1 : 0);
+        const bScore = (b.hasLowerRisk ? 1 : 0) + (b.hasLowerCare ? 1 : 0);
+
+        return bScore - aScore;
+      });
+  }, [pet, relatedPets]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -500,20 +542,36 @@ export function SpeciesProfile() {
               </p>
             </div>
 
-            {relatedPets.length > 0 && (
-              <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
-                <div className="mb-5 flex items-center gap-2 text-emerald-800">
-                  <Fish className="h-5 w-5" />
-                  <h2 className="text-2xl font-bold">Related species</h2>
-                </div>
+            <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+              <div className="mb-5 flex items-center gap-2 text-emerald-800">
+                <Fish className="h-5 w-5" />
+                <h2 className="text-2xl font-bold">Recommended Alternatives</h2>
+              </div>
 
+              {recommendedAlternatives.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {relatedPets.map((item) => (
+                  {recommendedAlternatives.map((item) => (
                     <Link
                       key={item.pet_id}
                       to={`/species/${item.pet_id}`}
                       className="rounded-2xl border border-stone-200 p-4 transition hover:border-emerald-400 hover:bg-emerald-50"
                     >
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        {item.hasLowerRisk && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+                            <ShieldAlert className="h-3.5 w-3.5" />
+                            Lower Risk
+                          </span>
+                        )}
+
+                        {item.hasLowerCare && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800">
+                            <HandHeart className="h-3.5 w-3.5" />
+                            Easier Care
+                          </span>
+                        )}
+                      </div>
+
                       <h3 className="font-bold text-stone-900">
                         {displayText(
                           item.pet_vernacular_name,
@@ -522,17 +580,32 @@ export function SpeciesProfile() {
                             : "Unknown Species",
                         )}
                       </h3>
+
                       <p className="mt-1 text-sm italic text-stone-600">
                         {displayText(item.pet_scientific_name)}
                       </p>
+
                       <p className="mt-3 text-sm text-stone-700">
                         Family: {displayText(item.pet_family)}
                       </p>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
+                          Risk: {displayText(item.pet_invasive_risk)}
+                        </span>
+                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
+                          Care: {displayText(item.pet_care_level)}
+                        </span>
+                      </div>
                     </Link>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-5 text-stone-600">
+                  Sorry, no better alternative found at the moment.
+                </div>
+              )}
+            </div>
           </div>
 
           <aside className="space-y-6">
