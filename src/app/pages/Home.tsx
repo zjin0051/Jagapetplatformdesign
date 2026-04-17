@@ -34,13 +34,12 @@ export function Home() {
     <div className="flex flex-col gap-12 pb-24 font-sans bg-stone-50 text-stone-900 overflow-hidden">
       {/* Hero Section */}
       <section className="relative w-full min-h-[600px] pb-32 flex items-center justify-center">
-        <div className="absolute inset-0 bg-emerald-900/60 z-10 overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1764175760954-e99714c7dd98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBwbGFudGVkJTIwYXF1YXJpdW0lMjB0YW5rfGVufDF8fHx8MTc3NDcxODU3Mnww&ixlib=rb-4.1.0&q=80&w=1080"
-            alt="Beautiful planted aquarium"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-        </div>
+        <div className="absolute inset-0 bg-emerald-900/60 z-10 overflow-hidden"></div>
+        <img
+          src="https://images.unsplash.com/photo-1764175760954-e99714c7dd98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBwbGFudGVkJTIwYXF1YXJpdW0lMjB0YW5rfGVufDF8fHx8MTc3NDcxODU3Mnww&ixlib=rb-4.1.0&q=80&w=1080"
+          alt="Beautiful planted aquarium"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
 
         <div className="relative z-20 max-w-4xl mx-auto px-4 text-center">
           <motion.div
