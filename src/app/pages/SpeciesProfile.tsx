@@ -78,6 +78,43 @@ export function SpeciesProfile() {
   const { pet, relatedPets, loading, error } = usePetDetail(id);
   const { answers } = useUser();
 
+  const suitability = useMemo(() => {
+    if (!answers || !pet) return null;
+
+    const fits: string[] = [];
+    const reasons: string[] = [];
+
+    const petCareLevel = normalizeCareLevel(pet.pet_care_level);
+    const petRiskLevel = normalizeRiskLevel(pet.pet_invasive_risk);
+
+    // hard-stop reason
+    if (pet.pet_banned) {
+      reasons.push("This species is banned in Malaysia");
+    }
+
+    // ecological risk
+    if (petRiskLevel === "high") {
+      reasons.push("Higher ecological risk");
+    } else if (petRiskLevel === "low") {
+      fits.push("Low ecological risk");
+    }
+
+    // care vs user experience
+    if (petCareLevel) {
+      if (experienceRank[answers.experience] >= experienceRank[petCareLevel]) {
+        fits.push("Manageable care level");
+      } else {
+        reasons.push("High care difficulty for your experience level");
+      }
+    }
+
+    return {
+      isSuitable: reasons.length === 0,
+      fits,
+      reasons,
+    };
+  }, [answers, pet]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
@@ -139,43 +176,6 @@ export function SpeciesProfile() {
 
   const inCompare = isInCompare(pet.pet_id);
   const compareDisabled = isCompareFull && !inCompare;
-
-  const suitability = useMemo(() => {
-    if (!answers || !pet) return null;
-
-    const fits: string[] = [];
-    const reasons: string[] = [];
-
-    const petCareLevel = normalizeCareLevel(pet.pet_care_level);
-    const petRiskLevel = normalizeRiskLevel(pet.pet_invasive_risk);
-
-    // hard-stop reason
-    if (pet.pet_banned) {
-      reasons.push("This species is banned in Malaysia");
-    }
-
-    // ecological risk
-    if (petRiskLevel === "high") {
-      reasons.push("Higher ecological risk");
-    } else if (petRiskLevel === "low") {
-      fits.push("Low ecological risk");
-    }
-
-    // care vs user experience
-    if (petCareLevel) {
-      if (experienceRank[answers.experience] >= experienceRank[petCareLevel]) {
-        fits.push("Manageable care level");
-      } else {
-        reasons.push("High care difficulty for your experience level");
-      }
-    }
-
-    return {
-      isSuitable: reasons.length === 0,
-      fits,
-      reasons,
-    };
-  }, [answers, pet]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50">
