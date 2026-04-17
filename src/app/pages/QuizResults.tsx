@@ -129,7 +129,7 @@ export function QuizResults() {
               <p className="text-emerald-800 mb-4">
                 Create a profile or log in to keep your quiz answers and update them whenever you retake the quiz.
               </p>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
                 <Link
                   to="/login"
                   className="rounded-xl px-4 py-2 bg-emerald-600 text-white"

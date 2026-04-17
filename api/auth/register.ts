@@ -4,7 +4,7 @@ import {
   createSessionToken,
   sha256,
   buildSessionCookie,
-} from "./_lib/auth";
+} from "../_lib/auth";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {

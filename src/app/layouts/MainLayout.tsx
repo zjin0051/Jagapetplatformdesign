@@ -22,6 +22,7 @@ export function MainLayout() {
     { name: "Identify Pet", path: "/identify" },
     { name: "Compatibility Quiz", path: "/quiz" },
     { name: "Need to Rehome?", path: "/safe-exit" },
+    { name: "Profile", path: "/profile" },
   ];
 
   return (
