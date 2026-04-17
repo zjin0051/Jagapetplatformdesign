@@ -20,6 +20,7 @@ import {
   HandHeart,
   Skull,
   Ban,
+  Heart,
 } from "lucide-react";
 import { motion } from "motion/react";
 import type { Pet } from "../types/pet.types";
@@ -35,12 +36,47 @@ import {
   getSpeciesDangerBadgeClasses,
 } from "../utils/petDisplay";
 import { useCompare } from "../context/CompareContext";
+import { useUser } from "../context/UserContext";
+
+type ExperienceLevel = "beginner" | "intermediate" | "advanced";
+type RiskLevel = "low" | "medium" | "high";
+
+const experienceRank: Record<ExperienceLevel, number> = {
+  beginner: 1,
+  intermediate: 2,
+  advanced: 3,
+};
+
+function normalizeCareLevel(
+  value: string | null | undefined,
+): ExperienceLevel | null {
+  const text = (value ?? "").toLowerCase();
+
+  if (text.includes("begin")) return "beginner";
+  if (text.includes("intermediate")) return "intermediate";
+  if (text.includes("advanced")) return "advanced";
+
+  return null;
+}
+
+function normalizeRiskLevel(
+  value: string | null | undefined,
+): RiskLevel | null {
+  const text = (value ?? "").toLowerCase();
+
+  if (text.includes("low")) return "low";
+  if (text.includes("medium")) return "medium";
+  if (text.includes("high")) return "high";
+
+  return null;
+}
 
 export function SpeciesProfile() {
   const navigate = useNavigate();
   const { toggleCompare, isInCompare, isCompareFull } = useCompare();
   const { id } = useParams<{ id: string }>();
   const { pet, relatedPets, loading, error } = usePetDetail(id);
+  const { answers } = useUser();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -103,6 +139,43 @@ export function SpeciesProfile() {
 
   const inCompare = isInCompare(pet.pet_id);
   const compareDisabled = isCompareFull && !inCompare;
+
+  const suitability = useMemo(() => {
+    if (!answers || !pet) return null;
+
+    const fits: string[] = [];
+    const reasons: string[] = [];
+
+    const petCareLevel = normalizeCareLevel(pet.pet_care_level);
+    const petRiskLevel = normalizeRiskLevel(pet.pet_invasive_risk);
+
+    // hard-stop reason
+    if (pet.pet_banned) {
+      reasons.push("This species is banned in Malaysia");
+    }
+
+    // ecological risk
+    if (petRiskLevel === "high") {
+      reasons.push("Higher ecological risk");
+    } else if (petRiskLevel === "low") {
+      fits.push("Low ecological risk");
+    }
+
+    // care vs user experience
+    if (petCareLevel) {
+      if (experienceRank[answers.experience] >= experienceRank[petCareLevel]) {
+        fits.push("Manageable care level");
+      } else {
+        reasons.push("High care difficulty for your experience level");
+      }
+    }
+
+    return {
+      isSuitable: reasons.length === 0,
+      fits,
+      reasons,
+    };
+  }, [answers, pet]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50">
@@ -275,6 +348,60 @@ export function SpeciesProfile() {
       <section className="px-4 py-12">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.6fr_1fr]">
           <div className="space-y-8">
+            {suitability &&
+              (suitability.reasons.length > 0 ||
+                suitability.fits.length > 0) && (
+                <section
+                  className={`rounded-3xl border-2 p-8 shadow-sm ${
+                    suitability.isSuitable
+                      ? "border-emerald-200 bg-emerald-50"
+                      : "border-rose-200 bg-rose-50"
+                  }`}
+                >
+                  <h2
+                    className={`mb-6 flex items-center gap-3 text-3xl font-bold ${
+                      suitability.isSuitable
+                        ? "text-emerald-900"
+                        : "text-rose-900"
+                    }`}
+                  >
+                    {suitability.isSuitable ? (
+                      <Heart className="h-8 w-8 fill-current text-emerald-600" />
+                    ) : (
+                      <AlertTriangle className="h-8 w-8 text-rose-600" />
+                    )}
+                    {suitability.isSuitable
+                      ? "Why it fits you"
+                      : "Why this may not fit you"}
+                  </h2>
+
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {suitability.isSuitable
+                      ? suitability.fits.map((fit, index) => (
+                          <div
+                            key={`${fit}-${index}`}
+                            className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm"
+                          >
+                            <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-500" />
+                            <span className="text-lg font-semibold text-emerald-900">
+                              {fit}
+                            </span>
+                          </div>
+                        ))
+                      : suitability.reasons.map((reason, index) => (
+                          <div
+                            key={`${reason}-${index}`}
+                            className="flex items-center gap-3 rounded-2xl border border-rose-100 bg-white p-5 shadow-sm"
+                          >
+                            <AlertTriangle className="h-6 w-6 shrink-0 text-rose-500" />
+                            <span className="text-lg font-semibold text-rose-900">
+                              {reason}
+                            </span>
+                          </div>
+                        ))}
+                  </div>
+                </section>
+              )}
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
                 <Info className="h-5 w-5" />
