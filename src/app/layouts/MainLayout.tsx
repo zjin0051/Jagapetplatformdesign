@@ -37,11 +37,11 @@ export function MainLayout() {
             >
               <img
                 src={logoImage}
-                alt="JagaPet MY Logo"
+                alt="Shell & Fin MY Logo"
                 className="h-12 w-12 object-cover rounded-full mix-blend-multiply"
               />
               <span className="text-xl font-bold tracking-tight text-emerald-700">
-                JagaPet MY
+                Shell & Fin MY
               </span>
             </Link>
 
@@ -131,10 +131,10 @@ export function MainLayout() {
             <div className="flex items-center gap-3 mb-4">
               <img
                 src={logoImage}
-                alt="JagaPet MY Logo"
+                alt="Shell & Fin MY Logo"
                 className="h-10 w-10 object-cover rounded-full brightness-110"
               />
-              <span className="text-xl font-bold">JagaPet MY</span>
+              <span className="text-xl font-bold">Shell & Fin MY</span>
             </div>
             <p className="text-emerald-200 text-sm leading-relaxed max-w-xs">
               Empowering Malaysians to make safe, responsible choices for
@@ -202,7 +202,7 @@ export function MainLayout() {
             <div className="bg-emerald-700 p-4 text-white flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <HelpCircle className="h-5 w-5" />
-                <h3 className="font-semibold">JagaPet MY Assistant</h3>
+                <h3 className="font-semibold">Shell & Fin MY Assistant</h3>
               </div>
               <button
                 onClick={() => setIsChatOpen(false)}
@@ -213,9 +213,9 @@ export function MainLayout() {
             </div>
             <div className="flex-1 p-4 overflow-y-auto bg-stone-50 space-y-4 text-sm">
               <div className="bg-emerald-100 text-emerald-900 p-3 rounded-2xl rounded-tl-sm self-start max-w-[85%]">
-                Hi! I'm your JagaPet MY Assistant. Do you have questions about
-                caring for a specific species, or need advice on rehoming a pet
-                you can no longer keep?
+                Hi! I'm your Shell & Fin MY Assistant. Do you have questions
+                about caring for a specific species, or need advice on rehoming
+                a pet you can no longer keep?
               </div>
               {/* Fake conversation for prototype */}
               <div className="bg-white border border-stone-200 text-stone-800 p-3 rounded-2xl rounded-tr-sm self-end max-w-[85%] ml-auto shadow-sm">
