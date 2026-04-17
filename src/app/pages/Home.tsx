@@ -38,7 +38,7 @@ export function Home() {
           <img
             src="https://images.unsplash.com/photo-1764175760954-e99714c7dd98?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBwbGFudGVkJTIwYXF1YXJpdW0lMjB0YW5rfGVufDF8fHx8MTc3NDcxODU3Mnww&ixlib=rb-4.1.0&q=80&w=1080"
             alt="Beautiful planted aquarium"
-            className="absolute inset-0 w-full h-full object-cover -z-10"
+            className="absolute inset-0 w-full h-full object-cover"
           />
         </div>
 
