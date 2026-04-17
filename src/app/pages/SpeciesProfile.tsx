@@ -34,9 +34,11 @@ import {
   getSpeciesCareBadgeClasses,
   getSpeciesDangerBadgeClasses,
 } from "../utils/petDisplay";
+import { useCompare } from "../context/CompareContext";
 
 export function SpeciesProfile() {
   const navigate = useNavigate();
+  const { toggleCompare, isInCompare, isCompareFull } = useCompare();
   const { id } = useParams<{ id: string }>();
   const { pet, relatedPets, loading, error } = usePetDetail(id);
 
@@ -99,6 +101,9 @@ export function SpeciesProfile() {
     );
   }
 
+  const inCompare = isInCompare(pet.pet_id);
+  const compareDisabled = isCompareFull && !inCompare;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50">
       {dangerLevel === "High" && (
@@ -148,6 +153,32 @@ export function SpeciesProfile() {
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
+            </button>
+
+            {/* // Compare Button */}
+            <button
+              onClick={() => toggleCompare(pet)}
+              disabled={compareDisabled}
+              className={`flex items-center gap-2 rounded-full px-5 py-2.5 font-bold shadow-lg backdrop-blur-md transition-all ${
+                inCompare
+                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                  : compareDisabled
+                    ? "cursor-not-allowed border border-white/20 bg-white/10 text-white/70"
+                    : "border border-white/30 bg-white/20 text-white hover:bg-white/40"
+              }`}
+            >
+              {inCompare ? (
+                <CheckCircle2 className="h-5 w-5" />
+              ) : (
+                <Scale className="h-5 w-5" />
+              )}
+              <span>
+                {inCompare
+                  ? "Added to Compare"
+                  : compareDisabled
+                    ? "Compare Full"
+                    : "Add to Compare"}
+              </span>
             </button>
           </div>
         </div>
