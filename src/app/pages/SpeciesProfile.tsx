@@ -592,25 +592,29 @@ export function SpeciesProfile() {
                           Risk: {displayText(item.pet_invasive_risk)}
                         </span> */}
 
-                        <span
-                          className={getDangerBadgeClasses(
-                            item.pet_invasive_risk!,
-                          )}
-                        >
-                          <ShieldAlert className="w-3 h-3" />
-                          {item.pet_invasive_risk} Biodiversity Risk
-                        </span>
+                        {item.pet_invasive_risk && (
+                          <span
+                            className={getDangerBadgeClasses(
+                              item.pet_invasive_risk,
+                            )}
+                          >
+                            <ShieldAlert className="w-3 h-3" />
+                            {item.pet_invasive_risk} Risk
+                          </span>
+                        )}
 
                         {/* <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
                           Care: {displayText(item.pet_care_level)}
                         </span> */}
 
-                        <span
-                          className={getCareBadgeClasses(item.pet_care_level!)}
-                        >
-                          <HandHeart className="w-3 h-3" />
-                          {item.pet_care_level} Care
-                        </span>
+                        {item.pet_care_level && (
+                          <span
+                            className={getCareBadgeClasses(item.pet_care_level)}
+                          >
+                            <HandHeart className="w-3 h-3" />
+                            {item.pet_care_level} Care
+                          </span>
+                        )}
                       </div>
                     </Link>
                   ))}
