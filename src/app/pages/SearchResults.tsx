@@ -10,6 +10,7 @@ import {
   ShieldAlert,
   Skull,
   ScanEye,
+  Ban,
 } from "lucide-react";
 import { motion } from "motion/react";
 import type { Pet, SortOption } from "../types/pet.types";
@@ -185,6 +186,12 @@ export function SearchResults() {
                             >
                               <HandHeart className="w-3 h-3" />
                               {pet.pet_care_level} Care
+                            </span>
+                          )}
+                          {pet.pet_banned && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+                              <Ban className="w-4 h-4" />
+                              Banned in Malaysia
                             </span>
                           )}
                         </div>

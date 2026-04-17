@@ -19,6 +19,7 @@ import {
   Droplet,
   HandHeart,
   Skull,
+  Ban,
 } from "lucide-react";
 import { motion } from "motion/react";
 import type { Pet } from "../types/pet.types";
@@ -110,6 +111,17 @@ export function SpeciesProfile() {
         </div>
       )}
 
+      {pet.pet_banned && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
+            <AlertTriangle className="h-5 w-5" />
+            Warning: this species is prohibited in Malaysia. If you are caught
+            importing, selling, or keeping it, you can face a hefty fine or even
+            jail time.
+          </div>
+        </div>
+      )}
+
       {isInvasive && (
         <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
           <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
@@ -188,6 +200,12 @@ export function SpeciesProfile() {
                 <Skull className="w-4 h-4" />
                 {dangerLevel || "Unknown"} Danger
               </span>
+              {pet.pet_banned && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-4 py-1.5 text-sm font-semibold text-red-700">
+                  <Ban className="w-4 h-4" />
+                  Banned in Malaysia
+                </span>
+              )}
             </motion.div>
             <motion.h1
               key={`title-${pet?.pet_id}`}
@@ -360,7 +378,7 @@ export function SpeciesProfile() {
           </div>
 
           <aside className="space-y-6">
-            <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+            {/* <div className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
                 <ShieldAlert className="h-5 w-5" />
                 <h3 className="text-xl font-bold">Safety summary</h3>
@@ -387,6 +405,15 @@ export function SpeciesProfile() {
 
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                    Legal Status
+                  </p>
+                  <p className="mt-1 text-stone-800">
+                    {displayText(pet.pet_banned ? "Banned" : "Not banned")}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
                     Common aquarium species
                   </p>
                   <div className="mt-1 flex items-center gap-2 text-stone-800">
@@ -404,10 +431,76 @@ export function SpeciesProfile() {
                   </div>
                 </div>
               </div>
+            </div> */}
+
+            <div className="bg-gradient-to-br from-rose-950 via-red-950 to-stone-950 text-white rounded-3xl p-8 shadow-sm sticky top-24">
+              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-rose-50">
+                <ShieldAlert className="w-6 h-6 text-rose-300" />
+                Safety Summary
+              </h3>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-2xl border border-rose-800 bg-red-900/40 p-4 flex flex-col items-center justify-center text-center min-h-[140px]">
+                  <div className="mb-3 flex items-center gap-2 text-rose-200">
+                    <Skull className="h-4 w-4" />
+                    <h4 className="text-sm font-semibold">Danger</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    {dangerLevel || "Unknown"}
+                  </p>
+                  <p className="mt-1 text-sm text-rose-300">
+                    {displayText(pet.pet_danger)}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-rose-800 bg-red-900/40 p-4 flex flex-col items-center justify-center text-center min-h-[140px]">
+                  <div className="mb-3 flex items-center gap-2 text-rose-200">
+                    <Fish className="h-4 w-4" />
+                    <h4 className="text-sm font-semibold">Native Status</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    {displayText(pet.pet_is_native)}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-rose-800 bg-red-900/40 p-4 flex flex-col items-center justify-center text-center min-h-[140px]">
+                  <div className="mb-3 flex items-center gap-2 text-rose-200">
+                    <Ban className="h-4 w-4" />
+                    <h4 className="text-sm font-semibold">Legal Status</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    {pet.pet_banned ? "Banned" : "Allowed"}
+                  </p>
+                  <p className="mt-1 text-sm text-rose-300">
+                    {pet.pet_banned
+                      ? "Restricted in Malaysia"
+                      : "No ban listed"}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-rose-800 bg-red-900/40 p-4 flex flex-col items-center justify-center text-center min-h-[140px]">
+                  <div className="mb-3 flex items-center gap-2 text-rose-200">
+                    {pet.pet_aquarium ? (
+                      <CheckCircle2 className="h-4 w-4" />
+                    ) : (
+                      <XCircle className="h-4 w-4" />
+                    )}
+                    <h4 className="text-sm font-semibold">Aquarium Trade</h4>
+                  </div>
+                  <p className="text-2xl font-bold text-white">
+                    {pet.pet_aquarium ? "Common" : "Limited"}
+                  </p>
+                  <p className="mt-1 text-sm text-rose-300">
+                    {pet.pet_aquarium
+                      ? "Common aquarium species"
+                      : "No / unknown"}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Care Tips */}
-            <div className="bg-emerald-900 text-white rounded-3xl p-8 shadow-2xl sticky top-24">
+            <div className="bg-emerald-900 text-white rounded-3xl p-8 shadow-sm sticky top-24">
               <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-emerald-50">
                 <Leaf className="w-6 h-6 text-emerald-400" /> Quick Facts
               </h3>
@@ -421,7 +514,7 @@ export function SpeciesProfile() {
                     <p className="text-2xl font-bold text-white">
                       {pet.pet_max_length || "Unknown"}
                     </p>
-                    <p className="mt-1 text-xs text-emerald-300">cm</p>
+                    <p className="mt-1 text-sm text-emerald-300">cm</p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
@@ -432,7 +525,7 @@ export function SpeciesProfile() {
                     <p className="text-2xl font-bold text-white">
                       {pet.pet_max_weight || "Unknown"}
                     </p>
-                    <p className="mt-1 text-xs text-emerald-300">kg</p>
+                    <p className="mt-1 text-sm text-emerald-300">kg</p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
@@ -443,7 +536,7 @@ export function SpeciesProfile() {
                     <p className="text-2xl font-bold text-white">
                       {pet.pet_longevity || "Unknown"}
                     </p>
-                    <p className="mt-1 text-xs text-emerald-300">years</p>
+                    <p className="mt-1 text-sm text-emerald-300">years</p>
                   </div>
 
                   <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
