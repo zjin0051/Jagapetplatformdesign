@@ -339,7 +339,12 @@ export function SpeciesProfile() {
                       className="rounded-2xl border border-stone-200 p-4 transition hover:border-emerald-400 hover:bg-emerald-50"
                     >
                       <h3 className="font-bold text-stone-900">
-                        {displayText(item.pet_vernacular_name, item.pet_id)}
+                        {displayText(
+                          item.pet_vernacular_name,
+                          item.pet_scientific_name
+                            ? item.pet_scientific_name
+                            : "Unknown Species",
+                        )}
                       </h3>
                       <p className="mt-1 text-sm italic text-stone-600">
                         {displayText(item.pet_scientific_name)}
@@ -408,7 +413,7 @@ export function SpeciesProfile() {
               </h3>
               <div className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4">
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
                     <div className="mb-3 flex items-center gap-2 text-emerald-200">
                       <Ruler className="h-4 w-4" />
                       <h4 className="text-sm font-semibold">Max Length</h4>
@@ -419,7 +424,7 @@ export function SpeciesProfile() {
                     <p className="mt-1 text-xs text-emerald-300">cm</p>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4">
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
                       <Scale className="h-4 w-4" />
                       <h4 className="text-sm font-semibold">Max Weight</h4>
@@ -430,9 +435,9 @@ export function SpeciesProfile() {
                     <p className="mt-1 text-xs text-emerald-300">kg</p>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Ruler className="h-4 w-4" />
+                      <Clock className="h-4 w-4" />
                       <h4 className="text-sm font-semibold">Longevity</h4>
                     </div>
                     <p className="text-2xl font-bold text-white">
@@ -441,7 +446,7 @@ export function SpeciesProfile() {
                     <p className="mt-1 text-xs text-emerald-300">years</p>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
                       <Thermometer className="h-4 w-4" />
                       <h4 className="text-sm font-semibold">Temperature</h4>
@@ -451,7 +456,7 @@ export function SpeciesProfile() {
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
                       <TestTubeDiagonal className="h-4 w-4" />
                       <h4 className="text-sm font-semibold">pH</h4>
@@ -461,7 +466,7 @@ export function SpeciesProfile() {
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
                     <div className="mb-2 flex items-center gap-2 text-emerald-200">
                       <Droplet className="h-4 w-4" />
                       <h4 className="text-sm font-semibold">Water Hardness</h4>
