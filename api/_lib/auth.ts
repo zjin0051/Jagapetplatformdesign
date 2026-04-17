@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 
 export const sql = neon(process.env.DATABASE_URL!);
 
-const SESSION_COOKIE = "jagapet_session";
+const SESSION_COOKIE = "shell&fin_session";
 const SESSION_DAYS = 30;
 
 export function hashPassword(password: string, salt?: string) {

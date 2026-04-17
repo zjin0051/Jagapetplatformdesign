@@ -6,7 +6,7 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const token = getCookie(req, "jagapet_session");
+    const token = getCookie(req, "shell&fin_session");
     if (token) {
       await sql`
         delete from public.user_session
