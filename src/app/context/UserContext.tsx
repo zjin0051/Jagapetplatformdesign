@@ -47,6 +47,18 @@ const UserContext = createContext<UserContextType>({
 
 export const useUser = () => useContext(UserContext);
 
+async function parseJsonResponse(res: Response) {
+  const text = await res.text();
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(
+      `Expected JSON response but received: ${text || "[empty response]"}`
+    );
+  }
+}
+
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [answers, setAnswersState] = useState<LifestyleAnswers | null>(null);
@@ -54,12 +66,23 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshUser = async () => {
     setLoading(true);
+
     try {
-      const res = await fetch("/api/auth/me", { credentials: "include" });
-      const data = await res.json();
+      const res = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+
+      const data = await parseJsonResponse(res);
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to load user session.");
+      }
 
       if (data.user) {
-        setUser({ userId: data.user.userId, username: data.user.username });
+        setUser({
+          userId: data.user.userId,
+          username: data.user.username,
+        });
         setAnswersState(data.user.answers ?? null);
       } else {
         setUser(null);
@@ -86,8 +109,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({ answers: newAnswers }),
       });
 
+      const data = await parseJsonResponse(res);
+
       if (!res.ok) {
-        throw new Error("Failed to save quiz answers.");
+        throw new Error(data.error || "Failed to save quiz answers.");
       }
     } else {
       localStorage.setItem("guest_quiz_answers", JSON.stringify(newAnswers));
@@ -107,19 +132,33 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       body: JSON.stringify({ username, password }),
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Registration failed");
+    const data = await parseJsonResponse(res);
+
+    if (!res.ok) {
+      throw new Error(data.error || "Registration failed");
+    }
 
     setUser(data.user);
 
     if (answers) {
-      await fetch("/api/profile", {
+      const profileRes = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ answers }),
       });
+
+      const profileData = await parseJsonResponse(profileRes);
+
+      if (!profileRes.ok) {
+        throw new Error(
+          profileData.error ||
+            "Profile was created, but saving quiz answers failed."
+        );
+      }
+
       localStorage.removeItem("guest_quiz_answers");
+      setAnswersState(answers);
     }
   };
 
@@ -131,30 +170,54 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       body: JSON.stringify({ username, password }),
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Login failed");
+    const data = await parseJsonResponse(res);
+
+    if (!res.ok) {
+      throw new Error(data.error || "Login failed");
+    }
 
     setUser(data.user);
 
     if (answers) {
-      await fetch("/api/profile", {
+      const profileRes = await fetch("/api/profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ answers }),
       });
+
+      const profileData = await parseJsonResponse(profileRes);
+
+      if (!profileRes.ok) {
+        throw new Error(
+          profileData.error ||
+            "Logged in, but saving quiz answers failed."
+        );
+      }
+
       localStorage.removeItem("guest_quiz_answers");
+      setAnswersState(answers);
     } else {
       await refreshUser();
     }
   };
 
   const logout = async () => {
-    await fetch("/api/auth/logout", {
+    const res = await fetch("/api/auth/logout", {
       method: "POST",
       credentials: "include",
     });
+
+    const data = await parseJsonResponse(res);
+
+    if (!res.ok) {
+      throw new Error(data.error || "Logout failed");
+    }
+
     setUser(null);
+
+    const local = localStorage.getItem("guest_quiz_answers");
+    setAnswersState(local ? JSON.parse(local) : null);
   };
 
   const value = useMemo(
