@@ -1,4 +1,4 @@
-import { clearSessionCookie, getCookie, sha256, sql } from "../_lib/auth";
+import { clearSessionCookie, getCookie, sha256, sql } from "../_lib/auth.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
