@@ -18,6 +18,7 @@ import {
   Expand,
   Droplet,
   HandHeart,
+  Skull,
 } from "lucide-react";
 import { motion } from "motion/react";
 import type { Pet } from "../types/pet.types";
@@ -119,73 +120,6 @@ export function SpeciesProfile() {
         </div>
       )}
 
-      {/* <section className="px-4 py-8">
-        <div className="mx-auto max-w-6xl">
-          <button
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate("/");
-              }
-            }}
-            className="group mb-6 flex items-center gap-2 text-stone-600 transition hover:text-emerald-600"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </button>
-
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="overflow-hidden rounded-[2rem] bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 p-8 text-white shadow-xl"
-          >
-            <div className="mb-4 flex flex-wrap gap-3">
-              <span className="rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
-                {displayText(pet.pet_family)}
-              </span>
-              <span className="rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
-                Danger: {dangerLevel}
-              </span>
-              <span className="rounded-full border border-white/25 bg-white/15 px-4 py-1.5 text-sm font-semibold backdrop-blur">
-                {pet.pet_aquarium
-                  ? "Common aquarium species"
-                  : "Not marked common"}
-              </span>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="rounded-2xl bg-white/15 p-4 backdrop-blur">
-                <Fish className="h-10 w-10" />
-              </div>
-
-              <div>
-                <h1 className="text-4xl font-black tracking-tight">
-                  {primaryCommonName}
-                </h1>
-
-                <p className="mt-2 text-lg italic text-emerald-50">
-                  {displayText(pet.pet_scientific_name)}
-                </p>
-
-                {otherCommonNames.length > 0 && (
-                  <p className="mt-2 text-lg font-semibold text-emerald-50">
-                    A.K.A: {otherCommonNames.join(", ")}
-                  </p>
-                )}
-
-                <p className="mt-4 max-w-3xl text-sm leading-7 text-emerald-50/95">
-                  {displayText(
-                    pet.pet_comments,
-                    "No additional description is available for this pet yet.",
-                  )}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section> */}
-
       {/* Hero Header */}
       <div className="relative h-[450px] md:h-[550px] w-full bg-stone-900 overflow-hidden">
         <div className="absolute top-6 inset-x-0 z-20">
@@ -198,10 +132,10 @@ export function SpeciesProfile() {
                   navigate("/");
                 }
               }}
-              className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white px-3 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg group"
+              className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-emerald-500 px-3 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg group"
             >
-              <ArrowLeft className="h-4 w-4 shadow-lg" />
-              <span className="shadow-lg">Back</span>
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
             </button>
           </div>
         </div>
@@ -246,6 +180,14 @@ export function SpeciesProfile() {
                 <HandHeart className="w-4 h-4" />
                 {pet?.pet_care_level || "Unknown"} Care
               </span>
+              <span
+                className={getSpeciesDangerBadgeClasses(
+                  dangerLevel || "Unknown",
+                )}
+              >
+                <Skull className="w-4 h-4" />
+                {dangerLevel || "Unknown"} Danger
+              </span>
             </motion.div>
             <motion.h1
               key={`title-${pet?.pet_id}`}
@@ -284,7 +226,7 @@ export function SpeciesProfile() {
       <section className="px-4 py-12">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.6fr_1fr]">
           <div className="space-y-8">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {/* <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 flex items-center gap-2 text-emerald-700">
                   <Ruler className="h-5 w-5" />
@@ -354,7 +296,7 @@ export function SpeciesProfile() {
                   {displayText(pet.pet_temperature)}
                 </p>
               </div>
-            </div>
+            </div> */}
 
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
@@ -526,6 +468,102 @@ export function SpeciesProfile() {
                         No / unknown
                       </>
                     )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Care Tips */}
+            <div className="bg-emerald-900 text-white rounded-3xl p-8 shadow-2xl sticky top-24">
+              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-emerald-50">
+                <Leaf className="w-6 h-6 text-emerald-400" /> Quick Facts
+              </h3>
+              <div className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <Ruler className="h-5 w-5" />
+                      <h4 className="font-bold">Max Length (cm)</h4>
+                    </div>
+                    <p className="text-lg font-semibold text-white">
+                      {pet.pet_max_length || "Unknown"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <Scale className="h-5 w-5" />
+                      <h4 className="font-bold">Max Weight (kg)</h4>
+                    </div>
+                    <p className="text-lg font-semibold text-white">
+                      {pet.pet_max_weight || "Unknown"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <Ruler className="h-5 w-5" />
+                      <h4 className="font-bold">Longevity (years)</h4>
+                    </div>
+                    <p className="text-lg font-semibold text-white">
+                      {pet.pet_longevity || "Unknown"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <Thermometer className="h-5 w-5" />
+                      <h4 className="font-bold">Temperature</h4>
+                    </div>
+                    <p className="text-lg font-semibold text-white">
+                      {displayText(pet.pet_temperature)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <TestTubeDiagonal className="h-5 w-5" />
+                      <h4 className="font-bold">pH</h4>
+                    </div>
+                    <p className="text-lg font-semibold text-white">
+                      {displayText(pet.pet_ph_range)}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/50 p-5">
+                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                      <Droplet className="h-5 w-5" />
+                      <h4 className="font-bold">Water Hardness</h4>
+                    </div>
+                    <p className="text-lg font-semibold text-white">
+                      {displayText(pet.pet_water_hardness)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-950 p-5 rounded-2xl border border-emerald-700 space-y-3">
+                  <h4 className="font-bold text-emerald-100 mb-2 border-b border-emerald-800 pb-2">
+                    Minimum Setup:
+                  </h4>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-400">Pet Price (RM)</span>
+                    <span className="font-semibold text-white capitalize">
+                      {pet.pet_cost || "Unknown"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-400">
+                      Tank Size (Gallons)
+                    </span>
+                    <span className="font-semibold text-white capitalize">
+                      {pet.pet_tank_size || "Unknown"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-emerald-400">Experience</span>
+                    <span className="font-semibold text-white capitalize">
+                      {pet.pet_care_level || "Unknown"}
+                    </span>
                   </div>
                 </div>
               </div>
