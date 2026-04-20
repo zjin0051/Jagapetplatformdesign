@@ -1,19 +1,82 @@
 import { neon } from "@neondatabase/serverless";
-import { getCostQuartiles, getPurchaseCostCategory } from "./_lib/petCost";
 
-const sql = neon(process.env.DATABASE_URL!);
+type PurchaseCostCategory = "Low" | "Medium" | "High" | "Unknown";
+
+function getPercentile(sortedValues: number[], percentile: number): number {
+  if (sortedValues.length === 0) return NaN;
+
+  const index = (sortedValues.length - 1) * percentile;
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+
+  if (lower === upper) return sortedValues[lower];
+
+  const weight = index - lower;
+  return (
+    sortedValues[lower] + (sortedValues[upper] - sortedValues[lower]) * weight
+  );
+}
+
+function getCostQuartiles(costs: Array<number | null | undefined>) {
+  const validCosts = costs
+    .filter(
+      (cost): cost is number =>
+        typeof cost === "number" && Number.isFinite(cost),
+    )
+    .sort((a, b) => a - b);
+
+  if (validCosts.length === 0) {
+    return { q1: NaN, q3: NaN };
+  }
+
+  return {
+    q1: getPercentile(validCosts, 0.25),
+    q3: getPercentile(validCosts, 0.75),
+  };
+}
+
+function getPurchaseCostCategory(
+  petCost: number | null | undefined,
+  q1: number,
+  q3: number,
+): PurchaseCostCategory {
+  if (typeof petCost !== "number" || !Number.isFinite(petCost)) {
+    return "Unknown";
+  }
+
+  if (!Number.isFinite(q1) || !Number.isFinite(q3)) {
+    return "Unknown";
+  }
+
+  if (petCost <= q1) return "Low";
+  if (petCost <= q3) return "Medium";
+  return "High";
+}
 
 export default async function handler(req: any, res: any) {
   try {
+    const databaseUrl = process.env.DATABASE_URL;
+
+    if (!databaseUrl) {
+      throw new Error("DATABASE_URL is missing");
+    }
+
+    const sql = neon(databaseUrl);
+
+    console.log("[recommendations] step 1: fetching all costs");
     const allCostRows = await sql`
       select pet_cost::float8 as pet_cost
       from public.pet
       where pet_cost is not null
     `;
 
-    const allCosts = allCostRows.map((row: any) => Number(row.pet_cost));
+    const allCosts = allCostRows
+      .map((row: any) => Number(row.pet_cost))
+      .filter((cost: number) => Number.isFinite(cost));
+
     const { q1, q3 } = getCostQuartiles(allCosts);
 
+    console.log("[recommendations] step 2: fetching recommended pets");
     const rows = await sql`
       select
         pet_id,
@@ -34,30 +97,38 @@ export default async function handler(req: any, res: any) {
       limit 4
     `;
 
-    const enrichedRows = rows.map((row: any) => ({
-      pet_id: String(row.pet_id),
-      pet_vernacular_name: row.pet_vernacular_name ?? null,
-      pet_scientific_name: row.pet_scientific_name ?? null,
-      pet_care_level: row.pet_care_level ?? null,
-      pet_is_native: row.pet_is_native ?? null,
-      pet_danger: row.pet_danger ?? null,
-      pet_invasive_risk: row.pet_invasive_risk ?? null,
-      pet_image_ref:
-        typeof row.pet_image_ref === "string" ? row.pet_image_ref.trim() : null,
-      pet_comments: row.pet_comments ?? null,
-      pet_cost: row.pet_cost == null ? null : Number(row.pet_cost),
-      pet_purchase_cost_category: getPurchaseCostCategory(
-        row.pet_cost == null ? null : Number(row.pet_cost),
-        q1,
-        q3,
-      ),
-    }));
+    console.log("[recommendations] raw rows:", rows);
 
-    console.log("recommendations result:", enrichedRows);
+    const enrichedRows = rows.map((row: any) => {
+      const petCost = row.pet_cost == null ? null : Number(row.pet_cost);
+
+      return {
+        pet_id: String(row.pet_id),
+        pet_vernacular_name: row.pet_vernacular_name ?? null,
+        pet_scientific_name: row.pet_scientific_name ?? null,
+        pet_care_level: row.pet_care_level ?? null,
+        pet_is_native: row.pet_is_native ?? null,
+        pet_danger: row.pet_danger ?? null,
+        pet_invasive_risk: row.pet_invasive_risk ?? null,
+        pet_image_ref:
+          typeof row.pet_image_ref === "string"
+            ? row.pet_image_ref.trim()
+            : null,
+        pet_comments: row.pet_comments ?? null,
+        pet_cost: petCost,
+        pet_purchase_cost_category: getPurchaseCostCategory(petCost, q1, q3),
+      };
+    });
+
+    console.log("[recommendations] success:", enrichedRows);
 
     return res.status(200).json(enrichedRows);
   } catch (error) {
-    console.error("recommendations error:", error);
+    console.error("[recommendations] error:", error);
+    console.error(
+      "[recommendations] stack:",
+      error instanceof Error ? error.stack : String(error),
+    );
 
     return res.status(500).json({
       error: error instanceof Error ? error.message : "Internal server error",
