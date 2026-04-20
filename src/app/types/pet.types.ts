@@ -1,4 +1,5 @@
 export type PurchaseCostCategory = "Low" | "Medium" | "High" | "Unknown";
+export type LifetimeBudgetCategory = "Low" | "Medium" | "High" | "Unknown";
 
 export type Pet = {
   pet_id: string;
@@ -27,6 +28,7 @@ export type Pet = {
   pet_invasive_risk: string | null;
   pet_care_level: string | null;
   pet_purchase_cost_category?: PurchaseCostCategory;
+  pet_lifetime_budget_category?: LifetimeBudgetCategory;
 };
 
 export type RecommendedPet = {
@@ -40,7 +42,8 @@ export type RecommendedPet = {
   pet_image_ref: string | null;
   pet_comments: string | null;
   pet_cost: number | null;
-  pet_purchase_cost_category: PurchaseCostCategory;
+  pet_purchase_cost_category?: PurchaseCostCategory;
+  pet_lifetime_budget_category?: LifetimeBudgetCategory;
 };
 
 export type SortOption =

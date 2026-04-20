@@ -212,6 +212,12 @@ export function Home() {
                             {pet.pet_purchase_cost_category} Purchase Cost
                           </span>
                         )}
+
+                        {pet.pet_lifetime_budget_category && (
+                          <span className="bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-xs font-bold">
+                            {pet.pet_lifetime_budget_category} Lifetime Budget
+                          </span>
+                        )}
                         <span className="bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm">
                           Recommended
                         </span>
