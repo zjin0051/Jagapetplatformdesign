@@ -17,6 +17,7 @@ import {
   getDangerBadgeClasses,
   getCareBadgeClasses,
 } from "../utils/petDisplay";
+import CircularProgress from "@mui/material/CircularProgress";
 
 export function Home() {
   const navigate = useNavigate();
@@ -153,63 +154,10 @@ export function Home() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* {recommendedSpecies.map((species) => (
-            <Link
-              key={species.id}
-              to={`/species/${species.id}`}
-              className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer"
-            >
-              <div className="relative h-56 overflow-hidden">
-                <img
-                  src={species.imageUrl}
-                  alt={species.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                />
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide backdrop-blur-md shadow-sm ${
-                      species.biodiversityRisk === "High"
-                        ? "bg-rose-500/90 text-white"
-                        : species.biodiversityRisk === "Medium"
-                          ? "bg-amber-500/90 text-white"
-                          : "bg-emerald-500/90 text-white"
-                    }`}
-                  >
-                    {species.biodiversityRisk} Risk
-                  </span>
-                  <span className="bg-white/90 text-stone-800 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md flex items-center gap-1 shadow-sm">
-                    {species.category === "fish" ? (
-                      <Fish className="w-3 h-3" />
-                    ) : null}
-                    {species.careDifficulty} Care
-                  </span>
-                </div>
-                <div className="absolute top-4 right-4">
-                  <span className="bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    Recommended
-                  </span>
-                </div>
-              </div>
-              <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-xl font-bold text-stone-900 mb-1">
-                  {species.name}
-                </h3>
-                <p className="text-sm text-stone-500 italic mb-4 font-serif">
-                  {species.scientificName}
-                </p>
-                <p className="text-stone-600 text-sm line-clamp-3 mb-6 flex-1">
-                  {species.shortDesc}
-                </p>
-                <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                  View Profile & Care Guide →
-                </div>
-              </div>
-            </Link>
-          ))} */}
-
           {loading ? (
-            <p className="text-stone-600">Loading recommendations...</p>
+            <div className="col-span-full flex items-center justify-center py-12">
+              <CircularProgress size={20} />
+            </div>
           ) : error ? (
             <p className="text-rose-600">{error}</p>
           ) : recommendations.length === 0 ? (
