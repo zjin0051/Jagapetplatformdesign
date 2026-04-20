@@ -17,12 +17,9 @@ export default async function handler(req: any, res: any) {
         pet_comments
       from public.pet
       where
-        pet_care_level ilike '%beginner%'
+        pet_care_level ilike '%Beginner%'
         and pet_is_native = true
         and pet_image_ref is not null
-        and pet_image_ref <> ''
-        and pet_invasive_risk ilike '%low%'
-        and pet_danger ilike '%low%'
       limit 4
     `;
 
