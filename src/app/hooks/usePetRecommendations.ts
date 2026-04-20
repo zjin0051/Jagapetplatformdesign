@@ -33,7 +33,7 @@ async function fetchPetRecommendations(): Promise<RecommendationsResponse> {
   return Array.isArray(data) ? (data as RecommendationsResponse) : [];
 }
 
-export function usePetRecommendations() {
+export function usePetRecommendationPool() {
   const query = useQuery({
     queryKey: ["pet-recommendations"],
     queryFn: fetchPetRecommendations,

@@ -47,7 +47,7 @@ export default async function handler(req: any, res: any) {
         pet_care_level ilike '%Beginner%'
         and pet_is_native ilike 'Native%'
         and pet_image_ref is not null
-      limit 4
+      order by pet_id
     `;
 
     const normalizedRows = rows.map((row: any) => ({
