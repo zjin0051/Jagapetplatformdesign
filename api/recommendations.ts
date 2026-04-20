@@ -5,18 +5,15 @@ const sql = neon(process.env.DATABASE_URL!);
 
 export default async function handler(req: any, res: any) {
   try {
-    // 1) Get all pet costs for quartile calculation
     const allCostRows = await sql`
-      select pet_cost
+      select pet_cost::float8 as pet_cost
       from public.pet
       where pet_cost is not null
     `;
 
-    const { q1, q3 } = getCostQuartiles(
-      allCostRows.map((row: any) => row.pet_cost),
-    );
+    const allCosts = allCostRows.map((row: any) => row.pet_cost);
+    const { q1, q3 } = getCostQuartiles(allCosts);
 
-    // 2) Get the recommendation cards
     const rows = await sql`
       select
         pet_id,
@@ -28,7 +25,7 @@ export default async function handler(req: any, res: any) {
         pet_invasive_risk,
         pet_image_ref,
         pet_comments,
-        pet_cost
+        pet_cost::float8 as pet_cost
       from public.pet
       where
         pet_care_level ilike '%Beginner%'
@@ -37,7 +34,6 @@ export default async function handler(req: any, res: any) {
       limit 4
     `;
 
-    // 3) Add backend-derived cost category
     const enrichedRows = rows.map((row: any) => ({
       ...row,
       pet_purchase_cost_category: getPurchaseCostCategory(row.pet_cost, q1, q3),
@@ -45,7 +41,10 @@ export default async function handler(req: any, res: any) {
 
     return res.status(200).json(enrichedRows);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal server error" });
+    console.error("recommendations error:", error);
+
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Internal server error",
+    });
   }
 }
