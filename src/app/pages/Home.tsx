@@ -12,7 +12,11 @@ import { speciesData } from "../data/species";
 import { motion } from "motion/react";
 import { SearchAutocomplete } from "../components/SearchAutocomplete";
 import { usePetRecommendations } from "../hooks/usePetRecommendations";
-import { getPetCommonNames, getDangerBadgeClasses } from "../utils/petDisplay";
+import {
+  getPetCommonNames,
+  getDangerBadgeClasses,
+  getCareBadgeClasses,
+} from "../utils/petDisplay";
 
 export function Home() {
   const navigate = useNavigate();
@@ -236,7 +240,7 @@ export function Home() {
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
 
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
+                      <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                         {pet.pet_invasive_risk && (
                           <span
                             className={getDangerBadgeClasses(
@@ -248,7 +252,9 @@ export function Home() {
                         )}
 
                         {pet.pet_care_level && (
-                          <span className="bg-white/90 text-stone-800 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md shadow-sm">
+                          <span
+                            className={getCareBadgeClasses(pet.pet_care_level)}
+                          >
                             {pet.pet_care_level} Care
                           </span>
                         )}
