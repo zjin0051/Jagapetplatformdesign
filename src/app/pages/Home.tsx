@@ -7,6 +7,9 @@ import {
   Leaf,
   Fish,
   Sparkles,
+  ShieldAlert,
+  HandHeart,
+  Banknote,
 } from "lucide-react";
 import { speciesData } from "../data/species";
 import { motion } from "motion/react";
@@ -17,6 +20,7 @@ import {
   getDangerBadgeClasses,
   getCareBadgeClasses,
   getCostBadgeClasses,
+  getNativeBadgeClasses,
 } from "../utils/petDisplay";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -196,28 +200,13 @@ export function Home() {
                               pet.pet_invasive_risk,
                             )}
                           >
+                            <ShieldAlert className="w-3 h-3" />
                             {pet.pet_invasive_risk} Risk
                           </span>
                         )}
 
-                        {pet.pet_care_level && (
-                          <span
-                            className={getCareBadgeClasses(pet.pet_care_level)}
-                          >
-                            {pet.pet_care_level} Care
-                          </span>
-                        )}
-
-                        {pet.pet_lifetime_budget_category && (
-                          <span
-                            className={getCostBadgeClasses(
-                              pet.pet_lifetime_budget_category,
-                            )}
-                          >
-                            {pet.pet_lifetime_budget_category} Budget
-                          </span>
-                        )}
-                        <span className="bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm">
+                        <span className="inline-flex items-center gap-1 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm">
+                          <Sparkles className="w-3 h-3" />
                           Recommended
                         </span>
                       </div>
@@ -233,9 +222,41 @@ export function Home() {
                           "Scientific name unavailable"}
                       </p>
 
-                      <p className="text-stone-600 text-sm line-clamp-3 mb-6 flex-1">
-                        {pet.pet_comments ?? "No description available."}
-                      </p>
+                      <div className="mb-4 flex flex-wrap gap-2">
+                        {pet.pet_is_native && (
+                          <span
+                            className={getNativeBadgeClasses(pet.pet_is_native)}
+                          >
+                            <Fish className="w-3 h-3" />
+                            {pet.pet_is_native}
+                          </span>
+                        )}
+                        {pet.pet_care_level && (
+                          <span
+                            className={getCareBadgeClasses(pet.pet_care_level)}
+                          >
+                            <HandHeart className="w-3 h-3" />
+                            {pet.pet_care_level} Care
+                          </span>
+                        )}
+
+                        {pet.pet_lifetime_budget_category && (
+                          <span
+                            className={getCostBadgeClasses(
+                              pet.pet_lifetime_budget_category,
+                            )}
+                          >
+                            <Banknote className="w-3 h-3" />
+                            {pet.pet_lifetime_budget_category} Budget
+                          </span>
+                        )}
+                      </div>
+
+                      {pet.pet_comments && (
+                        <p className="text-stone-600 text-sm line-clamp-3 mb-6 flex-1">
+                          {pet.pet_comments}
+                        </p>
+                      )}
 
                       <div className="text-emerald-700 font-semibold text-sm">
                         View Profile & Care Guide →
