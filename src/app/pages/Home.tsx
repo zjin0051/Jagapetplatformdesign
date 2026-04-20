@@ -16,6 +16,7 @@ import {
   getPetCommonNames,
   getDangerBadgeClasses,
   getCareBadgeClasses,
+  getCostBadgeClasses,
 } from "../utils/petDisplay";
 import CircularProgress from "@mui/material/CircularProgress";
 
@@ -188,7 +189,7 @@ export function Home() {
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                       />
 
-                      <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                      <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
                         {pet.pet_invasive_risk && (
                           <span
                             className={getDangerBadgeClasses(
@@ -207,15 +208,13 @@ export function Home() {
                           </span>
                         )}
 
-                        {pet.pet_purchase_cost_category && (
-                          <span className="bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-xs font-bold">
-                            {pet.pet_purchase_cost_category} Purchase Cost
-                          </span>
-                        )}
-
                         {pet.pet_lifetime_budget_category && (
-                          <span className="bg-sky-100 text-sky-700 px-3 py-1 rounded-full text-xs font-bold">
-                            {pet.pet_lifetime_budget_category} Lifetime Budget
+                          <span
+                            className={getCostBadgeClasses(
+                              pet.pet_lifetime_budget_category,
+                            )}
+                          >
+                            {pet.pet_lifetime_budget_category} Budget
                           </span>
                         )}
                         <span className="bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm">
