@@ -1,3 +1,5 @@
+export type PurchaseCostCategory = "Low" | "Medium" | "High" | "Unknown";
+
 export type Pet = {
   pet_id: string;
   pet_scientific_name: string | null;
@@ -24,6 +26,7 @@ export type Pet = {
   pet_banned: boolean | null;
   pet_invasive_risk: string | null;
   pet_care_level: string | null;
+  pet_purchase_cost_category?: PurchaseCostCategory;
 };
 
 export type SortOption =
