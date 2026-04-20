@@ -178,7 +178,7 @@ export function Home() {
                     className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer h-full"
                   >
                     <div className="relative h-56 overflow-hidden">
-                      {/* <img
+                      <img
                         src={
                           pet.pet_image_ref
                             ? `/pet_image/${pet.pet_image_ref}`
@@ -186,7 +186,7 @@ export function Home() {
                         }
                         alt={pet.pet_vernacular_name ?? "Pet image"}
                         className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      /> */}
+                      />
 
                       <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                         {pet.pet_invasive_risk && (
