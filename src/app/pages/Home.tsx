@@ -11,19 +11,13 @@ import {
 import { speciesData } from "../data/species";
 import { motion } from "motion/react";
 import { SearchAutocomplete } from "../components/SearchAutocomplete";
+import { usePetRecommendations } from "../hooks/usePetRecommendations";
+import { getPetCommonNames, getDangerBadgeClasses } from "../utils/petDisplay";
 
 export function Home() {
   const navigate = useNavigate();
 
-  // Get recommended species (beginner-friendly with low-medium risk)
-  const recommendedSpecies = speciesData
-    .filter(
-      (species) =>
-        species.careDifficulty === "Beginner" &&
-        (species.biodiversityRisk === "Low" ||
-          species.biodiversityRisk === "Medium"),
-    )
-    .slice(0, 4);
+  const { recommendations, loading, error } = usePetRecommendations();
 
   // Get high risk species for alert section
   const highRiskSpecies = speciesData.filter(
@@ -155,7 +149,7 @@ export function Home() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {recommendedSpecies.map((species) => (
+          {/* {recommendedSpecies.map((species) => (
             <Link
               key={species.id}
               to={`/species/${species.id}`}
@@ -208,7 +202,89 @@ export function Home() {
                 </div>
               </div>
             </Link>
-          ))}
+          ))} */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {loading ? (
+              <p className="text-stone-600">Loading recommendations...</p>
+            ) : error ? (
+              <p className="text-rose-600">{error}</p>
+            ) : recommendations.length === 0 ? (
+              <p className="text-stone-600">No recommendations found.</p>
+            ) : (
+              recommendations.map((pet, index) => {
+                const { primaryCommonName } = getPetCommonNames(pet);
+
+                return (
+                  <motion.div
+                    key={pet.pet_id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Link
+                      to={`/species/${pet.pet_id}`}
+                      className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer h-full"
+                    >
+                      <div className="relative h-56 overflow-hidden">
+                        <img
+                          src={
+                            pet.pet_image_ref
+                              ? `/pet_image/${pet.pet_image_ref}`
+                              : "/pet_image/pet_placeholder.png"
+                          }
+                          alt={pet.pet_vernacular_name ?? "Pet image"}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        />
+
+                        <div className="absolute top-4 left-4 flex flex-col gap-2">
+                          {pet.pet_invasive_risk && (
+                            <span
+                              className={getDangerBadgeClasses(
+                                pet.pet_invasive_risk,
+                              )}
+                            >
+                              {pet.pet_invasive_risk} Risk
+                            </span>
+                          )}
+
+                          {pet.pet_care_level && (
+                            <span className="bg-white/90 text-stone-800 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md shadow-sm">
+                              {pet.pet_care_level} Care
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="absolute top-4 right-4">
+                          <span className="bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm">
+                            Recommended
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-6 flex-1 flex flex-col">
+                        <h3 className="text-xl font-bold text-stone-900 mb-1">
+                          {primaryCommonName}
+                        </h3>
+
+                        <p className="text-sm text-stone-500 italic mb-4 font-serif">
+                          {pet.pet_scientific_name ??
+                            "Scientific name unavailable"}
+                        </p>
+
+                        <p className="text-stone-600 text-sm line-clamp-3 mb-6 flex-1">
+                          {pet.pet_comments ?? "No description available."}
+                        </p>
+
+                        <div className="text-emerald-700 font-semibold text-sm">
+                          View Profile & Care Guide →
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
         </div>
       </section>
 
