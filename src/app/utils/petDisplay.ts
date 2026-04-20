@@ -1,6 +1,6 @@
-import type { Pet } from "../types/pet.types";
+import type { Pet, RecommendedPet } from "../types/pet.types";
 
-export function getPetDisplayName(pet: Pet) {
+export function getPetDisplayName(pet: Pet | RecommendedPet) {
   return (
     pet.pet_vernacular_name ??
     pet.pet_scientific_name ??
@@ -8,7 +8,7 @@ export function getPetDisplayName(pet: Pet) {
   ).toLowerCase();
 }
 
-export function getPetCommonNames(pet: Pet) {
+export function getPetCommonNames(pet: Pet | RecommendedPet) {
   const vernacularNames = (pet.pet_vernacular_name ?? "")
     .split(";")
     .map((name) => name.trim())
