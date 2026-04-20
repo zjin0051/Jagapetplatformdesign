@@ -233,6 +233,17 @@ export function Home() {
           </div>
         </div>
 
+        {!loading && !error && recommendations.length > 4 && (
+          <button
+            type="button"
+            onClick={showNextRecommendations}
+            className="inline-flex items-center gap-2 self-start sm:self-auto rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-50"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Not my type
+          </button>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {loading ? (
             <div className="col-span-full flex items-center justify-center py-12">
@@ -245,114 +256,99 @@ export function Home() {
           ) : (
             visibleRecommendations.map((pet, index) => {
               const { primaryCommonName } = getPetCommonNames(pet);
-
               return (
-                <>
-                  <button
-                    type="button"
-                    onClick={showNextRecommendations}
-                    className="inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                <motion.div
+                  key={pet.pet_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Link
+                    to={`/species/${pet.pet_id}`}
+                    className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer h-full"
                   >
-                    <RefreshCw className="h-4 w-4" />
-                    Not my type
-                  </button>
-                  <motion.div
-                    key={pet.pet_id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <Link
-                      to={`/species/${pet.pet_id}`}
-                      className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer h-full"
-                    >
-                      <div className="relative h-56 overflow-hidden">
-                        <img
-                          src={
-                            pet.pet_image_ref
-                              ? `/pet_image/${pet.pet_image_ref}`
-                              : "/pet_image/pet_placeholder.png"
-                          }
-                          alt={pet.pet_vernacular_name ?? "Pet image"}
-                          className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                        />
+                    <div className="relative h-56 overflow-hidden">
+                      <img
+                        src={
+                          pet.pet_image_ref
+                            ? `/pet_image/${pet.pet_image_ref}`
+                            : "/pet_image/pet_placeholder.png"
+                        }
+                        alt={pet.pet_vernacular_name ?? "Pet image"}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      />
 
-                        <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
-                          {pet.pet_invasive_risk && (
-                            <span
-                              className={getDangerBadgeClasses(
-                                pet.pet_invasive_risk,
-                              )}
-                            >
-                              <ShieldAlert className="w-3 h-3" />
-                              {pet.pet_invasive_risk} Risk
-                            </span>
-                          )}
-
-                          <span className="inline-flex items-center gap-1 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm">
-                            <Sparkles className="w-3 h-3" />
-                            Recommended
+                      <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
+                        {pet.pet_invasive_risk && (
+                          <span
+                            className={getDangerBadgeClasses(
+                              pet.pet_invasive_risk,
+                            )}
+                          >
+                            <ShieldAlert className="w-3 h-3" />
+                            {pet.pet_invasive_risk} Risk
                           </span>
-                        </div>
-                      </div>
-
-                      <div className="p-6 flex-1 flex flex-col">
-                        <h3 className="text-xl font-bold text-stone-900 mb-1">
-                          {primaryCommonName}
-                        </h3>
-
-                        <p className="text-sm text-stone-500 italic mb-4 font-serif">
-                          {pet.pet_scientific_name ??
-                            "Scientific name unavailable"}
-                        </p>
-
-                        <div className="mb-4 flex flex-wrap gap-2">
-                          {pet.pet_is_native && (
-                            <span
-                              className={getNativeBadgeClasses(
-                                pet.pet_is_native,
-                              )}
-                            >
-                              <Fish className="w-3 h-3" />
-                              {pet.pet_is_native}
-                            </span>
-                          )}
-                          {pet.pet_care_level && (
-                            <span
-                              className={getCareBadgeClasses(
-                                pet.pet_care_level,
-                              )}
-                            >
-                              <HandHeart className="w-3 h-3" />
-                              {pet.pet_care_level} Care
-                            </span>
-                          )}
-
-                          {pet.pet_lifetime_budget_category && (
-                            <span
-                              className={getCostBadgeClasses(
-                                pet.pet_lifetime_budget_category,
-                              )}
-                            >
-                              <Banknote className="w-3 h-3" />
-                              {pet.pet_lifetime_budget_category} Budget
-                            </span>
-                          )}
-                        </div>
-
-                        {pet.pet_comments && (
-                          <p className="text-stone-600 text-sm line-clamp-3 mb-6 flex-1">
-                            {pet.pet_comments}
-                          </p>
                         )}
 
-                        <div className="text-emerald-700 font-semibold text-sm">
-                          View Profile & Care Guide →
-                        </div>
+                        <span className="inline-flex items-center gap-1 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm">
+                          <Sparkles className="w-3 h-3" />
+                          Recommended
+                        </span>
                       </div>
-                    </Link>
-                  </motion.div>
-                </>
+                    </div>
+
+                    <div className="p-6 flex-1 flex flex-col">
+                      <h3 className="text-xl font-bold text-stone-900 mb-1">
+                        {primaryCommonName}
+                      </h3>
+
+                      <p className="text-sm text-stone-500 italic mb-4 font-serif">
+                        {pet.pet_scientific_name ??
+                          "Scientific name unavailable"}
+                      </p>
+
+                      <div className="mb-4 flex flex-wrap gap-2">
+                        {pet.pet_is_native && (
+                          <span
+                            className={getNativeBadgeClasses(pet.pet_is_native)}
+                          >
+                            <Fish className="w-3 h-3" />
+                            {pet.pet_is_native}
+                          </span>
+                        )}
+                        {pet.pet_care_level && (
+                          <span
+                            className={getCareBadgeClasses(pet.pet_care_level)}
+                          >
+                            <HandHeart className="w-3 h-3" />
+                            {pet.pet_care_level} Care
+                          </span>
+                        )}
+
+                        {pet.pet_lifetime_budget_category && (
+                          <span
+                            className={getCostBadgeClasses(
+                              pet.pet_lifetime_budget_category,
+                            )}
+                          >
+                            <Banknote className="w-3 h-3" />
+                            {pet.pet_lifetime_budget_category} Budget
+                          </span>
+                        )}
+                      </div>
+
+                      {pet.pet_comments && (
+                        <p className="text-stone-600 text-sm line-clamp-3 mb-6 flex-1">
+                          {pet.pet_comments}
+                        </p>
+                      )}
+
+                      <div className="text-emerald-700 font-semibold text-sm">
+                        View Profile & Care Guide →
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
               );
             })
           )}
