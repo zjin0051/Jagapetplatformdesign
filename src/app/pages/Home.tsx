@@ -258,9 +258,6 @@ export function Home() {
                             {pet.pet_care_level} Care
                           </span>
                         )}
-                      </div>
-
-                      <div className="absolute top-4 right-4">
                         <span className="bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm">
                           Recommended
                         </span>
