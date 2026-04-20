@@ -11,7 +11,7 @@ export default async function handler(req: any, res: any) {
       where pet_cost is not null
     `;
 
-    const allCosts = allCostRows.map((row: any) => row.pet_cost);
+    const allCosts = allCostRows.map((row: any) => Number(row.pet_cost));
     const { q1, q3 } = getCostQuartiles(allCosts);
 
     const rows = await sql`
@@ -35,9 +35,25 @@ export default async function handler(req: any, res: any) {
     `;
 
     const enrichedRows = rows.map((row: any) => ({
-      ...row,
-      pet_purchase_cost_category: getPurchaseCostCategory(row.pet_cost, q1, q3),
+      pet_id: String(row.pet_id),
+      pet_vernacular_name: row.pet_vernacular_name ?? null,
+      pet_scientific_name: row.pet_scientific_name ?? null,
+      pet_care_level: row.pet_care_level ?? null,
+      pet_is_native: row.pet_is_native ?? null,
+      pet_danger: row.pet_danger ?? null,
+      pet_invasive_risk: row.pet_invasive_risk ?? null,
+      pet_image_ref:
+        typeof row.pet_image_ref === "string" ? row.pet_image_ref.trim() : null,
+      pet_comments: row.pet_comments ?? null,
+      pet_cost: row.pet_cost == null ? null : Number(row.pet_cost),
+      pet_purchase_cost_category: getPurchaseCostCategory(
+        row.pet_cost == null ? null : Number(row.pet_cost),
+        q1,
+        q3,
+      ),
     }));
+
+    console.log("recommendations result:", enrichedRows);
 
     return res.status(200).json(enrichedRows);
   } catch (error) {

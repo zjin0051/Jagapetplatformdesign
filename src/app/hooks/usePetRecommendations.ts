@@ -5,8 +5,9 @@ type RecommendationsResponse = RecommendedPet[];
 
 async function fetchPetRecommendations(): Promise<RecommendationsResponse> {
   const response = await fetch("/api/recommendations");
-
   const data = await response.json();
+
+  console.log("recommendations api data:", data);
 
   if (!response.ok) {
     throw new Error(data.error || "Failed to load recommendations");
