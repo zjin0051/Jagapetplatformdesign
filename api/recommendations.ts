@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import { getCostQuartiles, getPurchaseCostCategory } from "./_lib/petCost";
+import { getCostQuartiles, getPurchaseCostCategory } from "./_lib/petCost.js";
 
 export default async function handler(req: any, res: any) {
   try {
