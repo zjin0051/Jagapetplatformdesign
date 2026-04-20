@@ -111,9 +111,7 @@ export default async function handler(req: any, res: any) {
         pet_danger: row.pet_danger ?? null,
         pet_invasive_risk: row.pet_invasive_risk ?? null,
         pet_image_ref:
-          typeof row.pet_image_ref === "string"
-            ? row.pet_image_ref.trim()
-            : null,
+          typeof row.pet_image_ref === "string" ? row.pet_image_ref : null,
         pet_comments: row.pet_comments ?? null,
         pet_cost: petCost,
         pet_purchase_cost_category: getPurchaseCostCategory(petCost, q1, q3),
