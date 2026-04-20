@@ -1,53 +1,30 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { Pet } from "../types/pet.types";
 
-type UsePetRecommendationsResult = {
-  recommendations: Pet[];
-  loading: boolean;
-  error: string | null;
-};
+type RecommendationsResponse = Pet[];
 
-export function usePetRecommendations(): UsePetRecommendationsResult {
-  const [recommendations, setRecommendations] = useState<Pet[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+async function fetchPetRecommendations(): Promise<RecommendationsResponse> {
+  const response = await fetch("/api/recommendations");
 
-  useEffect(() => {
-    let cancelled = false;
+  const data = await response.json();
 
-    async function loadRecommendations() {
-      try {
-        setLoading(true);
-        setError(null);
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to load recommendations");
+  }
 
-        const response = await fetch("/api/recommendations");
-        const data = await response.json();
+  return data ?? [];
+}
 
-        if (!response.ok) {
-          throw new Error(data.error || "Failed to load recommendations");
-        }
+export function usePetRecommendations() {
+  const query = useQuery({
+    queryKey: ["pet-recommendations"],
+    queryFn: fetchPetRecommendations,
+    staleTime: 1000 * 60 * 30, // 30 minutes
+  });
 
-        if (!cancelled) {
-          setRecommendations(data ?? []);
-        }
-      } catch (err: any) {
-        if (!cancelled) {
-          setError(err.message || "Failed to load recommendations");
-          setRecommendations([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadRecommendations();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return { recommendations, loading, error };
+  return {
+    recommendations: query.data ?? [],
+    loading: query.isPending,
+    error: query.error instanceof Error ? query.error.message : null,
+  };
 }
