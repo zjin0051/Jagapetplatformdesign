@@ -4,6 +4,7 @@ import { Search, X } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { usePetSearch } from "../hooks/usePetSearch";
 import { displayText, getPetCommonNames } from "../utils/petDisplay";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 
 interface SearchAutocompleteProps {
   placeholder?: string;
@@ -34,7 +35,8 @@ export function SearchAutocomplete({
   const navigate = useNavigate();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const { results, loading } = usePetSearch(searchQuery);
+  const debouncedQuery = useDebouncedValue(searchQuery, 300);
+  const { results, loading } = usePetSearch(debouncedQuery);
   const suggestions = results.slice(0, 6);
 
   useEffect(() => {
