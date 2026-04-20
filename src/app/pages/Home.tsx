@@ -231,18 +231,17 @@ export function Home() {
               ecological risks.
             </p>
           </div>
+          {!loading && !error && recommendations.length > 4 && (
+            <button
+              type="button"
+              onClick={showNextRecommendations}
+              className="inline-flex items-center gap-2 self-start sm:self-auto rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-50"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Not my type
+            </button>
+          )}
         </div>
-
-        {!loading && !error && recommendations.length > 4 && (
-          <button
-            type="button"
-            onClick={showNextRecommendations}
-            className="inline-flex items-center gap-2 self-start sm:self-auto rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-50"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Not my type
-          </button>
-        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {loading ? (
