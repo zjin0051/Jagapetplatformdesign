@@ -29,6 +29,20 @@ export type Pet = {
   pet_purchase_cost_category?: PurchaseCostCategory;
 };
 
+export type RecommendedPet = {
+  pet_id: string;
+  pet_vernacular_name: string | null;
+  pet_scientific_name: string | null;
+  pet_care_level: string | null;
+  pet_is_native: string | null;
+  pet_danger: string | null;
+  pet_invasive_risk: string | null;
+  pet_image_ref: string | null;
+  pet_comments: string | null;
+  pet_cost: number | null;
+  pet_purchase_cost_category: PurchaseCostCategory;
+};
+
 export type SortOption =
   | "aquarium"
   | "alphabet_asc"

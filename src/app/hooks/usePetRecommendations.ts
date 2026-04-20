@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Pet } from "../types/pet.types";
+import type { RecommendedPet } from "../types/pet.types";
 
-type RecommendationsResponse = Pet[];
+type RecommendationsResponse = RecommendedPet[];
 
 async function fetchPetRecommendations(): Promise<RecommendationsResponse> {
   const response = await fetch("/api/recommendations");
