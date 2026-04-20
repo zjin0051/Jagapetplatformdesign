@@ -18,7 +18,7 @@ export default async function handler(req: any, res: any) {
       from public.pet
       where
         pet_care_level ilike '%Beginner%'
-        and pet_is_native = true
+        and pet_is_native ilike 'Native%'
         and pet_image_ref is not null
       limit 4
     `;

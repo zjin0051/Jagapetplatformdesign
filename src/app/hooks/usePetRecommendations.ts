@@ -20,7 +20,7 @@ export function usePetRecommendations(): UsePetRecommendationsResult {
         setLoading(true);
         setError(null);
 
-        const response = await fetch("/api/recommendations.js");
+        const response = await fetch("/api/recommendations");
         const data = await response.json();
 
         if (!response.ok) {
