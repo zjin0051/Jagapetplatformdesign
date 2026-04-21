@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, Link, Navigate } from "react-router";
 import { speciesData, Species } from "../data/species";
 import { useWishlist } from "../context/WishlistContext";
@@ -14,8 +14,9 @@ import {
   Leaf,
   Thermometer,
   Banknote,
-  Map,
+  Map as MapIcon,
   HelpCircle,
+  RefreshCw,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useQuizRecommendations } from "../hooks/useQuizRecommendations";
@@ -137,6 +138,109 @@ function getUserLifespanLevel(value: string | undefined): 1 | 2 | 3 | null {
   }
 
   return null;
+}
+
+function shuffleArray<T>(items: T[]) {
+  const copy = [...items];
+
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+
+  return copy;
+}
+
+function useRefreshableResults<T extends { pet: { pet_id: string } }>(
+  items: T[],
+  storageKey: string,
+  pageSize = 6,
+) {
+  const [deck, setDeck] = useState<string[]>([]);
+  const [cursor, setCursor] = useState(0);
+
+  useEffect(() => {
+    if (items.length === 0) {
+      setDeck([]);
+      setCursor(0);
+      return;
+    }
+
+    const currentIds = items.map((item) => item.pet.pet_id);
+    const currentIdSet = new Set(currentIds);
+
+    const savedDeckRaw = sessionStorage.getItem(`${storageKey}-deck`);
+    const savedCursorRaw = sessionStorage.getItem(`${storageKey}-cursor`);
+
+    if (savedDeckRaw) {
+      try {
+        const savedDeck = JSON.parse(savedDeckRaw) as string[];
+
+        const keptIds = savedDeck.filter((id) => currentIdSet.has(id));
+        const missingIds = currentIds.filter((id) => !keptIds.includes(id));
+        const rebuiltDeck = [...keptIds, ...shuffleArray(missingIds)];
+
+        if (rebuiltDeck.length > 0) {
+          const parsedCursor = Number(savedCursorRaw ?? "0");
+          const safeCursor =
+            Number.isFinite(parsedCursor) && parsedCursor >= 0
+              ? Math.min(parsedCursor, Math.max(rebuiltDeck.length - 1, 0))
+              : 0;
+
+          setDeck(rebuiltDeck);
+          setCursor(safeCursor);
+          return;
+        }
+      } catch {
+        // ignore bad session data
+      }
+    }
+
+    const freshDeck = shuffleArray(currentIds);
+    setDeck(freshDeck);
+    setCursor(0);
+    sessionStorage.setItem(`${storageKey}-deck`, JSON.stringify(freshDeck));
+    sessionStorage.setItem(`${storageKey}-cursor`, "0");
+  }, [items, storageKey]);
+
+  const visibleItems = useMemo(() => {
+    const itemMap = new Map(
+      items.map((item) => [item.pet.pet_id, item] as const),
+    );
+
+    return deck
+      .slice(cursor, cursor + pageSize)
+      .map((id) => itemMap.get(id))
+      .filter((item): item is T => item !== undefined);
+  }, [items, deck, cursor, pageSize]);
+
+  function refreshItems() {
+    if (deck.length <= pageSize) return;
+
+    const nextCursor = cursor + pageSize;
+
+    if (nextCursor >= deck.length) {
+      const reshuffledDeck = shuffleArray(deck);
+      setDeck(reshuffledDeck);
+      setCursor(0);
+      sessionStorage.setItem(
+        `${storageKey}-deck`,
+        JSON.stringify(reshuffledDeck),
+      );
+      sessionStorage.setItem(`${storageKey}-cursor`, "0");
+      return;
+    }
+
+    setCursor(nextCursor);
+    sessionStorage.setItem(`${storageKey}-cursor`, String(nextCursor));
+  }
+
+  return {
+    visibleItems,
+    refreshItems,
+    canRefresh: items.length > pageSize,
+    totalCount: items.length,
+  };
 }
 
 export function QuizResults() {
@@ -270,6 +374,17 @@ export function QuizResults() {
 
   const matches = userFocusedPets.filter((r) => r.suitable);
   const unsuitable = userFocusedPets.filter((r) => !r.suitable);
+  const {
+    visibleItems: visibleMatches,
+    refreshItems: refreshMatches,
+    canRefresh: canRefreshMatches,
+  } = useRefreshableResults(matches, "quiz-results-matches", 6);
+
+  const {
+    visibleItems: visibleUnsuitable,
+    refreshItems: refreshUnsuitable,
+    canRefresh: canRefreshUnsuitable,
+  } = useRefreshableResults(unsuitable, "quiz-results-unsuitable", 6);
 
   const alternatives = results
     .filter(
@@ -369,19 +484,31 @@ export function QuizResults() {
         </div>
 
         {/* Suitable Matches */}
-        {matches.length > 0 && (
+        {visibleMatches.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="space-y-8"
           >
-            <h2 className="text-3xl font-bold flex items-center gap-3 text-emerald-900 border-b-2 border-emerald-100 pb-4">
-              <Heart className="w-8 h-8 text-emerald-500 fill-current" />
-              Suitable For You
-            </h2>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-3xl font-bold flex items-center gap-3 text-emerald-900 border-b-2 border-emerald-100 pb-4">
+                <Heart className="w-8 h-8 text-emerald-500 fill-current" />
+                Suitable For You
+              </h2>
+              {canRefreshMatches && (
+                <button
+                  type="button"
+                  onClick={refreshMatches}
+                  className="inline-flex items-center gap-2 self-start sm:self-auto rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm hover:bg-emerald-50"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Show other matches
+                </button>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {matches.map(({ pet, fits }) => (
+              {visibleMatches.map(({ pet, fits }) => (
                 <div
                   key={pet.pet_id}
                   className="bg-white rounded-3xl shadow-lg border-2 border-emerald-500 overflow-hidden flex flex-col relative"
@@ -436,25 +563,34 @@ export function QuizResults() {
         )}
 
         {/* Unsuitable / Reconsider */}
-        {unsuitable.length > 0 && (
+
+        {visibleUnsuitable.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="space-y-8"
           >
-            <h2 className="text-3xl font-bold flex items-center gap-3 text-rose-900 border-b-2 border-rose-100 pb-4">
-              <ShieldAlert className="w-8 h-8 text-rose-500" />
-              Not Recommended
-            </h2>
-            <p className="text-stone-700 text-lg">
-              Based on your answers, these species are a poor fit. Acquiring
-              them may result in unmanageable costs, inadequate space, or poor
-              animal welfare.
-            </p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-3xl font-bold flex items-center gap-3 text-rose-900 border-b-2 border-rose-100 pb-4">
+                <ShieldAlert className="w-8 h-8 text-rose-500" />
+                Not Recommended
+              </h2>
+
+              {canRefreshUnsuitable && (
+                <button
+                  type="button"
+                  onClick={refreshUnsuitable}
+                  className="inline-flex items-center gap-2 self-start sm:self-auto rounded-full border border-rose-200 bg-white px-4 py-2 text-sm font-semibold text-rose-700 shadow-sm hover:bg-rose-50"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Show other concerns
+                </button>
+              )}
+            </div>
 
             <div className="space-y-6">
-              {unsuitable.map(({ pet, reasons }) => (
+              {visibleUnsuitable.map(({ pet, reasons }) => (
                 <div
                   key={pet.pet_id}
                   className="bg-white rounded-3xl p-6 border border-rose-200 shadow-sm flex flex-col md:flex-row gap-6 relative overflow-hidden"
