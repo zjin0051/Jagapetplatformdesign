@@ -7,28 +7,107 @@ import {
   Leaf,
   Fish,
   Sparkles,
+  ShieldAlert,
+  HandHeart,
+  Banknote,
+  RefreshCw,
 } from "lucide-react";
 import { speciesData } from "../data/species";
 import { motion } from "motion/react";
 import { SearchAutocomplete } from "../components/SearchAutocomplete";
+import { usePetRecommendationPool } from "../hooks/usePetRecommendations";
+import {
+  getPetCommonNames,
+  getDangerBadgeClasses,
+  getCareBadgeClasses,
+  getCostBadgeClasses,
+  getNativeBadgeClasses,
+} from "../utils/petDisplay";
+import CircularProgress from "@mui/material/CircularProgress";
+import { useEffect, useMemo, useState } from "react";
+import { RecommendedPet } from "../types/pet.types";
+
+function shuffleArray<T>(items: T[]) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
 
 export function Home() {
   const navigate = useNavigate();
 
-  // Get recommended species (beginner-friendly with low-medium risk)
-  const recommendedSpecies = speciesData
-    .filter(
-      (species) =>
-        species.careDifficulty === "Beginner" &&
-        (species.biodiversityRisk === "Low" ||
-          species.biodiversityRisk === "Medium"),
-    )
-    .slice(0, 4);
+  const { recommendations, loading, error } = usePetRecommendationPool();
+  const [deck, setDeck] = useState<string[]>([]);
+  const [cursor, setCursor] = useState(0);
+
+  useEffect(() => {
+    if (!recommendations.length) return;
+
+    const savedDeck = sessionStorage.getItem("home-recommendation-deck");
+    const savedCursor = sessionStorage.getItem("home-recommendation-cursor");
+
+    const validIds = new Set(recommendations.map((pet) => pet.pet_id));
+
+    if (savedDeck) {
+      const parsedDeck = JSON.parse(savedDeck) as string[];
+      const filteredDeck = parsedDeck.filter((id) => validIds.has(id));
+
+      if (filteredDeck.length >= 4) {
+        setDeck(filteredDeck);
+        setCursor(savedCursor ? Number(savedCursor) : 0);
+        return;
+      }
+    }
+
+    const shuffled = shuffleArray(recommendations.map((pet) => pet.pet_id));
+    setDeck(shuffled);
+    setCursor(0);
+    sessionStorage.setItem(
+      "home-recommendation-deck",
+      JSON.stringify(shuffled),
+    );
+    sessionStorage.setItem("home-recommendation-cursor", "0");
+  }, [recommendations]);
+
+  const visibleRecommendations = useMemo(() => {
+    const petMap = new Map(
+      recommendations.map((pet) => [pet.pet_id, pet] as const),
+    );
+
+    return deck
+      .slice(cursor, cursor + 4)
+      .map((id) => petMap.get(id))
+      .filter((pet): pet is RecommendedPet => pet !== undefined);
+  }, [recommendations, deck, cursor]);
 
   // Get high risk species for alert section
   const highRiskSpecies = speciesData.filter(
     (species) => species.biodiversityRisk === "High",
   );
+
+  function showNextRecommendations() {
+    if (!deck.length) return;
+
+    let nextCursor = cursor + 4;
+
+    if (nextCursor >= deck.length) {
+      const reshuffled = shuffleArray(deck);
+      setDeck(reshuffled);
+      setCursor(0);
+      sessionStorage.setItem(
+        "home-recommendation-deck",
+        JSON.stringify(reshuffled),
+      );
+      sessionStorage.setItem("home-recommendation-cursor", "0");
+      return;
+    }
+
+    setCursor(nextCursor);
+    sessionStorage.setItem("home-recommendation-cursor", String(nextCursor));
+  }
 
   return (
     <div className="flex flex-col gap-12 pb-24 font-sans bg-stone-50 text-stone-900 overflow-hidden">
@@ -152,63 +231,126 @@ export function Home() {
               ecological risks.
             </p>
           </div>
+          {!loading && !error && recommendations.length > 4 && (
+            <button
+              type="button"
+              onClick={showNextRecommendations}
+              className="inline-flex items-center gap-2 self-start sm:self-auto rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-50"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Not my type
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {recommendedSpecies.map((species) => (
-            <Link
-              key={species.id}
-              to={`/species/${species.id}`}
-              className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer"
-            >
-              <div className="relative h-56 overflow-hidden">
-                <img
-                  src={species.imageUrl}
-                  alt={species.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                />
-                <div className="absolute top-4 left-4 flex flex-col gap-2">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide backdrop-blur-md shadow-sm ${
-                      species.biodiversityRisk === "High"
-                        ? "bg-rose-500/90 text-white"
-                        : species.biodiversityRisk === "Medium"
-                          ? "bg-amber-500/90 text-white"
-                          : "bg-emerald-500/90 text-white"
-                    }`}
+          {loading ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <CircularProgress size={20} />
+            </div>
+          ) : error ? (
+            <p className="text-rose-600">{error}</p>
+          ) : visibleRecommendations.length === 0 ? (
+            <p className="text-stone-600">No recommendations found.</p>
+          ) : (
+            visibleRecommendations.map((pet, index) => {
+              const { primaryCommonName } = getPetCommonNames(pet);
+              return (
+                <motion.div
+                  key={pet.pet_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Link
+                    to={`/species/${pet.pet_id}`}
+                    className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer h-full"
                   >
-                    {species.biodiversityRisk} Risk
-                  </span>
-                  <span className="bg-white/90 text-stone-800 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md flex items-center gap-1 shadow-sm">
-                    {species.category === "fish" ? (
-                      <Fish className="w-3 h-3" />
-                    ) : null}
-                    {species.careDifficulty} Care
-                  </span>
-                </div>
-                <div className="absolute top-4 right-4">
-                  <span className="bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm flex items-center gap-1">
-                    <Sparkles className="w-3 h-3" />
-                    Recommended
-                  </span>
-                </div>
-              </div>
-              <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-xl font-bold text-stone-900 mb-1">
-                  {species.name}
-                </h3>
-                <p className="text-sm text-stone-500 italic mb-4 font-serif">
-                  {species.scientificName}
-                </p>
-                <p className="text-stone-600 text-sm line-clamp-3 mb-6 flex-1">
-                  {species.shortDesc}
-                </p>
-                <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                  View Profile & Care Guide →
-                </div>
-              </div>
-            </Link>
-          ))}
+                    <div className="relative h-56 overflow-hidden">
+                      <img
+                        src={
+                          pet.pet_image_ref
+                            ? `/pet_image/${pet.pet_image_ref}`
+                            : "/pet_image/pet_placeholder.png"
+                        }
+                        alt={pet.pet_vernacular_name ?? "Pet image"}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      />
+
+                      <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
+                        {pet.pet_invasive_risk && (
+                          <span
+                            className={getDangerBadgeClasses(
+                              pet.pet_invasive_risk,
+                            )}
+                          >
+                            <ShieldAlert className="w-3 h-3" />
+                            {pet.pet_invasive_risk} Risk
+                          </span>
+                        )}
+
+                        <span className="inline-flex items-center gap-1 bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm">
+                          <Sparkles className="w-3 h-3" />
+                          Recommended
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-6 flex-1 flex flex-col">
+                      <h3 className="text-xl font-bold text-stone-900 mb-1">
+                        {primaryCommonName}
+                      </h3>
+
+                      <p className="text-sm text-stone-500 italic mb-4 font-serif">
+                        {pet.pet_scientific_name ??
+                          "Scientific name unavailable"}
+                      </p>
+
+                      <div className="mb-4 flex flex-wrap gap-2">
+                        {pet.pet_is_native && (
+                          <span
+                            className={getNativeBadgeClasses(pet.pet_is_native)}
+                          >
+                            <Fish className="w-3 h-3" />
+                            {pet.pet_is_native}
+                          </span>
+                        )}
+                        {pet.pet_care_level && (
+                          <span
+                            className={getCareBadgeClasses(pet.pet_care_level)}
+                          >
+                            <HandHeart className="w-3 h-3" />
+                            {pet.pet_care_level} Care
+                          </span>
+                        )}
+
+                        {pet.pet_lifetime_budget_category && (
+                          <span
+                            className={getCostBadgeClasses(
+                              pet.pet_lifetime_budget_category,
+                            )}
+                          >
+                            <Banknote className="w-3 h-3" />
+                            {pet.pet_lifetime_budget_category} Budget
+                          </span>
+                        )}
+                      </div>
+
+                      {pet.pet_comments && (
+                        <p className="text-stone-600 text-sm line-clamp-3 mb-6 flex-1">
+                          {pet.pet_comments}
+                        </p>
+                      )}
+
+                      <div className="text-emerald-700 font-semibold text-sm">
+                        View Profile & Care Guide →
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })
+          )}
         </div>
       </section>
 

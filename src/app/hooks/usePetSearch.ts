@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import type { Pet } from "../types/pet.types";
 
 type UsePetSearchResult = {
@@ -7,58 +7,36 @@ type UsePetSearchResult = {
   error: string | null;
 };
 
+async function fetchPetSearch(query: string): Promise<Pet[]> {
+  const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Search failed");
+  }
+
+  return data ?? [];
+}
+
 export function usePetSearch(query: string): UsePetSearchResult {
-  const [results, setResults] = useState<Pet[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const trimmedQuery = query.trim();
 
-  useEffect(() => {
-    let cancelled = false;
+  const searchQuery = useQuery({
+    queryKey: ["pet-search", trimmedQuery],
+    queryFn: () => fetchPetSearch(trimmedQuery),
+    enabled: !!trimmedQuery,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 15,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
 
-    async function runSearch() {
-      const trimmedQuery = query.trim();
-
-      if (!trimmedQuery) {
-        setResults([]);
-        setError(null);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(trimmedQuery)}`,
-        );
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Search failed");
-        }
-
-        if (!cancelled) {
-          setResults(data ?? []);
-        }
-      } catch (err: any) {
-        if (!cancelled) {
-          setError(err.message || "Search failed");
-          setResults([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    }
-
-    runSearch();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [query]);
-
-  return { results, loading, error };
+  return {
+    results: trimmedQuery ? searchQuery.data ?? [] : [],
+    loading: !!trimmedQuery && searchQuery.isPending,
+    error:
+      trimmedQuery && searchQuery.error instanceof Error
+        ? searchQuery.error.message
+        : null,
+  };
 }

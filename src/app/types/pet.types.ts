@@ -1,3 +1,6 @@
+export type PurchaseCostCategory = "Low" | "Medium" | "High" | "Unknown";
+export type LifetimeBudgetCategory = "Low" | "Medium" | "High" | "Unknown";
+
 export type Pet = {
   pet_id: string;
   pet_scientific_name: string | null;
@@ -24,6 +27,23 @@ export type Pet = {
   pet_banned: boolean | null;
   pet_invasive_risk: string | null;
   pet_care_level: string | null;
+  pet_purchase_cost_category?: PurchaseCostCategory;
+  pet_lifetime_budget_category?: LifetimeBudgetCategory;
+};
+
+export type RecommendedPet = {
+  pet_id: string;
+  pet_vernacular_name: string | null;
+  pet_scientific_name: string | null;
+  pet_care_level: string | null;
+  pet_is_native: string | null;
+  pet_danger: string | null;
+  pet_invasive_risk: string | null;
+  pet_image_ref: string | null;
+  pet_comments: string | null;
+  pet_cost: number | null;
+  pet_purchase_cost_category?: PurchaseCostCategory;
+  pet_lifetime_budget_category?: LifetimeBudgetCategory;
 };
 
 export type SortOption =
