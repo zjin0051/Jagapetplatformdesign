@@ -14,7 +14,6 @@ import {
   Leaf,
   Thermometer,
   Banknote,
-  Map as MapIcon,
   HelpCircle,
   RefreshCw,
 } from "lucide-react";
