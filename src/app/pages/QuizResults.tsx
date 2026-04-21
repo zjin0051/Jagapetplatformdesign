@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, Link, Navigate } from "react-router";
 import { speciesData, Species } from "../data/species";
 import { useWishlist } from "../context/WishlistContext";
-import { useUser } from "../context/UserContext";
+import { LifestyleAnswers, useUser } from "../context/UserContext";
 import {
   CheckCircle2,
   AlertTriangle,
@@ -139,6 +139,98 @@ function getUserLifespanLevel(value: string | undefined): 1 | 2 | 3 | null {
   return null;
 }
 
+const evaluatePet = (pet: QuizRecommendationPet, answers: LifestyleAnswers) => {
+  const reasons: string[] = [];
+  const fits: string[] = [];
+
+  const petBudget = getBudgetLevel(pet.pet_lifetime_budget_category);
+  const petSpace = getSpaceLevel(pet.pet_tank_size, pet.pet_max_length);
+  const petTime = getTimeLevel(pet.pet_care_level);
+  const petExperience = getExperienceLevel(pet.pet_care_level);
+  const petLifespan = getLifespanLevel(pet.pet_longevity);
+
+  let score = 0;
+  let blockers = 0;
+
+  if (petBudget !== null) {
+    if (levels.budget[answers.budget] < petBudget) {
+      reasons.push(
+        `Budget: This pet likely needs a ${pet.pet_lifetime_budget_category?.toLowerCase()} lifetime budget, which is above your selected budget.`,
+      );
+      blockers += 1;
+    } else {
+      fits.push("Suitable budget");
+      score += 1;
+    }
+  }
+
+  if (petSpace !== null) {
+    if (levels.space[answers.space] < petSpace) {
+      reasons.push(
+        "Space: This pet may need a larger habitat setup than the space you selected.",
+      );
+      blockers += 1;
+    } else {
+      fits.push("Appropriate space requirement");
+      score += 1;
+    }
+  }
+
+  if (petTime !== null) {
+    if (levels.time[answers.time] < petTime) {
+      reasons.push(
+        "Time: This pet may require more care time than your current availability.",
+      );
+      blockers += 1;
+    } else {
+      fits.push("Manageable maintenance time");
+      score += 1;
+    }
+  }
+
+  if (petExperience !== null) {
+    if (levels.experience[answers.experience] < petExperience) {
+      reasons.push(
+        "Experience: This pet may be too challenging for your current experience level.",
+      );
+      blockers += 1;
+    } else {
+      fits.push("Manageable care level");
+      score += 1;
+    }
+  }
+
+  // lifespan is better as a preference signal, not a hard blocker
+  const userLifespanLevel = getUserLifespanLevel(answers.lifespan);
+
+  if (petLifespan !== null && userLifespanLevel !== null) {
+    if (petLifespan === userLifespanLevel) {
+      fits.push("Matches your lifespan preference");
+      score += 1;
+    } else if (petLifespan > userLifespanLevel) {
+      reasons.push(
+        "Commitment: This pet may live longer than the commitment you prefer.",
+      );
+    }
+  }
+
+  if (pet.pet_invasive_risk === "High") {
+    reasons.push(
+      "High ecological risk: This species needs especially responsible containment and must never be released.",
+    );
+  }
+
+  const suitable = blockers === 0;
+
+  return {
+    pet,
+    suitable,
+    reasons,
+    fits,
+    score,
+  };
+};
+
 function shuffleArray<T>(items: T[]) {
   const copy = [...items];
 
@@ -247,6 +339,30 @@ export function QuizResults() {
   const { user, answers } = useUser();
   const { pets, loading, error } = useQuizRecommendations();
 
+  const results = useMemo(() => {
+    if (!answers) return [];
+    return pets.map((pet) => evaluatePet(pet, answers));
+  }, [pets, answers]);
+
+  const userFocusedPets =
+    wishlist.length > 0
+      ? results.filter((r) => wishlist.includes(r.pet.pet_id))
+      : results;
+
+  const matches = userFocusedPets.filter((r) => r.suitable);
+  const unsuitable = userFocusedPets.filter((r) => !r.suitable);
+  const {
+    visibleItems: visibleMatches,
+    refreshItems: refreshMatches,
+    canRefresh: canRefreshMatches,
+  } = useRefreshableResults(matches, "quiz-results-matches", 6);
+
+  const {
+    visibleItems: visibleUnsuitable,
+    refreshItems: refreshUnsuitable,
+    canRefresh: canRefreshUnsuitable,
+  } = useRefreshableResults(unsuitable, "quiz-results-unsuitable", 6);
+
   if (!answers) {
     return <Navigate to="/quiz" replace />;
   }
@@ -272,119 +388,6 @@ export function QuizResults() {
   }
 
   // Determine suitability for all species
-  const evaluatePet = (pet: QuizRecommendationPet) => {
-    const reasons: string[] = [];
-    const fits: string[] = [];
-
-    const petBudget = getBudgetLevel(pet.pet_lifetime_budget_category);
-    const petSpace = getSpaceLevel(pet.pet_tank_size, pet.pet_max_length);
-    const petTime = getTimeLevel(pet.pet_care_level);
-    const petExperience = getExperienceLevel(pet.pet_care_level);
-    const petLifespan = getLifespanLevel(pet.pet_longevity);
-
-    let score = 0;
-    let blockers = 0;
-
-    if (petBudget !== null) {
-      if (levels.budget[answers.budget] < petBudget) {
-        reasons.push(
-          `Budget: This pet likely needs a ${pet.pet_lifetime_budget_category?.toLowerCase()} lifetime budget, which is above your selected budget.`,
-        );
-        blockers += 1;
-      } else {
-        fits.push("Suitable budget");
-        score += 1;
-      }
-    }
-
-    if (petSpace !== null) {
-      if (levels.space[answers.space] < petSpace) {
-        reasons.push(
-          "Space: This pet may need a larger habitat setup than the space you selected.",
-        );
-        blockers += 1;
-      } else {
-        fits.push("Appropriate space requirement");
-        score += 1;
-      }
-    }
-
-    if (petTime !== null) {
-      if (levels.time[answers.time] < petTime) {
-        reasons.push(
-          "Time: This pet may require more care time than your current availability.",
-        );
-        blockers += 1;
-      } else {
-        fits.push("Manageable maintenance time");
-        score += 1;
-      }
-    }
-
-    if (petExperience !== null) {
-      if (levels.experience[answers.experience] < petExperience) {
-        reasons.push(
-          "Experience: This pet may be too challenging for your current experience level.",
-        );
-        blockers += 1;
-      } else {
-        fits.push("Manageable care level");
-        score += 1;
-      }
-    }
-
-    // lifespan is better as a preference signal, not a hard blocker
-    const userLifespanLevel = getUserLifespanLevel(answers.lifespan);
-
-    if (petLifespan !== null && userLifespanLevel !== null) {
-      if (petLifespan === userLifespanLevel) {
-        fits.push("Matches your lifespan preference");
-        score += 1;
-      } else if (petLifespan > userLifespanLevel) {
-        reasons.push(
-          "Commitment: This pet may live longer than the commitment you prefer.",
-        );
-      }
-    }
-
-    if (pet.pet_invasive_risk === "High") {
-      reasons.push(
-        "High ecological risk: This species needs especially responsible containment and must never be released.",
-      );
-    }
-
-    const suitable = blockers === 0;
-
-    return {
-      pet,
-      suitable,
-      reasons,
-      fits,
-      score,
-    };
-  };
-
-  const results = pets.map(evaluatePet);
-
-  const userFocusedPets =
-    wishlist.length > 0
-      ? results.filter((r) => wishlist.includes(r.pet.pet_id))
-      : results;
-
-  const matches = userFocusedPets.filter((r) => r.suitable);
-  const unsuitable = userFocusedPets.filter((r) => !r.suitable);
-  const {
-    visibleItems: visibleMatches,
-    refreshItems: refreshMatches,
-    canRefresh: canRefreshMatches,
-  } = useRefreshableResults(matches, "quiz-results-matches", 6);
-
-  const {
-    visibleItems: visibleUnsuitable,
-    refreshItems: refreshUnsuitable,
-    canRefresh: canRefreshUnsuitable,
-  } = useRefreshableResults(unsuitable, "quiz-results-unsuitable", 6);
-
   const alternatives = results
     .filter(
       (r) =>
