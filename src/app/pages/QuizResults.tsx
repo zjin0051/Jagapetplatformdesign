@@ -20,6 +20,7 @@ import {
 import { motion } from "motion/react";
 import { useQuizRecommendations } from "../hooks/useQuizRecommendations";
 import type { QuizRecommendationPet } from "../types/pet.types";
+import { getPetCommonNames } from "../utils/petDisplay";
 
 const levels = {
   budget: { low: 1, medium: 2, high: 3 },
@@ -510,56 +511,62 @@ export function QuizResults() {
               )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {visibleMatches.map(({ pet, fits }) => (
-                <div
-                  key={pet.pet_id}
-                  className="bg-white rounded-3xl shadow-lg border-2 border-emerald-500 overflow-hidden flex flex-col relative"
-                >
-                  <div className="relative h-48">
-                    <img
-                      src={
-                        pet.pet_image_ref
-                          ? `/pet_image/${pet.pet_image_ref}`
-                          : "/pet_image/pet_placeholder.png"
-                      }
-                      alt={pet.pet_vernacular_name ?? "Pet image"}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                    <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
-                      Great Fit
+              {visibleMatches.map(({ pet, fits }) => {
+                const { primaryCommonName, otherCommonNames } =
+                  getPetCommonNames(pet);
+                return (
+                  <div
+                    key={pet.pet_id}
+                    className="bg-white rounded-3xl shadow-lg border-2 border-emerald-500 overflow-hidden flex flex-col relative"
+                  >
+                    <div className="relative h-48">
+                      <img
+                        src={
+                          pet.pet_image_ref
+                            ? `/pet_image/${pet.pet_image_ref}`
+                            : "/pet_image/pet_placeholder.png"
+                        }
+                        alt={pet.pet_vernacular_name ?? "Pet image"}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
+                        Great Fit
+                      </div>
+                    </div>
+                    <div className="p-6 flex flex-col flex-1">
+                      <h3 className="text-2xl font-bold mb-1">
+                        {primaryCommonName ?? pet.pet_scientific_name}
+                      </h3>
+                      <p className="text-stone-500 text-sm mb-4">
+                        Care: {pet.pet_care_level} • Risk:{" "}
+                        {pet.pet_invasive_risk}
+                      </p>
+
+                      <div className="bg-emerald-50 rounded-2xl p-4 mb-6">
+                        <h4 className="text-emerald-900 font-bold mb-2 flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600" />{" "}
+                          Why it fits you:
+                        </h4>
+                        <ul className="space-y-2 text-sm text-emerald-800">
+                          {fits.map((fit, i) => (
+                            <li key={i}>• {fit}</li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="mt-auto">
+                        <Link
+                          to={`/species/${pet.pet_id}`}
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl font-bold text-center transition-colors inline-flex items-center justify-center gap-2"
+                        >
+                          View Full Care Guide{" "}
+                          <ArrowRight className="w-5 h-5" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                  <div className="p-6 flex flex-col flex-1">
-                    <h3 className="text-2xl font-bold mb-1">
-                      {pet.pet_scientific_name}
-                    </h3>
-                    <p className="text-stone-500 text-sm mb-4">
-                      Care: {pet.pet_care_level} • Risk: {pet.pet_invasive_risk}
-                    </p>
-
-                    <div className="bg-emerald-50 rounded-2xl p-4 mb-6">
-                      <h4 className="text-emerald-900 font-bold mb-2 flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />{" "}
-                        Why it fits you:
-                      </h4>
-                      <ul className="space-y-2 text-sm text-emerald-800">
-                        {fits.map((fit, i) => (
-                          <li key={i}>• {fit}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="mt-auto">
-                      <Link
-                        to={`/species/${pet.pet_id}`}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl font-bold text-center transition-colors inline-flex items-center justify-center gap-2"
-                      >
-                        View Full Care Guide <ArrowRight className="w-5 h-5" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -592,49 +599,53 @@ export function QuizResults() {
             </div>
 
             <div className="space-y-6">
-              {visibleUnsuitable.map(({ pet, reasons }) => (
-                <div
-                  key={pet.pet_id}
-                  className="bg-white rounded-3xl p-6 border border-rose-200 shadow-sm flex flex-col md:flex-row gap-6 relative overflow-hidden"
-                >
-                  <div className="absolute top-0 left-0 w-2 h-full bg-rose-500"></div>
-                  <div className="md:w-1/3">
-                    <img
-                      src={
-                        pet.pet_image_ref
-                          ? `/pet_image/${pet.pet_image_ref}`
-                          : "/pet_image/pet_placeholder.png"
-                      }
-                      alt={pet.pet_vernacular_name ?? "Pet image"}
-                      className="w-full h-40 object-cover rounded-2xl shadow-sm"
-                    />
-                    <h4 className="font-bold text-xl text-stone-900 mt-3">
-                      {pet.pet_scientific_name}
-                    </h4>
-                  </div>
-                  <div className="md:w-2/3 bg-rose-50/50 rounded-2xl p-5 border border-rose-100">
-                    <h5 className="font-bold text-rose-800 mb-3 flex items-center gap-2 text-lg">
-                      <XOctagon className="w-5 h-5 text-rose-600" /> Why this
-                      may not fit you:
-                    </h5>
-                    <ul className="space-y-3">
-                      {reasons.map((reason, i) => (
-                        <li
-                          key={i}
-                          className="flex gap-3 items-start text-rose-900 font-medium bg-white p-3 rounded-xl shadow-sm border border-rose-100"
-                        >
-                          <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-                          <span>{reason}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-4 text-sm text-stone-600 italic">
-                      Suggestion: Consider adjusting your budget or freeing up
-                      more space, otherwise explore the alternatives below.
+              {visibleUnsuitable.map(({ pet, reasons }) => {
+                const { primaryCommonName, otherCommonNames } =
+                  getPetCommonNames(pet);
+                return (
+                  <div
+                    key={pet.pet_id}
+                    className="bg-white rounded-3xl p-6 border border-rose-200 shadow-sm flex flex-col md:flex-row gap-6 relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 left-0 w-2 h-full bg-rose-500"></div>
+                    <div className="md:w-1/3">
+                      <img
+                        src={
+                          pet.pet_image_ref
+                            ? `/pet_image/${pet.pet_image_ref}`
+                            : "/pet_image/pet_placeholder.png"
+                        }
+                        alt={pet.pet_vernacular_name ?? "Pet image"}
+                        className="w-full h-40 object-cover rounded-2xl shadow-sm"
+                      />
+                      <h4 className="font-bold text-xl text-stone-900 mt-3">
+                        {primaryCommonName ?? pet.pet_scientific_name}
+                      </h4>
+                    </div>
+                    <div className="md:w-2/3 bg-rose-50/50 rounded-2xl p-5 border border-rose-100">
+                      <h5 className="font-bold text-rose-800 mb-3 flex items-center gap-2 text-lg">
+                        <XOctagon className="w-5 h-5 text-rose-600" /> Why this
+                        may not fit you:
+                      </h5>
+                      <ul className="space-y-3">
+                        {reasons.map((reason, i) => (
+                          <li
+                            key={i}
+                            className="flex gap-3 items-start text-rose-900 font-medium bg-white p-3 rounded-xl shadow-sm border border-rose-100"
+                          >
+                            <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                            <span>{reason}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-4 text-sm text-stone-600 italic">
+                        Suggestion: Consider adjusting your budget or freeing up
+                        more space, otherwise explore the alternatives below.
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </motion.div>
         )}
