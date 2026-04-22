@@ -1,4 +1,9 @@
-import type { Pet, PetBodyShape, PetTraits, RecommendedPet } from "../types/pet.types";
+import type {
+  Pet,
+  PetBodyShape,
+  PetTraits,
+  RecommendedPet,
+} from "../types/pet.types";
 
 export function getPetDisplayName(pet: Pet | RecommendedPet) {
   return (
@@ -10,7 +15,7 @@ export function getPetDisplayName(pet: Pet | RecommendedPet) {
 
 export function getPetCommonNames(pet: Pet | RecommendedPet) {
   const vernacularNames = (pet.pet_vernacular_name ?? "")
-    .split(";")
+    .split(/[;,]/)
     .map((name) => name.trim())
     .filter(Boolean);
 
@@ -58,10 +63,10 @@ export function formatPetTraits(traits: PetTraits): string {
 
     return (
       [
-        carapace_colour ? `Carapace: ${carapace_colour}` : null,
-        dorsal_colour ? `Dorsal colour: ${dorsal_colour}` : null,
-        dorsal_pattern ? `Dorsal pattern: ${dorsal_pattern}` : null,
-        underside_colour ? `Underside: ${underside_colour}` : null,
+        carapace_colour ? `Carapace Colour: ${carapace_colour}` : null,
+        dorsal_colour ? `Dorsal Colour: ${dorsal_colour}` : null,
+        dorsal_pattern ? `Dorsal Pattern: ${dorsal_pattern}` : null,
+        underside_colour ? `Underside Colour: ${underside_colour}` : null,
       ]
         .filter(Boolean)
         .join(", ") || "-"
@@ -86,6 +91,14 @@ export function displayNumber(
 ) {
   if (value == null || Number.isNaN(value)) return fallback;
   return `${value}${suffix}`;
+}
+
+export function formatCurrencyMYR(value: number) {
+  return new Intl.NumberFormat("ms-MY", {
+    style: "currency",
+    currency: "MYR",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 export function splitTraits(value: string | null | undefined) {
