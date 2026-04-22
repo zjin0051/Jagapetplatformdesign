@@ -345,13 +345,38 @@ export function QuizResults() {
     return pets.map((pet) => evaluatePet(pet, answers));
   }, [pets, answers]);
 
-  const userFocusedPets =
-    wishlist.length > 0
+  const userFocusedPets = useMemo(() => {
+    return wishlist.length > 0
       ? results.filter((r) => wishlist.includes(r.pet.pet_id))
       : results;
+  }, [results, wishlist]);
 
-  const matches = userFocusedPets.filter((r) => r.suitable);
-  const unsuitable = userFocusedPets.filter((r) => !r.suitable);
+  const matches = useMemo(() => {
+    return userFocusedPets.filter((r) => r.suitable);
+  }, [userFocusedPets]);
+
+  const unsuitable = useMemo(() => {
+    return userFocusedPets.filter((r) => !r.suitable);
+  }, [userFocusedPets]);
+
+  const alternatives = useMemo(() => {
+    return results
+      .filter(
+        (r) =>
+          r.suitable &&
+          !userFocusedPets.some((p) => p.pet.pet_id === r.pet.pet_id),
+      )
+      .sort((a, b) => {
+        const scoreDiff = b.score - a.score;
+        if (scoreDiff !== 0) return scoreDiff;
+
+        const aRisk = riskLevel[a.pet.pet_invasive_risk ?? "Unknown"] ?? 4;
+        const bRisk = riskLevel[b.pet.pet_invasive_risk ?? "Unknown"] ?? 4;
+        return aRisk - bRisk;
+      })
+      .slice(0, 3);
+  }, [results, userFocusedPets]);
+
   const {
     visibleItems: visibleMatches,
     refreshItems: refreshMatches,
@@ -387,23 +412,6 @@ export function QuizResults() {
       </div>
     );
   }
-
-  // Determine suitability for all species
-  const alternatives = results
-    .filter(
-      (r) =>
-        r.suitable &&
-        !userFocusedPets.some((p) => p.pet.pet_id === r.pet.pet_id),
-    )
-    .sort((a, b) => {
-      const scoreDiff = b.score - a.score;
-      if (scoreDiff !== 0) return scoreDiff;
-
-      const aRisk = riskLevel[a.pet.pet_invasive_risk ?? "Unknown"] ?? 4;
-      const bRisk = riskLevel[b.pet.pet_invasive_risk ?? "Unknown"] ?? 4;
-      return aRisk - bRisk;
-    })
-    .slice(0, 3);
 
   return (
     <div className="bg-stone-50 min-h-screen py-16 px-4 font-sans text-stone-900">
