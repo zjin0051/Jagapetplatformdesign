@@ -853,31 +853,41 @@ export function SpeciesProfile() {
                   )}
                 </div>
 
-                <div className="bg-emerald-950 p-5 rounded-2xl border border-emerald-700 space-y-3">
-                  <h4 className="font-bold text-emerald-100 mb-2 border-b border-emerald-800 pb-2">
-                    Minimum Setup:
-                  </h4>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-emerald-400">Pet Price (RM)</span>
-                    <span className="font-semibold text-white capitalize">
-                      {pet.pet_cost || "Unknown"}
-                    </span>
+                {(pet.pet_cost != null ||
+                  pet.pet_tank_size ||
+                  pet.pet_care_level) && (
+                  <div className="bg-emerald-950 p-5 rounded-2xl border border-emerald-700 space-y-3">
+                    <h4 className="font-bold text-emerald-100 mb-2 border-b border-emerald-800 pb-2">
+                      Minimum Setup:
+                    </h4>
+                    {pet.pet_cost != null && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-400">Pet Price (RM)</span>
+                        <span className="font-semibold text-white capitalize">
+                          {pet.pet_cost}
+                        </span>
+                      </div>
+                    )}
+                    {pet.pet_tank_size && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-400">
+                          Tank Size (Gallons)
+                        </span>
+                        <span className="font-semibold text-white capitalize">
+                          {pet.pet_tank_size}
+                        </span>
+                      </div>
+                    )}
+                    {pet.pet_care_level && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-400">Experience</span>
+                        <span className="font-semibold text-white capitalize">
+                          {pet.pet_care_level}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-emerald-400">
-                      Tank Size (Gallons)
-                    </span>
-                    <span className="font-semibold text-white capitalize">
-                      {pet.pet_tank_size || "Unknown"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-emerald-400">Experience</span>
-                    <span className="font-semibold text-white capitalize">
-                      {pet.pet_care_level || "Unknown"}
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </aside>

@@ -17,6 +17,7 @@ import { motion } from "motion/react";
 import { useQuizRecommendations } from "../hooks/useQuizRecommendations";
 import type { QuizRecommendationPet } from "../types/pet.types";
 import { getPetCommonNames } from "../utils/petDisplay";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const levels = {
   budget: { low: 1, medium: 2, high: 3 },
@@ -381,7 +382,8 @@ export function QuizResults() {
     return (
       <div className="bg-stone-50 min-h-screen py-16 px-4">
         <div className="max-w-5xl mx-auto text-center text-stone-600">
-          Loading your quiz matches...
+          <CircularProgress size="3rem" />
+          <p className="mt-4">Loading your quiz matches...</p>
         </div>
       </div>
     );
