@@ -314,7 +314,7 @@ export function SpeciesProfile() {
           className="absolute inset-0 w-full h-full object-cover"
         />
 
-        <div className="absolute bottom-0 inset-x-0 z-20">
+        {/* <div className="absolute bottom-0 inset-x-0 z-20">
           <div className="mx-auto max-w-7xl px-8 md:px-12 pb-8 md:pb-12">
             <motion.div
               key={`tags-${pet?.pet_id}`}
@@ -372,23 +372,7 @@ export function SpeciesProfile() {
             >
               {pet?.pet_scientific_name}
             </motion.p>
-            {hasPetPrice && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.45 }}
-                className="mt-5 inline-flex items-end gap-3 rounded-2xl border border-white/20 bg-white/15 px-5 py-4 backdrop-blur-md shadow-lg"
-              >
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-300">
-                    Estimated Price
-                  </p>
-                  <p className="text-3xl md:text-4xl font-extrabold text-white leading-none">
-                    {formatCurrencyMYR(pet.pet_cost)}
-                  </p>
-                </div>
-              </motion.div>
-            )}
+
             {otherCommonNames.length > 0 && (
               <motion.p
                 key={`subtitle-${pet?.pet_id}`}
@@ -401,6 +385,105 @@ export function SpeciesProfile() {
                 {otherCommonNames.join(", ")}
               </motion.p>
             )}
+          </div>
+        </div> */}
+
+        <div className="absolute bottom-0 inset-x-0 z-20">
+          <div className="mx-auto max-w-7xl px-8 md:px-12 pb-8 md:pb-12">
+            <motion.div
+              key={`tags-${pet?.pet_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex items-center gap-3 mb-4 flex-wrap"
+            >
+              <span
+                className={getSpeciesDangerBadgeClasses(
+                  pet?.pet_invasive_risk || "Unknown",
+                )}
+              >
+                <ShieldAlert className="w-4 h-4" />
+                {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
+              </span>
+
+              <span
+                className={getSpeciesCareBadgeClasses(
+                  pet?.pet_care_level || "Unknown",
+                )}
+              >
+                <HandHeart className="w-4 h-4" />
+                {pet?.pet_care_level || "Unknown"} Care
+              </span>
+
+              <span
+                className={getSpeciesDangerBadgeClasses(
+                  dangerLevel || "Unknown",
+                )}
+              >
+                <Skull className="w-4 h-4" />
+                {dangerLevel || "Unknown"} Danger
+              </span>
+
+              {pet.pet_banned && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-4 py-1.5 text-sm font-semibold text-red-700">
+                  <Ban className="w-4 h-4" />
+                  Banned in Malaysia
+                </span>
+              )}
+            </motion.div>
+
+            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-3xl">
+                <motion.h1
+                  key={`title-${pet?.pet_id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
+                >
+                  {primaryCommonName}
+                </motion.h1>
+
+                <motion.p
+                  key={`subtitle-${pet?.pet_id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className="text-xl md:text-2xl text-stone-300 mb-2 italic font-serif"
+                >
+                  {pet?.pet_scientific_name}
+                </motion.p>
+
+                {otherCommonNames.length > 0 && (
+                  <motion.p
+                    key={`aka-${pet?.pet_id}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.45 }}
+                    className="text-lg md:text-xl text-stone-200 font-serif"
+                  >
+                    <span className="font-semibold">A.K.A:</span>{" "}
+                    {otherCommonNames.join(", ")}
+                  </motion.p>
+                )}
+              </div>
+
+              {pet.pet_cost != null && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                  className="shrink-0 self-start md:self-end rounded-2xl border border-white/20 bg-white/15 px-6 py-5 backdrop-blur-md shadow-lg min-w-[180px]"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-300">
+                    Estimated Price
+                  </p>
+                  <p className="mt-1 text-3xl md:text-4xl font-extrabold text-white leading-none">
+                    {formatCurrencyMYR(pet.pet_cost)}
+                  </p>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
       </div>
