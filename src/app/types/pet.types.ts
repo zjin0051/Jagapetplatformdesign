@@ -46,6 +46,23 @@ export type RecommendedPet = {
   pet_lifetime_budget_category?: LifetimeBudgetCategory;
 };
 
+export type QuizRecommendationPet = {
+  pet_id: string;
+  pet_vernacular_name: string | null;
+  pet_scientific_name: string | null;
+  pet_care_level: string | null;
+  pet_is_native: string | null;
+  pet_danger: string | null;
+  pet_invasive_risk: string | null;
+  pet_image_ref: string | null;
+  pet_comments: string | null;
+  pet_cost: number | null;
+  pet_longevity: number | null;
+  pet_max_length: number | null;
+  pet_tank_size: string | null;
+  pet_lifetime_budget_category?: LifetimeBudgetCategory;
+};
+
 export type SortOption =
   | "aquarium"
   | "alphabet_asc"
