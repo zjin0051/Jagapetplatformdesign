@@ -314,80 +314,6 @@ export function SpeciesProfile() {
           className="absolute inset-0 w-full h-full object-cover"
         />
 
-        {/* <div className="absolute bottom-0 inset-x-0 z-20">
-          <div className="mx-auto max-w-7xl px-8 md:px-12 pb-8 md:pb-12">
-            <motion.div
-              key={`tags-${pet?.pet_id}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="flex items-center gap-3 mb-4 flex-wrap"
-            >
-              <span
-                className={getSpeciesDangerBadgeClasses(
-                  pet?.pet_invasive_risk || "Unknown",
-                )}
-              >
-                <ShieldAlert className="w-4 h-4" />
-                {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
-              </span>
-              <span
-                className={getSpeciesCareBadgeClasses(
-                  pet?.pet_care_level || "Unknown",
-                )}
-              >
-                <HandHeart className="w-4 h-4" />
-                {pet?.pet_care_level || "Unknown"} Care
-              </span>
-              <span
-                className={getSpeciesDangerBadgeClasses(
-                  dangerLevel || "Unknown",
-                )}
-              >
-                <Skull className="w-4 h-4" />
-                {dangerLevel || "Unknown"} Danger
-              </span>
-              {pet.pet_banned && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-4 py-1.5 text-sm font-semibold text-red-700">
-                  <Ban className="w-4 h-4" />
-                  Banned in Malaysia
-                </span>
-              )}
-            </motion.div>
-            <motion.h1
-              key={`title-${pet?.pet_id}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
-            >
-              {primaryCommonName}
-            </motion.h1>
-            <motion.p
-              key={`subtitle-${pet?.pet_id}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="text-xl md:text-2xl text-stone-300 mb-2 italic font-serif"
-            >
-              {pet?.pet_scientific_name}
-            </motion.p>
-
-            {otherCommonNames.length > 0 && (
-              <motion.p
-                key={`subtitle-${pet?.pet_id}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="text-xl md:text-2xl text-stone-300 font-serif"
-              >
-                <span className="font-semibold">A.K.A:</span>{" "}
-                {otherCommonNames.join(", ")}
-              </motion.p>
-            )}
-          </div>
-        </div> */}
-
         <div className="absolute bottom-0 inset-x-0 z-20">
           <div className="mx-auto max-w-7xl px-8 md:px-12 pb-8 md:pb-12">
             <motion.div
@@ -663,40 +589,80 @@ export function SpeciesProfile() {
                   </p>
                 </div>
 
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Body shape
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {formatPetBodyShape(pet.pet_body_shape)}
-                  </p>
-                </div>
+                {pet.pet_body_shape && (
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                      Body shape
+                    </p>
+                    <p className="mt-1 text-stone-800">
+                      {formatPetBodyShape(pet.pet_body_shape)}
+                    </p>
+                  </div>
+                )}
 
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Migration type
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_migration_type)}
-                  </p>
-                </div>
+                {pet.pet_migration_type && (
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                      Migration type
+                    </p>
+                    <p className="mt-1 text-stone-800">
+                      {displayText(pet.pet_migration_type)}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
-              <div className="mb-4 flex items-center gap-2 text-emerald-800">
-                <Leaf className="h-5 w-5" />
-                <h2 className="text-2xl font-bold">Traits</h2>
-              </div>
+            {pet.pet_traits && (
+              <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+                <div className="mb-4 flex items-center gap-2 text-emerald-800">
+                  <Leaf className="h-5 w-5" />
+                  <h2 className="text-2xl font-bold">Traits</h2>
+                </div>
 
-              {pet.pet_traits && (
                 <div className="flex flex-wrap gap-3">
                   <span className="leading-7 text-stone-700">
                     {formatPetTraits(pet.pet_traits)}
                   </span>
                 </div>
+              </div>
+            )}
+
+            {pet.pet_diet &&
+              (pet.pet_diet.main_type || pet.pet_diet.remarks) && (
+                <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2 text-emerald-800">
+                    <Leaf className="h-5 w-5" />
+                    <h2 className="text-2xl font-bold">Diet</h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    {pet.pet_diet.main_type && (
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                          Main diet type
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-semibold text-emerald-800">
+                            {displayText(pet.pet_diet.main_type)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {pet.pet_diet.remarks && (
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                          Feeding notes
+                        </p>
+                        <p className="mt-1 leading-7 text-stone-700">
+                          {displayText(pet.pet_diet.remarks)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
-            </div>
 
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
