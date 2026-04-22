@@ -449,7 +449,9 @@ export function SpeciesProfile() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.4 }}
-                  className="text-xl md:text-2xl text-stone-300 mb-2 italic font-serif"
+                  className={`text-xl md:text-2xl text-stone-300 italic font-serif ${
+                    otherCommonNames.length > 0 ? "mb-2" : ""
+                  }`}
                 >
                   {pet?.pet_scientific_name}
                 </motion.p>
