@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, Link, Navigate } from "react-router";
-import { speciesData, Species } from "../data/species";
 import { useWishlist } from "../context/WishlistContext";
 import { LifestyleAnswers, useUser } from "../context/UserContext";
 import {
@@ -11,9 +10,6 @@ import {
   Heart,
   XOctagon,
   Search,
-  Leaf,
-  Thermometer,
-  Banknote,
   HelpCircle,
   RefreshCw,
 } from "lucide-react";
@@ -121,21 +117,9 @@ function getUserLifespanLevel(value: string | undefined): 1 | 2 | 3 | null {
 
   const normalized = value.trim().toLowerCase();
 
-  if (normalized === "1 - 5 years" || normalized === "1-5 years") {
-    return 1;
-  }
-
-  if (
-    normalized === "5 - 15 years" ||
-    normalized === "5 -15 years" ||
-    normalized === "5-15 years"
-  ) {
-    return 2;
-  }
-
-  if (normalized === "15+ years" || normalized === "15+ years (long term)") {
-    return 3;
-  }
+  if (normalized === "short") return 1;
+  if (normalized === "medium") return 2;
+  if (normalized === "long") return 3;
 
   return null;
 }
@@ -446,6 +430,7 @@ export function QuizResults() {
           <div className="flex justify-center gap-4 flex-wrap">
             <Link
               to="/quiz"
+              state={{ retake: true }}
               className="bg-white border-2 border-stone-200 text-stone-700 px-6 py-2 rounded-full font-bold hover:bg-stone-100 transition"
             >
               Retake Quiz
@@ -735,6 +720,7 @@ export function QuizResults() {
             </p>
             <Link
               to="/quiz"
+              state={{ retake: true }}
               className="bg-emerald-600 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-700 transition inline-block"
             >
               Adjust Your Answers
