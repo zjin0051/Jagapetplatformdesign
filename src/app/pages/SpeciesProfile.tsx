@@ -36,6 +36,8 @@ import {
   getSpeciesDangerBadgeClasses,
   getDangerBadgeClasses,
   getCareBadgeClasses,
+  formatPetBodyShape,
+  formatPetTraits,
 } from "../utils/petDisplay";
 import { useCompare } from "../context/CompareContext";
 import { useUser } from "../context/UserContext";
@@ -173,7 +175,7 @@ export function SpeciesProfile() {
     [pet?.pet_is_native],
   );
 
-  const traits = useMemo(() => splitTraits(pet?.pet_traits), [pet?.pet_traits]);
+  // const traits = useMemo(() => splitTraits(pet?.pet_traits), [pet?.pet_traits]);
 
   const { primaryCommonName, otherCommonNames } = pet
     ? getPetCommonNames(pet)
@@ -494,7 +496,7 @@ export function SpeciesProfile() {
                     Body shape
                   </p>
                   <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_body_shape)}
+                    {formatPetBodyShape(pet.pet_body_shape)}
                   </p>
                 </div>
 
@@ -515,20 +517,13 @@ export function SpeciesProfile() {
                 <h2 className="text-2xl font-bold">Traits</h2>
               </div>
 
-              {traits.length > 0 ? (
+              {(pet.pet_traits && (
                 <div className="flex flex-wrap gap-3">
-                  {traits.map((trait, index) => (
-                    <span
-                      key={`${trait}-${index}`}
-                      className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-800"
-                    >
-                      {trait}
-                    </span>
-                  ))}
+                  <span className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-800">
+                    {formatPetTraits(pet.pet_traits)}
+                  </span>
                 </div>
-              ) : (
-                <p className="text-stone-600">No trait data available.</p>
-              )}
+              )) || <p className="text-stone-600">No trait data available.</p>}
             </div>
 
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">

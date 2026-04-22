@@ -1,4 +1,4 @@
-import type { Pet, RecommendedPet } from "../types/pet.types";
+import type { Pet, PetBodyShape, PetTraits, RecommendedPet } from "../types/pet.types";
 
 export function getPetDisplayName(pet: Pet | RecommendedPet) {
   return (
@@ -19,6 +19,56 @@ export function getPetCommonNames(pet: Pet | RecommendedPet) {
       vernacularNames[0] ?? pet.pet_scientific_name ?? "Unknown Pet",
     otherCommonNames: vernacularNames.slice(1),
   };
+}
+
+export function formatPetBodyShape(bodyShape: PetBodyShape): string {
+  if (!bodyShape) return "-";
+
+  if ("fish" in bodyShape) {
+    return bodyShape.fish.body_shape ?? "-";
+  }
+
+  if ("turtle" in bodyShape) {
+    const { shell_type, no_of_toes_fore, no_of_toes_hind } = bodyShape.turtle;
+
+    return (
+      [
+        shell_type ? `Shell type: ${shell_type}` : null,
+        no_of_toes_fore != null ? `Fore toes: ${no_of_toes_fore}` : null,
+        no_of_toes_hind != null ? `Hind toes: ${no_of_toes_hind}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ") || "-"
+    );
+  }
+
+  return "-";
+}
+
+export function formatPetTraits(traits: PetTraits): string {
+  if (!traits) return "-";
+
+  if ("fish" in traits) {
+    return "-";
+  }
+
+  if ("turtle" in traits) {
+    const { carapace_colour, dorsal_colour, dorsal_pattern, underside_colour } =
+      traits.turtle;
+
+    return (
+      [
+        carapace_colour ? `Carapace: ${carapace_colour}` : null,
+        dorsal_colour ? `Dorsal colour: ${dorsal_colour}` : null,
+        dorsal_pattern ? `Dorsal pattern: ${dorsal_pattern}` : null,
+        underside_colour ? `Underside: ${underside_colour}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ") || "-"
+    );
+  }
+
+  return "-";
 }
 
 export function displayText(
