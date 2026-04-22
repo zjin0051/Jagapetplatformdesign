@@ -21,6 +21,7 @@ import {
   Skull,
   Ban,
   Heart,
+  Dna,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { usePetDetail } from "../hooks/usePetDetails";
@@ -616,7 +617,7 @@ export function SpeciesProfile() {
             {pet.pet_traits && (
               <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
                 <div className="mb-4 flex items-center gap-2 text-emerald-800">
-                  <Leaf className="h-5 w-5" />
+                  <Dna className="h-5 w-5" />
                   <h2 className="text-2xl font-bold">Traits</h2>
                 </div>
 
