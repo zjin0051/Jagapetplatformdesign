@@ -1,14 +1,50 @@
 export type PurchaseCostCategory = "Low" | "Medium" | "High" | "Unknown";
 export type LifetimeBudgetCategory = "Low" | "Medium" | "High" | "Unknown";
 
+export type FishBodyShape = {
+  fish: {
+    body_shape: string | null;
+  };
+};
+
+export type TurtleBodyShape = {
+  turtle: {
+    shell_type: string | null;
+    no_of_toes_fore: number | null;
+    no_of_toes_hind: number | null;
+  };
+};
+
+export type PetBodyShape = FishBodyShape | TurtleBodyShape | null;
+
+export type FishTraits = {
+  fish: Record<string, never>; // or {} if fish currently has no extra traits
+};
+
+export type TurtleTraits = {
+  turtle: {
+    carapace_colour: string | null;
+    dorsal_colour: string | null;
+    dorsal_pattern: string | null;
+    underside_colour: string | null;
+  };
+};
+
+export type PetTraits = FishTraits | TurtleTraits | null;
+
+export type PetDiet = {
+  main_type: string | null;
+  remarks: string | null;
+} | null;
+
 export type Pet = {
   pet_id: string;
   pet_scientific_name: string | null;
   pet_vernacular_name: string | null;
   pet_genus: string | null;
   pet_family: string | null;
-  pet_body_shape: string | null;
-  pet_traits: string | null;
+  pet_body_shape: PetBodyShape;
+  pet_traits: PetTraits;
   pet_max_length: number | null;
   pet_max_weight: number | null;
   pet_longevity: number | null;
@@ -29,6 +65,7 @@ export type Pet = {
   pet_care_level: string | null;
   pet_purchase_cost_category?: PurchaseCostCategory;
   pet_lifetime_budget_category?: LifetimeBudgetCategory;
+  pet_diet: PetDiet;
 };
 
 export type RecommendedPet = {

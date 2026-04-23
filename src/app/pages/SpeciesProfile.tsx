@@ -21,21 +21,22 @@ import {
   Skull,
   Ban,
   Heart,
+  Dna,
 } from "lucide-react";
 import { motion } from "motion/react";
-import type { Pet } from "../types/pet.types";
 import { usePetDetail } from "../hooks/usePetDetails";
 import {
   displayText,
-  displayNumber,
   normalizeDangerBadge,
   getPetCommonNames,
-  splitTraits,
   isInvasiveSpecies,
   getSpeciesCareBadgeClasses,
   getSpeciesDangerBadgeClasses,
   getDangerBadgeClasses,
   getCareBadgeClasses,
+  formatPetBodyShape,
+  formatPetTraits,
+  formatCurrencyMYR,
 } from "../utils/petDisplay";
 import { useCompare } from "../context/CompareContext";
 import { useUser } from "../context/UserContext";
@@ -173,8 +174,6 @@ export function SpeciesProfile() {
     [pet?.pet_is_native],
   );
 
-  const traits = useMemo(() => splitTraits(pet?.pet_traits), [pet?.pet_traits]);
-
   const { primaryCommonName, otherCommonNames } = pet
     ? getPetCommonNames(pet)
     : { primaryCommonName: "Unknown Pet", otherCommonNames: [] };
@@ -220,6 +219,7 @@ export function SpeciesProfile() {
 
   const inCompare = isInCompare(pet.pet_id);
   const compareDisabled = isCompareFull && !inCompare;
+  const hasPetPrice = pet.pet_cost != null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50">
@@ -332,6 +332,7 @@ export function SpeciesProfile() {
                 <ShieldAlert className="w-4 h-4" />
                 {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
               </span>
+
               <span
                 className={getSpeciesCareBadgeClasses(
                   pet?.pet_care_level || "Unknown",
@@ -340,6 +341,7 @@ export function SpeciesProfile() {
                 <HandHeart className="w-4 h-4" />
                 {pet?.pet_care_level || "Unknown"} Care
               </span>
+
               <span
                 className={getSpeciesDangerBadgeClasses(
                   dangerLevel || "Unknown",
@@ -348,6 +350,7 @@ export function SpeciesProfile() {
                 <Skull className="w-4 h-4" />
                 {dangerLevel || "Unknown"} Danger
               </span>
+
               {pet.pet_banned && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-4 py-1.5 text-sm font-semibold text-red-700">
                   <Ban className="w-4 h-4" />
@@ -355,36 +358,61 @@ export function SpeciesProfile() {
                 </span>
               )}
             </motion.div>
-            <motion.h1
-              key={`title-${pet?.pet_id}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
-            >
-              {primaryCommonName}
-            </motion.h1>
-            <motion.p
-              key={`subtitle-${pet?.pet_id}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="text-xl md:text-2xl text-stone-300 mb-2 italic font-serif"
-            >
-              {pet?.pet_scientific_name}
-            </motion.p>
-            {otherCommonNames.length > 0 && (
-              <motion.p
-                key={`subtitle-${pet?.pet_id}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="text-xl md:text-2xl text-stone-300 font-serif"
-              >
-                <span className="font-semibold">A.K.A:</span>{" "}
-                {otherCommonNames.join(", ")}
-              </motion.p>
-            )}
+
+            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-3xl">
+                <motion.h1
+                  key={`title-${pet?.pet_id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
+                >
+                  {primaryCommonName}
+                </motion.h1>
+
+                <motion.p
+                  key={`subtitle-${pet?.pet_id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className={`text-xl md:text-2xl text-stone-300 italic font-serif ${
+                    otherCommonNames.length > 0 ? "mb-2" : ""
+                  }`}
+                >
+                  {pet?.pet_scientific_name}
+                </motion.p>
+
+                {otherCommonNames.length > 0 && (
+                  <motion.p
+                    key={`aka-${pet?.pet_id}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.45 }}
+                    className="text-lg md:text-xl text-stone-200 font-serif"
+                  >
+                    <span className="font-semibold">A.K.A:</span>{" "}
+                    {otherCommonNames.join(", ")}
+                  </motion.p>
+                )}
+              </div>
+
+              {pet.pet_cost != null && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                  className="shrink-0 self-start md:self-end rounded-2xl border border-white/20 bg-white/15 px-6 py-5 backdrop-blur-md shadow-lg min-w-[180px]"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-300">
+                    Estimated Price
+                  </p>
+                  <p className="mt-1 text-3xl md:text-4xl font-extrabold text-white leading-none">
+                    {formatCurrencyMYR(pet.pet_cost)}
+                  </p>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -446,6 +474,79 @@ export function SpeciesProfile() {
                   </div>
                 </section>
               )}
+
+            {recommendedAlternatives?.length > 0 && (
+              <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+                <div className="mb-5 flex items-center gap-2 text-emerald-800">
+                  <Fish className="h-5 w-5" />
+                  <h2 className="text-2xl font-bold">
+                    Recommended Alternatives
+                  </h2>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {recommendedAlternatives.map((item) => (
+                    <Link
+                      key={item.pet_id}
+                      to={`/species/${item.pet_id}`}
+                      className="rounded-2xl border border-stone-200 p-4 transition hover:border-emerald-400 hover:bg-emerald-50"
+                    >
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        {item.hasLowerRisk && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+                            <ShieldAlert className="h-3.5 w-3.5" />
+                            Lower Risk
+                          </span>
+                        )}
+
+                        {item.hasLowerCare && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800">
+                            <HandHeart className="h-3.5 w-3.5" />
+                            Easier Care
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="font-bold text-stone-900">
+                        {displayText(
+                          item.pet_vernacular_name,
+                          item.pet_scientific_name
+                            ? item.pet_scientific_name
+                            : "Unknown Species",
+                        )}
+                      </h3>
+
+                      <p className="mt-1 text-sm italic text-stone-600">
+                        {displayText(item.pet_scientific_name)}
+                      </p>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {item.pet_invasive_risk && (
+                          <span
+                            className={getDangerBadgeClasses(
+                              item.pet_invasive_risk,
+                            )}
+                          >
+                            <ShieldAlert className="w-3 h-3" />
+                            {item.pet_invasive_risk} Risk
+                          </span>
+                        )}
+
+                        {item.pet_care_level && (
+                          <span
+                            className={getCareBadgeClasses(item.pet_care_level)}
+                          >
+                            <HandHeart className="w-3 h-3" />
+                            {item.pet_care_level} Care
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
                 <Info className="h-5 w-5" />
@@ -489,47 +590,80 @@ export function SpeciesProfile() {
                   </p>
                 </div>
 
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Body shape
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_body_shape)}
-                  </p>
-                </div>
+                {pet.pet_body_shape && (
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                      Body shape
+                    </p>
+                    <p className="mt-1 text-stone-800">
+                      {formatPetBodyShape(pet.pet_body_shape)}
+                    </p>
+                  </div>
+                )}
 
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-                    Migration type
-                  </p>
-                  <p className="mt-1 text-stone-800">
-                    {displayText(pet.pet_migration_type)}
-                  </p>
-                </div>
+                {pet.pet_migration_type && (
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                      Migration type
+                    </p>
+                    <p className="mt-1 text-stone-800">
+                      {displayText(pet.pet_migration_type)}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
-              <div className="mb-4 flex items-center gap-2 text-emerald-800">
-                <Leaf className="h-5 w-5" />
-                <h2 className="text-2xl font-bold">Traits</h2>
-              </div>
+            {pet.pet_traits && (
+              <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+                <div className="mb-4 flex items-center gap-2 text-emerald-800">
+                  <Dna className="h-5 w-5" />
+                  <h2 className="text-2xl font-bold">Traits</h2>
+                </div>
 
-              {traits.length > 0 ? (
                 <div className="flex flex-wrap gap-3">
-                  {traits.map((trait, index) => (
-                    <span
-                      key={`${trait}-${index}`}
-                      className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-800"
-                    >
-                      {trait}
-                    </span>
-                  ))}
+                  <span className="leading-7 text-stone-700">
+                    {formatPetTraits(pet.pet_traits)}
+                  </span>
                 </div>
-              ) : (
-                <p className="text-stone-600">No trait data available.</p>
+              </div>
+            )}
+
+            {pet.pet_diet &&
+              (pet.pet_diet.main_type || pet.pet_diet.remarks) && (
+                <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2 text-emerald-800">
+                    <Leaf className="h-5 w-5" />
+                    <h2 className="text-2xl font-bold">Diet</h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    {pet.pet_diet.main_type && (
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                          Main diet type
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-semibold text-emerald-800">
+                            {displayText(pet.pet_diet.main_type)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {pet.pet_diet.remarks && (
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                          Feeding notes
+                        </p>
+                        <p className="mt-1 leading-7 text-stone-700">
+                          {displayText(pet.pet_diet.remarks)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
-            </div>
 
             <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
               <div className="mb-4 flex items-center gap-2 text-emerald-800">
@@ -542,88 +676,6 @@ export function SpeciesProfile() {
                   "No additional comments are available for this pet.",
                 )}
               </p>
-            </div>
-
-            <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
-              <div className="mb-5 flex items-center gap-2 text-emerald-800">
-                <Fish className="h-5 w-5" />
-                <h2 className="text-2xl font-bold">Recommended Alternatives</h2>
-              </div>
-
-              {recommendedAlternatives.length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {recommendedAlternatives.map((item) => (
-                    <Link
-                      key={item.pet_id}
-                      to={`/species/${item.pet_id}`}
-                      className="rounded-2xl border border-stone-200 p-4 transition hover:border-emerald-400 hover:bg-emerald-50"
-                    >
-                      <div className="mb-3 flex flex-wrap gap-2">
-                        {item.hasLowerRisk && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-                            <ShieldAlert className="h-3.5 w-3.5" />
-                            Lower Risk
-                          </span>
-                        )}
-
-                        {item.hasLowerCare && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800">
-                            <HandHeart className="h-3.5 w-3.5" />
-                            Easier Care
-                          </span>
-                        )}
-                      </div>
-
-                      <h3 className="font-bold text-stone-900">
-                        {displayText(
-                          item.pet_vernacular_name,
-                          item.pet_scientific_name
-                            ? item.pet_scientific_name
-                            : "Unknown Species",
-                        )}
-                      </h3>
-
-                      <p className="mt-1 text-sm italic text-stone-600">
-                        {displayText(item.pet_scientific_name)}
-                      </p>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {/* <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
-                          Risk: {displayText(item.pet_invasive_risk)}
-                        </span> */}
-
-                        {item.pet_invasive_risk && (
-                          <span
-                            className={getDangerBadgeClasses(
-                              item.pet_invasive_risk,
-                            )}
-                          >
-                            <ShieldAlert className="w-3 h-3" />
-                            {item.pet_invasive_risk} Risk
-                          </span>
-                        )}
-
-                        {/* <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">
-                          Care: {displayText(item.pet_care_level)}
-                        </span> */}
-
-                        {item.pet_care_level && (
-                          <span
-                            className={getCareBadgeClasses(item.pet_care_level)}
-                          >
-                            <HandHeart className="w-3 h-3" />
-                            {item.pet_care_level} Care
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-5 text-stone-600">
-                  Sorry, no better alternative found at the moment.
-                </div>
-              )}
             </div>
           </div>
 
@@ -690,95 +742,119 @@ export function SpeciesProfile() {
               </h3>
               <div className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
-                    <div className="mb-3 flex items-center gap-2 text-emerald-200">
-                      <Ruler className="h-4 w-4" />
-                      <h4 className="text-sm font-semibold">Max Length</h4>
+                  {pet.pet_max_length && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-3 flex items-center gap-2 text-emerald-200">
+                        <Ruler className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">Max Length</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {pet.pet_max_length}
+                      </p>
+                      <p className="mt-1 text-sm text-emerald-300">cm</p>
                     </div>
-                    <p className="text-2xl font-bold text-white">
-                      {pet.pet_max_length || "Unknown"}
-                    </p>
-                    <p className="mt-1 text-sm text-emerald-300">cm</p>
-                  </div>
+                  )}
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
-                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Scale className="h-4 w-4" />
-                      <h4 className="text-sm font-semibold">Max Weight</h4>
+                  {pet.pet_max_weight && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <Scale className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">Max Weight</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {pet.pet_max_weight}
+                      </p>
+                      <p className="mt-1 text-sm text-emerald-300">kg</p>
                     </div>
-                    <p className="text-2xl font-bold text-white">
-                      {pet.pet_max_weight || "Unknown"}
-                    </p>
-                    <p className="mt-1 text-sm text-emerald-300">kg</p>
-                  </div>
+                  )}
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
-                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Clock className="h-4 w-4" />
-                      <h4 className="text-sm font-semibold">Longevity</h4>
+                  {pet.pet_longevity && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <Clock className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">Longevity</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {pet.pet_longevity}
+                      </p>
+                      <p className="mt-1 text-sm text-emerald-300">years</p>
                     </div>
-                    <p className="text-2xl font-bold text-white">
-                      {pet.pet_longevity || "Unknown"}
-                    </p>
-                    <p className="mt-1 text-sm text-emerald-300">years</p>
-                  </div>
+                  )}
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
-                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Thermometer className="h-4 w-4" />
-                      <h4 className="text-sm font-semibold">Temperature</h4>
+                  {pet.pet_temperature && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <Thermometer className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">Temperature</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {displayText(pet.pet_temperature)}
+                      </p>
                     </div>
-                    <p className="text-2xl font-bold text-white">
-                      {displayText(pet.pet_temperature)}
-                    </p>
-                  </div>
+                  )}
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
-                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <TestTubeDiagonal className="h-4 w-4" />
-                      <h4 className="text-sm font-semibold">pH</h4>
+                  {pet.pet_ph_range && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <TestTubeDiagonal className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">pH</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {displayText(pet.pet_ph_range)}
+                      </p>
                     </div>
-                    <p className="text-2xl font-bold text-white">
-                      {displayText(pet.pet_ph_range)}
-                    </p>
-                  </div>
+                  )}
 
-                  <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
-                    <div className="mb-2 flex items-center gap-2 text-emerald-200">
-                      <Droplet className="h-4 w-4" />
-                      <h4 className="text-sm font-semibold">Water Hardness</h4>
+                  {pet.pet_water_hardness && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <Droplet className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">
+                          Water Hardness
+                        </h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {displayText(pet.pet_water_hardness)}
+                      </p>
                     </div>
-                    <p className="text-2xl font-bold text-white">
-                      {displayText(pet.pet_water_hardness)}
-                    </p>
-                  </div>
+                  )}
                 </div>
 
-                <div className="bg-emerald-950 p-5 rounded-2xl border border-emerald-700 space-y-3">
-                  <h4 className="font-bold text-emerald-100 mb-2 border-b border-emerald-800 pb-2">
-                    Minimum Setup:
-                  </h4>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-emerald-400">Pet Price (RM)</span>
-                    <span className="font-semibold text-white capitalize">
-                      {pet.pet_cost || "Unknown"}
-                    </span>
+                {(pet.pet_cost != null ||
+                  pet.pet_tank_size ||
+                  pet.pet_care_level) && (
+                  <div className="bg-emerald-950 p-5 rounded-2xl border border-emerald-700 space-y-3">
+                    <h4 className="font-bold text-emerald-100 mb-2 border-b border-emerald-800 pb-2">
+                      Minimum Setup:
+                    </h4>
+                    {pet.pet_cost != null && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-400">Pet Price (RM)</span>
+                        <span className="font-semibold text-white capitalize">
+                          {pet.pet_cost}
+                        </span>
+                      </div>
+                    )}
+                    {pet.pet_tank_size && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-400">
+                          Tank Size (Gallons)
+                        </span>
+                        <span className="font-semibold text-white capitalize">
+                          {pet.pet_tank_size}
+                        </span>
+                      </div>
+                    )}
+                    {pet.pet_care_level && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-400">Experience</span>
+                        <span className="font-semibold text-white capitalize">
+                          {pet.pet_care_level}
+                        </span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-emerald-400">
-                      Tank Size (Gallons)
-                    </span>
-                    <span className="font-semibold text-white capitalize">
-                      {pet.pet_tank_size || "Unknown"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-emerald-400">Experience</span>
-                    <span className="font-semibold text-white capitalize">
-                      {pet.pet_care_level || "Unknown"}
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </aside>

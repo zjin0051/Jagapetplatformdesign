@@ -39,7 +39,8 @@ export default async function handler(req: any, res: any) {
         pet_image_ref,
         pet_banned,
         pet_invasive_risk,
-        pet_care_level
+        pet_care_level,
+        pet_diet
       from public.pet
       where
         pet_vernacular_name ilike ${pattern}

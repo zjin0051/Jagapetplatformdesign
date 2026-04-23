@@ -1,4 +1,9 @@
-import type { Pet, RecommendedPet } from "../types/pet.types";
+import type {
+  Pet,
+  PetBodyShape,
+  PetTraits,
+  RecommendedPet,
+} from "../types/pet.types";
 
 export function getPetDisplayName(pet: Pet | RecommendedPet) {
   return (
@@ -10,7 +15,7 @@ export function getPetDisplayName(pet: Pet | RecommendedPet) {
 
 export function getPetCommonNames(pet: Pet | RecommendedPet) {
   const vernacularNames = (pet.pet_vernacular_name ?? "")
-    .split(";")
+    .split(/[;,]/)
     .map((name) => name.trim())
     .filter(Boolean);
 
@@ -19,6 +24,56 @@ export function getPetCommonNames(pet: Pet | RecommendedPet) {
       vernacularNames[0] ?? pet.pet_scientific_name ?? "Unknown Pet",
     otherCommonNames: vernacularNames.slice(1),
   };
+}
+
+export function formatPetBodyShape(bodyShape: PetBodyShape): string {
+  if (!bodyShape) return "-";
+
+  if ("fish" in bodyShape) {
+    return bodyShape.fish.body_shape ?? "-";
+  }
+
+  if ("turtle" in bodyShape) {
+    const { shell_type, no_of_toes_fore, no_of_toes_hind } = bodyShape.turtle;
+
+    return (
+      [
+        shell_type ? `Shell type: ${shell_type}` : null,
+        no_of_toes_fore != null ? `Fore toes: ${no_of_toes_fore}` : null,
+        no_of_toes_hind != null ? `Hind toes: ${no_of_toes_hind}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ") || "-"
+    );
+  }
+
+  return "-";
+}
+
+export function formatPetTraits(traits: PetTraits): string {
+  if (!traits) return "-";
+
+  if ("fish" in traits) {
+    return "-";
+  }
+
+  if ("turtle" in traits) {
+    const { carapace_colour, dorsal_colour, dorsal_pattern, underside_colour } =
+      traits.turtle;
+
+    return (
+      [
+        carapace_colour ? `Carapace Colour: ${carapace_colour}` : null,
+        dorsal_colour ? `Dorsal Colour: ${dorsal_colour}` : null,
+        dorsal_pattern ? `Dorsal Pattern: ${dorsal_pattern}` : null,
+        underside_colour ? `Underside Colour: ${underside_colour}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ") || "-"
+    );
+  }
+
+  return "-";
 }
 
 export function displayText(
@@ -36,6 +91,14 @@ export function displayNumber(
 ) {
   if (value == null || Number.isNaN(value)) return fallback;
   return `${value}${suffix}`;
+}
+
+export function formatCurrencyMYR(value: number) {
+  return new Intl.NumberFormat("ms-MY", {
+    style: "currency",
+    currency: "MYR",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 export function splitTraits(value: string | null | undefined) {
