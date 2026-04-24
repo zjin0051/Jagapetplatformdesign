@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import {
   AlertTriangle,
   ShieldCheck,
@@ -16,6 +16,7 @@ import { speciesData } from "../data/species";
 import { motion } from "motion/react";
 import { SearchAutocomplete } from "../components/SearchAutocomplete";
 import { usePetRecommendationPool } from "../hooks/usePetRecommendations";
+import { useHighRiskSpecies } from "../hooks/useHighRiskSpecies";
 import {
   getPetCommonNames,
   getDangerBadgeClasses,
@@ -37,11 +38,18 @@ function shuffleArray<T>(items: T[]) {
 }
 
 export function Home() {
-  const navigate = useNavigate();
-
   const { recommendations, loading, error } = usePetRecommendationPool();
+  const {
+    highRiskSpecies,
+    loading: highRiskLoading,
+    error: highRiskError,
+  } = useHighRiskSpecies();
+
   const [deck, setDeck] = useState<string[]>([]);
   const [cursor, setCursor] = useState(0);
+
+  const [highRiskDeck, setHighRiskDeck] = useState<string[]>([]);
+  const [highRiskCursor, setHighRiskCursor] = useState(0);
 
   useEffect(() => {
     if (!recommendations.length) return;
@@ -72,6 +80,32 @@ export function Home() {
     sessionStorage.setItem("home-recommendation-cursor", "0");
   }, [recommendations]);
 
+  useEffect(() => {
+    if (!highRiskSpecies.length) return;
+
+    const savedDeck = sessionStorage.getItem("home-high-risk-deck");
+    const savedCursor = sessionStorage.getItem("home-high-risk-cursor");
+
+    const validIds = new Set(highRiskSpecies.map((pet) => pet.pet_id));
+
+    if (savedDeck) {
+      const parsedDeck = JSON.parse(savedDeck) as string[];
+      const filteredDeck = parsedDeck.filter((id) => validIds.has(id));
+
+      if (filteredDeck.length >= 4) {
+        setHighRiskDeck(filteredDeck);
+        setHighRiskCursor(savedCursor ? Number(savedCursor) : 0);
+        return;
+      }
+    }
+
+    const shuffled = shuffleArray(highRiskSpecies.map((pet) => pet.pet_id));
+    setHighRiskDeck(shuffled);
+    setHighRiskCursor(0);
+    sessionStorage.setItem("home-high-risk-deck", JSON.stringify(shuffled));
+    sessionStorage.setItem("home-high-risk-cursor", "0");
+  }, [highRiskSpecies]);
+
   const visibleRecommendations = useMemo(() => {
     const petMap = new Map(
       recommendations.map((pet) => [pet.pet_id, pet] as const),
@@ -83,10 +117,16 @@ export function Home() {
       .filter((pet): pet is RecommendedPet => pet !== undefined);
   }, [recommendations, deck, cursor]);
 
-  // Get high risk species for alert section
-  const highRiskSpecies = speciesData.filter(
-    (species) => species.biodiversityRisk === "High",
-  );
+  const visibleHighRiskSpecies = useMemo(() => {
+    const petMap = new Map(
+      highRiskSpecies.map((pet) => [pet.pet_id, pet] as const),
+    );
+
+    return highRiskDeck
+      .slice(highRiskCursor, highRiskCursor + 4)
+      .map((id) => petMap.get(id))
+      .filter((pet): pet is RecommendedPet => pet !== undefined);
+  }, [highRiskSpecies, highRiskDeck, highRiskCursor]);
 
   function showNextRecommendations() {
     if (!deck.length) return;
@@ -107,6 +147,24 @@ export function Home() {
 
     setCursor(nextCursor);
     sessionStorage.setItem("home-recommendation-cursor", String(nextCursor));
+  }
+
+  function showNextHighRiskSpecies() {
+    if (!highRiskDeck.length) return;
+
+    let nextCursor = highRiskCursor + 4;
+
+    if (nextCursor >= highRiskDeck.length) {
+      const reshuffled = shuffleArray(highRiskDeck);
+      setHighRiskDeck(reshuffled);
+      setHighRiskCursor(0);
+      sessionStorage.setItem("home-high-risk-deck", JSON.stringify(reshuffled));
+      sessionStorage.setItem("home-high-risk-cursor", "0");
+      return;
+    }
+
+    setHighRiskCursor(nextCursor);
+    sessionStorage.setItem("home-high-risk-cursor", String(nextCursor));
   }
 
   return (
@@ -355,7 +413,7 @@ export function Home() {
       </section>
 
       {/* High Biodiversity Risk Alert */}
-      <section className="max-w-7xl mx-auto px-4 w-full pt-12">
+      {/* <section className="max-w-7xl mx-auto px-4 w-full pt-12">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-3xl font-extrabold text-stone-900 flex items-center gap-3">
@@ -418,6 +476,128 @@ export function Home() {
               </div>
             </Link>
           ))}
+        </div>
+      </section> */}
+      {/* High Biodiversity Risk Alert */}
+      <section className="max-w-7xl mx-auto px-4 w-full pt-12">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-extrabold text-stone-900 flex items-center gap-3">
+              <Leaf className="text-emerald-600" />
+              High Biodiversity Risk Alert
+            </h2>
+            <p className="text-stone-600 mt-2 text-lg">
+              Commonly bought pets that pose threats to local ecosystems if
+              released.
+            </p>
+          </div>
+
+          {!highRiskLoading && !highRiskError && highRiskSpecies.length > 4 && (
+            <button
+              type="button"
+              onClick={showNextHighRiskSpecies}
+              className="inline-flex items-center gap-2 self-start sm:self-auto rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-50"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Show more
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {highRiskLoading ? (
+            <div className="col-span-full flex items-center justify-center py-12">
+              <CircularProgress size={20} />
+            </div>
+          ) : highRiskError ? (
+            <p className="text-rose-600">{highRiskError}</p>
+          ) : visibleHighRiskSpecies.length === 0 ? (
+            <p className="text-stone-600">No high risk species found.</p>
+          ) : (
+            visibleHighRiskSpecies.map((pet, index) => {
+              const { primaryCommonName } = getPetCommonNames(pet);
+
+              return (
+                <motion.div
+                  key={pet.pet_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Link
+                    to={`/species/${pet.pet_id}`}
+                    className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer h-full"
+                  >
+                    <div className="relative h-56 overflow-hidden">
+                      <img
+                        src={
+                          pet.pet_image_ref
+                            ? `/pet_image/${pet.pet_image_ref}`
+                            : "/pet_image/pet_placeholder.png"
+                        }
+                        alt={pet.pet_vernacular_name ?? "Pet image"}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                      />
+
+                      <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
+                        {pet.pet_invasive_risk && (
+                          <span
+                            className={getDangerBadgeClasses(
+                              pet.pet_invasive_risk,
+                            )}
+                          >
+                            <ShieldAlert className="w-3 h-3" />
+                            {pet.pet_invasive_risk} Risk
+                          </span>
+                        )}
+
+                        {pet.pet_care_level && (
+                          <span
+                            className={getCareBadgeClasses(pet.pet_care_level)}
+                          >
+                            <HandHeart className="w-3 h-3" />
+                            {pet.pet_care_level} Care
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-6 flex-1 flex flex-col">
+                      <h3 className="text-xl font-bold text-stone-900 mb-1">
+                        {primaryCommonName}
+                      </h3>
+
+                      <p className="text-sm text-stone-500 italic mb-4 font-serif">
+                        {pet.pet_scientific_name ??
+                          "Scientific name unavailable"}
+                      </p>
+
+                      <div className="mb-4 flex flex-wrap gap-2">
+                        {pet.pet_is_native && (
+                          <span
+                            className={getNativeBadgeClasses(pet.pet_is_native)}
+                          >
+                            <Fish className="w-3 h-3" />
+                            {pet.pet_is_native}
+                          </span>
+                        )}
+                      </div>
+
+                      {pet.pet_comments && (
+                        <p className="text-stone-600 text-sm line-clamp-3 mb-6 flex-1">
+                          {pet.pet_comments}
+                        </p>
+                      )}
+
+                      <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                        View Profile & Care Guide →
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })
+          )}
         </div>
       </section>
 
