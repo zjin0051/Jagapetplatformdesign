@@ -53,9 +53,9 @@ export async function getSessionUser(req: any) {
   const tokenHash = sha256(token);
 
   const rows = await sql`
-    select u.user_id, u.username, q.answers
+    select u.user_id, u.user_name, q.answers
     from public.user_session s
-    join public.app_user u on u.user_id = s.user_id
+    join public.user u on u.user_id = s.user_id
     left join public.user_quiz_profile q on q.user_id = u.user_id
     where s.session_token_hash = ${tokenHash}
       and s.expires_at > now()

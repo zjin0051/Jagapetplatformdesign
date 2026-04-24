@@ -15,7 +15,7 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({
       user: {
         userId: sessionUser.user_id,
-        username: sessionUser.username,
+        username: sessionUser.user_name,
         answers: sessionUser.answers ?? null,
       },
     });

@@ -13,18 +13,20 @@ export default async function handler(req: any, res: any) {
 
   try {
     const { username, password } = req.body || {};
-    const cleanUsername = String(username || "").trim().toLowerCase();
+    const cleanUsername = String(username || "")
+      .trim()
+      .toLowerCase();
     const cleanPassword = String(password || "");
 
     const rows = await sql`
-      select user_id, username, password_hash
-      from public.app_user
-      where username = ${cleanUsername}
+      select user_id, user_name, user_password_hash
+      from public.user
+      where user_name = ${cleanUsername}
       limit 1
     `;
 
     const user = rows[0];
-    if (!user || !verifyPassword(cleanPassword, user.password_hash)) {
+    if (!user || !verifyPassword(cleanPassword, user.user_password_hash)) {
       return res.status(401).json({ error: "Invalid username or password." });
     }
 
@@ -40,7 +42,7 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({
       user: {
         userId: user.user_id,
-        username: user.username,
+        username: user.user_name,
       },
     });
   } catch (error) {

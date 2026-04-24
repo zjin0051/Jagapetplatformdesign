@@ -28,7 +28,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const existing = await sql`
-      select user_id from public.app_user where username = ${cleanUsername} limit 1
+      select user_id from public.user where username = ${cleanUsername} limit 1
     `;
 
     if (existing.length > 0) {
@@ -38,9 +38,9 @@ export default async function handler(req: any, res: any) {
     const passwordHash = hashPassword(cleanPassword);
 
     const inserted = await sql`
-      insert into public.app_user (username, password_hash)
+      insert into public.user (user_name, user_password_hash)
       values (${cleanUsername}, ${passwordHash})
-      returning user_id, username
+      returning user_id, user_name
     `;
 
     const user = inserted[0];
