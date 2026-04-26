@@ -224,7 +224,9 @@ export default async function handler(req: any, res: any) {
         limit 1
       `;
 
-      const defaultTasks = buildDefaultTasks(careRows[0]);
+      // Reopen this line when the pet_care_profile table is populated with data. For now, it will just use the fallback frequencies for all pets.
+      // const defaultTasks = buildDefaultTasks(careRows[0]);
+      const defaultTasks = buildDefaultTasks(null);
 
       for (const task of defaultTasks) {
         step = `inserting pet_task: ${task.type}`;
