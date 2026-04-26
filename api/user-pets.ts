@@ -126,7 +126,6 @@ async function getUserPetsAndTasks(userId: string) {
     from public.pet_list pl
     join public.pet p on p.pet_id = pl.pet_id
     where pl.user_id = ${userId}
-    order by pl.pet_list_created_at desc
   `;
 
   const taskRows = await sql`
