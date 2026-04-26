@@ -220,7 +220,9 @@ export function Profile() {
       setShowAddPet(false);
     } catch (error) {
       console.error(error);
-      setFormError("Could not add pet.");
+      setFormError(
+        error instanceof Error ? error.message : "Could not add pet.",
+      );
     } finally {
       setSavingPet(false);
     }

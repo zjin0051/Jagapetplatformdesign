@@ -152,7 +152,9 @@ async function getUserPetsAndTasks(userId: string) {
 }
 
 export default async function handler(req: any, res: any) {
+  let step = "starting";
   try {
+    step = "getting session user";
     const sessionUser = await getSessionUser(req);
 
     if (!sessionUser) {
@@ -165,6 +167,7 @@ export default async function handler(req: any, res: any) {
     }
 
     if (req.method === "POST") {
+      step = "validating request body";
       const { petId, nickname, age } = req.body || {};
 
       if (!petId || !nickname || !String(nickname).trim()) {
@@ -178,6 +181,7 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ error: "Invalid age" });
       }
 
+      step = "checking pet species";
       const petRows = await sql`
         select pet_id
         from public.pet
@@ -191,6 +195,7 @@ export default async function handler(req: any, res: any) {
 
       const petListId = randomUUID();
 
+      step = "inserting pet_list";
       await sql`
         insert into public.pet_list (
           pet_list_id,
@@ -208,6 +213,7 @@ export default async function handler(req: any, res: any) {
         )
       `;
 
+      step = "reading pet_care_profile";
       const careRows = await sql`
         select
           feeding_frequency,
@@ -221,6 +227,7 @@ export default async function handler(req: any, res: any) {
       const defaultTasks = buildDefaultTasks(careRows[0]);
 
       for (const task of defaultTasks) {
+        step = `inserting pet_task: ${task.type}`;
         await sql`
           insert into public.pet_task (
             pet_task_id,
@@ -246,7 +253,7 @@ export default async function handler(req: any, res: any) {
           )
         `;
       }
-
+      step = "loading updated pets and tasks";
       const data = await getUserPetsAndTasks(sessionUser.user_id);
       return res.status(201).json(data);
     }
@@ -285,8 +292,14 @@ export default async function handler(req: any, res: any) {
     }
 
     return res.status(405).json({ error: "Method not allowed" });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Internal server error" });
+  } catch (error: any) {
+    console.error("[/api/user-pets error]", { step, error });
+
+    return res.status(500).json({
+      error: `Failed while ${step}`,
+      detail: error?.message,
+      code: error?.code,
+      constraint: error?.constraint,
+    });
   }
 }
