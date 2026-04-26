@@ -214,19 +214,42 @@ export default async function handler(req: any, res: any) {
       `;
 
       step = "reading pet_care_profile";
-      const careRows = await sql`
-        select
-          feeding_frequency,
-          cleaning_frequency,
-          vet_checkup_frequency
-        from public.pet_care_profile
-        where pet_id = ${String(petId)}
-        limit 1
-      `;
+      // const careRows = await sql`
+      //   select
+      //     feeding_frequency,
+      //     cleaning_frequency,
+      //     vet_checkup_frequency
+      //   from public.pet_care_profile
+      //   where pet_id = ${String(petId)}
+      //   limit 1
+      // `;
 
-      // Reopen this line when the pet_care_profile table is populated with data. For now, it will just use the fallback frequencies for all pets.
       // const defaultTasks = buildDefaultTasks(careRows[0]);
-      const defaultTasks = buildDefaultTasks(null);
+      let careProfile = null;
+
+      try {
+        const careRows = await sql`
+          select
+            feeding_frequency,
+            cleaning_frequency,
+            vet_checkup_frequency
+          from public.pet_care_profile
+          where pet_id = ${String(petId)}
+          limit 1
+        `;
+
+        careProfile = careRows[0] ?? null;
+      } catch (error: any) {
+        if (error?.code === "42P01") {
+          console.warn(
+            "pet_care_profile table does not exist yet. Using fallback task frequencies.",
+          );
+        } else {
+          throw error;
+        }
+      }
+
+      const defaultTasks = buildDefaultTasks(careProfile);
 
       for (const task of defaultTasks) {
         step = `inserting pet_task: ${task.type}`;

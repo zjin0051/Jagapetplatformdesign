@@ -493,17 +493,15 @@ export function Profile() {
                   >
                     <div className="flex items-start justify-between mb-6">
                       <div className="flex gap-4 items-center">
-                        {pet.imageUrl ? (
-                          <img
-                            src={pet.imageUrl}
-                            alt={pet.speciesName}
-                            className="w-24 h-24 rounded-xl object-cover shadow-md"
-                          />
-                        ) : (
-                          <div className="w-24 h-24 rounded-xl bg-emerald-100 flex items-center justify-center text-3xl shadow-md">
-                            🐾
-                          </div>
-                        )}
+                        <img
+                          src={
+                            pet.imageUrl
+                              ? `/pet_image/${pet.imageUrl}`
+                              : "/pet_image/pet_placeholder.png"
+                          }
+                          alt={pet.speciesName}
+                          className="w-24 h-24 rounded-xl object-cover shadow-md"
+                        />
 
                         <div>
                           <h3 className="text-2xl font-bold text-stone-900">
