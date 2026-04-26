@@ -12,7 +12,6 @@ import {
   Banknote,
   RefreshCw,
 } from "lucide-react";
-import { speciesData } from "../data/species";
 import { motion } from "motion/react";
 import { SearchAutocomplete } from "../components/SearchAutocomplete";
 import { usePetRecommendationPool } from "../hooks/usePetRecommendations";
