@@ -197,7 +197,7 @@ export default async function handler(req: any, res: any) {
           user_id,
           pet_list_name,
           pet_list_age,
-          pet_id,
+          pet_id
         )
         values (
           ${petListId},
