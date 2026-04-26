@@ -209,7 +209,7 @@ export default async function handler(req: any, res: any) {
           ${sessionUser.user_id},
           ${String(nickname).trim()},
           ${ageValue},
-          ${String(petId)},
+          ${String(petId)}
         )
       `;
 
