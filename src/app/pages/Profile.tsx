@@ -563,26 +563,28 @@ export function Profile() {
                                     : "bg-amber-50 border-amber-300"
                                 }`}
                               >
-                                <div className="flex items-start gap-3 mb-3">
-                                  <span
-                                    className={
-                                      task.lastCompleted
-                                        ? "text-emerald-600"
-                                        : "text-amber-600"
-                                    }
-                                  >
-                                    {TASK_ICONS[task.type] || (
-                                      <CheckCircle2 className="w-5 h-5" />
-                                    )}
-                                  </span>
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className={
+                                        task.lastCompleted
+                                          ? "text-emerald-600"
+                                          : "text-amber-600"
+                                      }
+                                    >
+                                      {TASK_ICONS[task.type] || (
+                                        <CheckCircle2 className="w-5 h-5" />
+                                      )}
+                                    </span>
 
-                                  <div>
-                                    <h5 className="font-bold text-stone-900">
-                                      {TASK_NAMES[task.type] || task.type}
-                                    </h5>
-                                    <p className="text-sm text-stone-600">
-                                      {formatFrequency(task)}
-                                    </p>
+                                    <div>
+                                      <h5 className="font-bold text-stone-900">
+                                        {TASK_NAMES[task.type] || task.type}
+                                      </h5>
+                                      <p className="text-sm text-stone-600">
+                                        {formatFrequency(task)}
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
 

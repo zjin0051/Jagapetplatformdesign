@@ -214,17 +214,6 @@ export default async function handler(req: any, res: any) {
       `;
 
       step = "reading pet_care_profile";
-      // const careRows = await sql`
-      //   select
-      //     feeding_frequency,
-      //     cleaning_frequency,
-      //     vet_checkup_frequency
-      //   from public.pet_care_profile
-      //   where pet_id = ${String(petId)}
-      //   limit 1
-      // `;
-
-      // const defaultTasks = buildDefaultTasks(careRows[0]);
       let careProfile = null;
 
       try {
