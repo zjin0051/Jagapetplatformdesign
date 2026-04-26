@@ -11,7 +11,9 @@ function parseFrequency(
   rawText: unknown,
   fallback: FrequencySpec,
 ): FrequencySpec {
-  const text = String(rawText || "").toLowerCase().trim();
+  const text = String(rawText || "")
+    .toLowerCase()
+    .trim();
 
   if (!text) return fallback;
 
@@ -90,7 +92,6 @@ function mapPet(row: any) {
     petId: row.pet_id,
     nickname: row.pet_list_name,
     age: row.pet_list_age === null ? null : Number(row.pet_list_age),
-    addedDate: row.pet_list_created_at,
     speciesName:
       row.pet_vernacular_name || row.pet_scientific_name || "Unknown species",
     scientificName: row.pet_scientific_name,
@@ -118,7 +119,6 @@ async function getUserPetsAndTasks(userId: string) {
       pl.user_id,
       pl.pet_list_name,
       pl.pet_list_age,
-      pl.pet_list_created_at,
       pl.pet_id,
       p.pet_vernacular_name,
       p.pet_scientific_name,
@@ -199,7 +199,6 @@ export default async function handler(req: any, res: any) {
           pet_list_name,
           pet_list_age,
           pet_id,
-          pet_list_created_at
         )
         values (
           ${petListId},
@@ -207,7 +206,6 @@ export default async function handler(req: any, res: any) {
           ${String(nickname).trim()},
           ${ageValue},
           ${String(petId)},
-          now()
         )
       `;
 
