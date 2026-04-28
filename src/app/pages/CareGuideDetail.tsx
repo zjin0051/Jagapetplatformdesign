@@ -344,7 +344,7 @@ export function CareGuideDetail() {
                     </td>
                   </tr>
                 )}
-                {careGuide.tankSize && (
+                {careGuide.waterDepth && (
                   <tr className="hover:bg-blue-50 transition-colors">
                     <td className="py-3 px-4 font-bold text-stone-700 flex items-center gap-2">
                       <Droplets className="w-5 h-5 text-blue-600" />
