@@ -200,6 +200,8 @@ export function Profile() {
   }, [user, loading]);
 
   async function loadDatabaseData() {
+    setFormError("");
+
     const cached = getProfilePetCache();
 
     if (cached) {
@@ -212,7 +214,6 @@ export function Profile() {
 
     try {
       setPetsLoading(true);
-      setFormError("");
 
       const [species, petData] = await Promise.all([
         fetchJson<SpeciesOption[]>("/api/species"),
@@ -281,6 +282,7 @@ export function Profile() {
       setPetNickname("");
       setPetAge("");
       setShowAddPet(false);
+      setFormError("");
     } catch (error) {
       console.error(error);
       setFormError(
@@ -315,6 +317,8 @@ export function Profile() {
         userPets: updatedPets,
         careTasks: updatedTasks,
       });
+
+      setFormError("");
     } catch (error) {
       console.error(error);
       setFormError("Could not remove pet.");
@@ -344,6 +348,8 @@ export function Profile() {
         userPets,
         careTasks: updatedTasks,
       });
+
+      setFormError("");
     } catch (error) {
       console.error(error);
       setFormError("Could not update task.");
