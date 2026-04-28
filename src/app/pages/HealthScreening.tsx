@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import {
   Camera,
-  UploadCloud,
   CheckCircle,
   AlertTriangle,
   Image as ImageIcon,
   Loader2,
   HeartPulse,
+  BookOpen,
+  ArrowRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -15,12 +17,122 @@ type HealthScreenResponse = {
   error?: string;
 };
 
+type PetIdentificationResult = {
+  scientific_name?: string;
+  common_name?: string;
+  confidence?: string;
+  notes?: string;
+};
+
+type PetIdentificationResponse = {
+  result?: string | PetIdentificationResult;
+  error?: string;
+};
+
+type SpeciesOption = {
+  petId?: string;
+  pet_id?: string;
+  name?: string | null;
+  pet_vernacular_name?: string | null;
+  scientificName?: string | null;
+  pet_scientific_name?: string | null;
+};
+
+function normalizeText(value: string | null | undefined) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function getSpeciesPetId(species: SpeciesOption) {
+  return species.petId || species.pet_id || null;
+}
+
+function getSpeciesScientificName(species: SpeciesOption) {
+  return species.scientificName || species.pet_scientific_name || null;
+}
+
+function getSpeciesCommonName(species: SpeciesOption) {
+  return species.name || species.pet_vernacular_name || null;
+}
+
+function parseIdentificationResult(
+  rawResult: PetIdentificationResponse["result"],
+): PetIdentificationResult | null {
+  if (!rawResult) return null;
+
+  if (typeof rawResult === "object") {
+    return rawResult;
+  }
+
+  try {
+    return JSON.parse(rawResult) as PetIdentificationResult;
+  } catch {
+    return null;
+  }
+}
+
+function findMatchingSpeciesId(
+  identifiedPet: PetIdentificationResult,
+  speciesOptions: SpeciesOption[],
+) {
+  const identifiedScientificName = normalizeText(identifiedPet.scientific_name);
+  const identifiedCommonName = normalizeText(identifiedPet.common_name);
+
+  if (
+    !identifiedScientificName ||
+    identifiedScientificName === "unknown" ||
+    identifiedCommonName === "unknown"
+  ) {
+    return null;
+  }
+
+  const scientificMatch = speciesOptions.find((species) => {
+    return (
+      normalizeText(getSpeciesScientificName(species)) ===
+      identifiedScientificName
+    );
+  });
+
+  if (scientificMatch) {
+    return getSpeciesPetId(scientificMatch);
+  }
+
+  const commonNameMatch = speciesOptions.find((species) => {
+    return (
+      normalizeText(getSpeciesCommonName(species)) === identifiedCommonName
+    );
+  });
+
+  if (commonNameMatch) {
+    return getSpeciesPetId(commonNameMatch);
+  }
+
+  return null;
+}
+
+async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(url, options);
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Request failed");
+  }
+
+  return data as T;
+}
+
 export function HealthScreening() {
   const [dragActive, setDragActive] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [isScreening, setIsScreening] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [matchedCareGuidePetId, setMatchedCareGuidePetId] = useState<
+    string | null
+  >(null);
+  const [careGuideLookupDone, setCareGuideLookupDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -41,6 +153,8 @@ export function HealthScreening() {
     setSelectedImage(null);
     setSelectedFileName(null);
     setResult(null);
+    setMatchedCareGuidePetId(null);
+    setCareGuideLookupDone(false);
     setError(null);
     setIsScreening(false);
 
@@ -49,37 +163,92 @@ export function HealthScreening() {
     }
   };
 
-  const handleHealthScreening = async (file: File) => {
+  const runHealthScreening = async (file: File) => {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await fetch("/api/pet-analysis?action=screen-health", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = (await response.json()) as HealthScreenResponse;
+
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to screen the pet health image.");
+    }
+
+    if (!data.result) {
+      throw new Error("The server returned an empty screening result.");
+    }
+
+    return data.result;
+  };
+
+  const findCareGuidePetIdFromImage = async (file: File) => {
+    try {
+      const identifyFormData = new FormData();
+      identifyFormData.append("image", file);
+
+      const identificationResponse = await fetch(
+        "/api/pet-analysis?action=identify-pet",
+        {
+          method: "POST",
+          body: identifyFormData,
+        },
+      );
+
+      const identificationData =
+        (await identificationResponse.json()) as PetIdentificationResponse;
+
+      if (!identificationResponse.ok) {
+        console.warn("Pet identification failed:", identificationData.error);
+        return null;
+      }
+
+      const identifiedPet = parseIdentificationResult(
+        identificationData.result,
+      );
+
+      if (!identifiedPet) {
+        return null;
+      }
+
+      const speciesOptions = await fetchJson<SpeciesOption[]>("/api/species");
+
+      return findMatchingSpeciesId(identifiedPet, speciesOptions);
+    } catch (lookupError) {
+      console.warn(
+        "Could not match identified pet to local database:",
+        lookupError,
+      );
+      return null;
+    }
+  };
+
+  const handleImageAnalysis = async (file: File) => {
     setError(null);
     setResult(null);
+    setMatchedCareGuidePetId(null);
+    setCareGuideLookupDone(false);
     setIsScreening(true);
 
     try {
-      const formData = new FormData();
-      formData.append("image", file);
+      const [healthResult, careGuidePetId] = await Promise.all([
+        runHealthScreening(file),
+        findCareGuidePetIdFromImage(file),
+      ]);
 
-      const response = await fetch("/api/pet-analysis?action=screen-health", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = (await response.json()) as HealthScreenResponse;
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to screen the pet health image.");
-      }
-
-      if (!data.result) {
-        throw new Error("The server returned an empty screening result.");
-      }
-
-      setResult(data.result);
+      setResult(healthResult);
+      setMatchedCareGuidePetId(careGuidePetId);
+      setCareGuideLookupDone(true);
     } catch (screeningError) {
       setError(
         screeningError instanceof Error
           ? screeningError.message
           : "We couldn't screen this image right now. Please try again.",
       );
+      setCareGuideLookupDone(true);
     } finally {
       setIsScreening(false);
     }
@@ -101,7 +270,7 @@ export function HealthScreening() {
     setSelectedImage(objectUrl);
     setSelectedFileName(file.name);
 
-    await handleHealthScreening(file);
+    await handleImageAnalysis(file);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -212,7 +381,7 @@ export function HealthScreening() {
                   <img
                     src={selectedImage}
                     alt="Screening"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-fit"
                   />
                   <div className="absolute inset-0 bg-amber-500/20 scan-line"></div>
                 </div>
@@ -241,7 +410,7 @@ export function HealthScreening() {
                     <img
                       src={selectedImage}
                       alt={selectedFileName || "Uploaded"}
-                      className="w-full aspect-square object-cover rounded-2xl shadow-md border-4 border-white mb-4"
+                      className="w-full aspect-square object-fit rounded-2xl shadow-md border-4 border-white mb-4"
                     />
 
                     {selectedFileName && (
@@ -310,6 +479,28 @@ export function HealthScreening() {
                               </p>
                             </div>
                           </div>
+                        </div>
+
+                        <div className="pt-2">
+                          {matchedCareGuidePetId ? (
+                            <Link
+                              to={`/species/${encodeURIComponent(
+                                matchedCareGuidePetId,
+                              )}`}
+                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl font-bold text-center transition-colors inline-flex items-center justify-center gap-2 shadow-md"
+                            >
+                              <BookOpen className="w-5 h-5" />
+                              View Care Guide
+                              <ArrowRight className="w-5 h-5" />
+                            </Link>
+                          ) : careGuideLookupDone ? (
+                            <p className="text-sm text-stone-500 bg-stone-50 border border-stone-200 rounded-xl p-3">
+                              No matching care guide was found in Shell & Fin MY
+                              database for this photo. We will continue
+                              improving and expanding care guide coverage for
+                              health screening results.
+                            </p>
+                          ) : null}
                         </div>
                       </>
                     )}
