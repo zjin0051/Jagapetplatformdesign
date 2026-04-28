@@ -2,7 +2,7 @@
 
 Prompt for Figma:
 
-Design a clean desktop web page for an aquatic pet website called JagaPet.
+Design a clean desktop web page for an aquatic pet website called Shell & Fin MY.
 Create a species search page with a search bar at the top.
 Users can search by common name or scientific name.
 Show search results as cards with:
@@ -24,8 +24,7 @@ Style:
 modern, calm, eco-friendly
 white background with green accents
 clean cards, not crowded
-easy to read for general users
-2. Species Profile page with warnings — Epic 1 / User Story 1.2
+easy to read for general users 2. Species Profile page with warnings — Epic 1 / User Story 1.2
 
 Prompt for Figma:
 
@@ -56,12 +55,11 @@ Style:
 professional but friendly
 clear hierarchy
 warning banners should stand out strongly
-suitable for Malaysian aquatic pet owners
-3. Lifestyle Compatibility Screening page — Epic 3 / User Story 3.1
+suitable for Malaysian aquatic pet owners 3. Lifestyle Compatibility Screening page — Epic 3 / User Story 3.1
 
 Prompt for Figma:
 
-Design a “Lifestyle Compatibility Screening” page for JagaPet.
+Design a “Lifestyle Compatibility Screening” page for Shell & Fin MY.
 This page is a questionnaire that helps users check whether a pet suits their lifestyle.
 
 Include form questions for:
@@ -89,8 +87,7 @@ Style:
 very clear and beginner-friendly
 big text
 not crowded
-soft aquatic theme
-4. Suitability Result page — Epic 3 / User Story 3.1
+soft aquatic theme 4. Suitability Result page — Epic 3 / User Story 3.1
 
 Prompt for Figma:
 
@@ -118,15 +115,14 @@ if the user does not know the pet name, show a clear button to go to species ide
 
 Style:
 
-same design system as JagaPet
+same design system as Shell & Fin MY
 readable and structured
 success state in green
-caution state in red or orange
-5. Wish List / Comparison page — Epic 3 / User Story 3.2
+caution state in red or orange 5. Wish List / Comparison page — Epic 3 / User Story 3.2
 
 Prompt for Figma:
 
-Design a comparison page for JagaPet where users compare several aquatic pet species they added to a wish list.
+Design a comparison page for Shell & Fin MY where users compare several aquatic pet species they added to a wish list.
 
 Include:
 
@@ -149,12 +145,11 @@ Style:
 comparison layout should be easy to scan
 clean ranking design
 balanced spacing
-modern eco-themed website
-6. Recommendation page — Epic 4 / User Story 4.1
+modern eco-themed website 6. Recommendation page — Epic 4 / User Story 4.1
 
 Prompt for Figma:
 
-Design a recommendation results page for JagaPet shown after the user completes the lifestyle compatibility screening.
+Design a recommendation results page for Shell & Fin MY shown after the user completes the lifestyle compatibility screening.
 
 The system should show at least 2 recommended species that match the user’s lifestyle.
 
@@ -180,8 +175,7 @@ Style:
 
 recommendation cards should feel trustworthy and clean
 make “Top match” visible
-not too much text on one card
-7. Species Profile with suitability explanation — Epic 4 / User Story 4.2
+not too much text on one card 7. Species Profile with suitability explanation — Epic 4 / User Story 4.2
 
 Prompt for Figma:
 
@@ -205,8 +199,7 @@ Style:
 
 explanation boxes should be simple and visual
 use icons for space, budget, care difficulty, ecological risk
-keep wording short and easy to understand
-8. Safer / Better-fit alternatives section inside species profile — Epic 4 / User Story 4.3
+keep wording short and easy to understand 8. Safer / Better-fit alternatives section inside species profile — Epic 4 / User Story 4.3
 
 Prompt for Figma:
 

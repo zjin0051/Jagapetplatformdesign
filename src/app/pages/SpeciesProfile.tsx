@@ -1,395 +1,865 @@
-import React, { useEffect } from 'react';
-import { useParams, Link } from 'react-router';
-import { speciesData, Species } from '../data/species';
-import { useWishlist } from '../context/WishlistContext';
-import { useUser } from '../context/UserContext';
-import { 
-  ArrowLeft, Info, AlertTriangle, CheckCircle2, 
-  Ruler, Clock, Thermometer, ShieldAlert,
-  Leaf, ExternalLink, Fish, Scale, Check, ArrowRight, HeartHandshake,
-  Wallet, Maximize, Target, Heart
-} from 'lucide-react';
-import { motion } from 'motion/react';
+import React, { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
+import {
+  ArrowLeft,
+  AlertTriangle,
+  Fish,
+  Info,
+  Ruler,
+  Scale,
+  Clock,
+  Thermometer,
+  ShieldAlert,
+  Leaf,
+  MessageSquareText,
+  CheckCircle2,
+  XCircle,
+  TestTubeDiagonal,
+  Expand,
+  Droplet,
+  HandHeart,
+  Skull,
+  Ban,
+  Heart,
+  Dna,
+} from "lucide-react";
+import { motion } from "motion/react";
+import { usePetDetail } from "../hooks/usePetDetails";
+import {
+  displayText,
+  normalizeDangerBadge,
+  getPetCommonNames,
+  isInvasiveSpecies,
+  getSpeciesCareBadgeClasses,
+  getSpeciesDangerBadgeClasses,
+  getDangerBadgeClasses,
+  getCareBadgeClasses,
+  formatPetBodyShape,
+  formatPetTraits,
+  formatCurrencyMYR,
+} from "../utils/petDisplay";
+import { useCompare } from "../context/CompareContext";
+import { useUser } from "../context/UserContext";
 
-const riskLevel = { Low: 1, Medium: 2, High: 3 };
-const difficultyLevel = { Beginner: 1, Intermediate: 2, Advanced: 3 };
+type ExperienceLevel = "beginner" | "intermediate" | "advanced";
+type RiskLevel = "low" | "medium" | "high";
 
-const levels = {
-  budget: { low: 1, medium: 2, high: 3 },
-  space: { small: 1, medium: 2, large: 3 },
-  time: { low: 1, medium: 2, high: 3 },
-  experience: { beginner: 1, intermediate: 2, advanced: 3 }
+const experienceRank: Record<ExperienceLevel, number> = {
+  beginner: 1,
+  intermediate: 2,
+  advanced: 3,
 };
 
+const riskRank: Record<RiskLevel, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+};
+
+function normalizeCareLevel(
+  value: string | null | undefined,
+): ExperienceLevel | null {
+  const text = (value ?? "").toLowerCase();
+
+  if (text.includes("begin")) return "beginner";
+  if (text.includes("intermediate")) return "intermediate";
+  if (text.includes("advanced")) return "advanced";
+
+  return null;
+}
+
+function normalizeRiskLevel(
+  value: string | null | undefined,
+): RiskLevel | null {
+  const text = (value ?? "").toLowerCase();
+
+  if (text.includes("low")) return "low";
+  if (text.includes("medium")) return "medium";
+  if (text.includes("high")) return "high";
+
+  return null;
+}
+
 export function SpeciesProfile() {
+  const navigate = useNavigate();
+  const { toggleCompare, isInCompare, isCompareFull } = useCompare();
   const { id } = useParams<{ id: string }>();
-  const species = speciesData.find(s => s.id === id);
-  const { toggleWishlist, isInWishlist } = useWishlist();
+  const { pet, relatedPets, loading, error } = usePetDetail(id);
   const { answers } = useUser();
+
+  const suitability = useMemo(() => {
+    if (!answers || !pet) return null;
+
+    const fits: string[] = [];
+    const reasons: string[] = [];
+
+    const petCareLevel = normalizeCareLevel(pet.pet_care_level);
+    const petRiskLevel = normalizeRiskLevel(pet.pet_invasive_risk);
+
+    // hard-stop reason
+    if (pet.pet_banned) {
+      reasons.push("This species is banned in Malaysia");
+    }
+
+    // ecological risk
+    if (petRiskLevel === "high") {
+      reasons.push("Higher ecological risk");
+    } else if (petRiskLevel === "low") {
+      fits.push("Low ecological risk");
+    }
+
+    // care vs user experience
+    if (petCareLevel) {
+      if (experienceRank[answers.experience] >= experienceRank[petCareLevel]) {
+        fits.push("Manageable care level");
+      } else {
+        reasons.push("High care difficulty for your experience level");
+      }
+    }
+
+    return {
+      isSuitable: reasons.length === 0,
+      fits,
+      reasons,
+    };
+  }, [answers, pet]);
+
+  const recommendedAlternatives = useMemo(() => {
+    if (!pet) return [];
+
+    const currentRisk = normalizeRiskLevel(pet.pet_invasive_risk);
+    const currentCare = normalizeCareLevel(pet.pet_care_level);
+
+    return relatedPets
+      .map((item) => {
+        const itemRisk = normalizeRiskLevel(item.pet_invasive_risk);
+        const itemCare = normalizeCareLevel(item.pet_care_level);
+
+        const hasLowerRisk =
+          !!currentRisk &&
+          !!itemRisk &&
+          riskRank[itemRisk] < riskRank[currentRisk];
+
+        const hasLowerCare =
+          !!currentCare &&
+          !!itemCare &&
+          experienceRank[itemCare] < experienceRank[currentCare];
+
+        return {
+          ...item,
+          hasLowerRisk,
+          hasLowerCare,
+        };
+      })
+      .filter((item) => item.hasLowerRisk || item.hasLowerCare)
+      .sort((a, b) => {
+        const aScore = (a.hasLowerRisk ? 1 : 0) + (a.hasLowerCare ? 1 : 0);
+        const bScore = (b.hasLowerRisk ? 1 : 0) + (b.hasLowerCare ? 1 : 0);
+
+        return bScore - aScore;
+      });
+  }, [pet, relatedPets]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  if (!species) {
+  const dangerLevel = useMemo(
+    () => normalizeDangerBadge(pet?.pet_danger),
+    [pet?.pet_danger],
+  );
+
+  const isInvasive = useMemo(
+    () => isInvasiveSpecies(pet?.pet_is_native),
+    [pet?.pet_is_native],
+  );
+
+  const { primaryCommonName, otherCommonNames } = pet
+    ? getPetCommonNames(pet)
+    : { primaryCommonName: "Unknown Pet", otherCommonNames: [] };
+
+  if (loading) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center text-stone-800 bg-stone-50">
-        <AlertTriangle className="w-16 h-16 text-rose-500 mb-4" />
-        <h2 className="text-3xl font-bold mb-4 text-stone-900">Species Not Found</h2>
-        <p className="text-stone-600 mb-8 max-w-md">The pet you are looking for might not be in our database yet or the link is incorrect.</p>
-        <Link to="/" className="bg-emerald-600 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-700 transition shadow-md">
-          Return Home
-        </Link>
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50 px-4 py-10">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-stone-600">Loading pet profile...</p>
+        </div>
       </div>
     );
   }
 
-  const inWishlist = isInWishlist(species.id);
-
-  // Compute safer / better-fit alternatives
-  const alternatives = speciesData
-    .filter(s => 
-      s.id !== species.id && 
-      s.category === species.category &&
-      riskLevel[s.biodiversityRisk] <= riskLevel[species.biodiversityRisk] &&
-      difficultyLevel[s.careDifficulty] <= difficultyLevel[species.careDifficulty]
-    )
-    .sort((a, b) => {
-      if (riskLevel[a.biodiversityRisk] !== riskLevel[b.biodiversityRisk]) {
-        return riskLevel[a.biodiversityRisk] - riskLevel[b.biodiversityRisk];
-      }
-      return difficultyLevel[a.careDifficulty] - difficultyLevel[b.careDifficulty];
-    })
-    .slice(0, 2);
-
-  // Suitability check based on user answers
-  let suitability = null;
-  if (answers) {
-    const reasons: string[] = [];
-    const fits: string[] = [];
-    
-    if (levels.budget[answers.budget] < levels.budget[species.minBudget]) {
-      reasons.push('High cost (Exceeds your budget)');
-    } else {
-      fits.push('Suitable budget for you');
-    }
-
-    if (levels.space[answers.space] < levels.space[species.minSpace]) {
-      reasons.push('Large adult size (Exceeds your space)');
-    } else {
-      fits.push('Appropriate space requirement');
-    }
-
-    if (levels.experience[answers.experience] < levels.experience[species.minExperience] || 
-        levels.time[answers.time] < levels.time[species.minTime]) {
-      reasons.push('High care difficulty or time requirement');
-    } else {
-      fits.push('Manageable care level');
-    }
-
-    if (species.biodiversityRisk === 'High') {
-      reasons.push('Higher ecological risk');
-    } else if (species.biodiversityRisk === 'Low') {
-      fits.push('Low ecological risk');
-    }
-
-    suitability = {
-      isSuitable: reasons.length === 0,
-      reasons,
-      fits
-    };
+  if (error || !pet) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50 px-4 py-10">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-stone-200 bg-white p-8 shadow-sm">
+          <div className="mb-4 flex items-center gap-3 text-amber-700">
+            <AlertTriangle className="h-6 w-6" />
+            <h1 className="text-2xl font-bold">Species Not Found</h1>
+          </div>
+          <p className="mb-6 text-stone-600">
+            The pet you are looking for might not be in the database yet, or the
+            link may be incorrect.
+          </p>
+          {error && (
+            <p className="mb-6 rounded-xl bg-stone-100 px-4 py-3 text-sm text-stone-700">
+              {error}
+            </p>
+          )}
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Return Home
+          </Link>
+        </div>
+      </div>
+    );
   }
 
+  const inCompare = isInCompare(pet.pet_id);
+  const compareDisabled = isCompareFull && !inCompare;
+  const hasPetPrice = pet.pet_cost != null;
+
   return (
-    <div className="bg-stone-50 min-h-screen pb-24 font-sans text-stone-900">
-      
-      {/* High Risk Warning Banner */}
-      {species.biodiversityRisk === 'High' && (
-        <div className="bg-rose-600 text-white py-3 px-4 text-center font-bold flex items-center justify-center gap-3 z-50 relative">
-          <ShieldAlert className="w-6 h-6" />
-          WARNING: High Invasive Risk. Do not release into the wild.
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50">
+      {dangerLevel === "High" && (
+        <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-red-800">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
+            <AlertTriangle className="h-5 w-5" />
+            Warning: this pet may pose a higher danger risk. Review handling and
+            safety information carefully.
+          </div>
+        </div>
+      )}
+
+      {pet.pet_banned && (
+        <div className="border-b border-red-200 bg-red-50 px-4 py-3 text-red-800">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
+            <AlertTriangle className="h-5 w-5" />
+            Warning: this species is prohibited in Malaysia. If you are caught
+            importing, selling, or keeping it, you can face a hefty fine or even
+            jail time.
+          </div>
+        </div>
+      )}
+
+      {isInvasive && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
+          <div className="mx-auto flex max-w-6xl items-center gap-2 font-medium">
+            <AlertTriangle className="h-5 w-5" />
+            Notice: this species is considered invasive. Avoid release into
+            local waterways and follow regional regulations.
+          </div>
         </div>
       )}
 
       {/* Hero Header */}
       <div className="relative h-[450px] md:h-[550px] w-full bg-stone-900 overflow-hidden">
-        <div className="absolute top-6 left-6 right-6 z-20 flex justify-between items-center max-w-7xl mx-auto">
-          <Link to="/" className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-white p-3 rounded-full transition-all flex items-center shadow-lg group">
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          </Link>
-          
-          <button 
-            onClick={() => toggleWishlist(species.id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold transition-all shadow-lg backdrop-blur-md ${
-              inWishlist 
-                ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
-                : 'bg-white/20 text-white hover:bg-white/40 border border-white/30'
-            }`}
-          >
-            {inWishlist ? <Check className="w-5 h-5" /> : <Scale className="w-5 h-5" />}
-            {inWishlist ? 'Added to Compare' : 'Add to Compare'}
-          </button>
+        <div className="absolute top-6 inset-x-0 z-20">
+          <div className="mx-auto max-w-7xl px-8 md:px-12 flex justify-between items-center">
+            <button
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate("/");
+                }
+              }}
+              className="bg-white/20 hover:bg-white/40 backdrop-blur-md text-emerald-500 px-3 py-3 rounded-full transition-all flex items-center gap-2 shadow-lg group"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </button>
+
+            {/* // Compare Button */}
+            <button
+              onClick={() => toggleCompare(pet)}
+              disabled={compareDisabled}
+              className={`flex items-center gap-2 rounded-full px-5 py-2.5 font-bold shadow-lg backdrop-blur-md transition-all ${
+                inCompare
+                  ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                  : compareDisabled
+                    ? "cursor-not-allowed border border-white/20 bg-white/10 text-white/70"
+                    : "border border-white/30 bg-white/20 text-white hover:bg-white/40"
+              }`}
+            >
+              {inCompare ? (
+                <CheckCircle2 className="h-5 w-5" />
+              ) : (
+                <Scale className="h-5 w-5" />
+              )}
+              <span>
+                {inCompare
+                  ? "Added to Compare"
+                  : compareDisabled
+                    ? "Compare Full"
+                    : "Add to Compare"}
+              </span>
+            </button>
+          </div>
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-900/40 to-transparent z-10"></div>
-        <motion.img 
-          key={species.id}
+        <motion.img
+          key={pet?.pet_id}
           initial={{ scale: 1.05 }}
           animate={{ scale: 1 }}
           transition={{ duration: 0.8 }}
-          src={species.imageUrl} 
-          alt={species.name} 
-          className="absolute inset-0 w-full h-full object-cover"
+          src={
+            pet.pet_image_ref
+              ? `/pet_image/${pet.pet_image_ref}`
+              : "/pet_image/pet_placeholder.png"
+          }
+          alt={pet.pet_vernacular_name ?? "Pet Image Placeholder"}
+          className="absolute inset-0 w-full h-full object-fit"
         />
-        
-        <div className="absolute bottom-0 left-0 w-full p-8 md:p-12 z-20 max-w-7xl mx-auto">
-          <motion.div 
-            key={`tags-${species.id}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex items-center gap-3 mb-4 flex-wrap"
-          >
-            <span className={`px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider backdrop-blur-md shadow-lg ${
-              species.biodiversityRisk === 'High' ? 'bg-rose-500/90 text-white border border-rose-400' :
-              species.biodiversityRisk === 'Medium' ? 'bg-amber-500/90 text-white border border-amber-400' :
-              'bg-emerald-500/90 text-white border border-emerald-400'
-            }`}>
-              {species.biodiversityRisk} Biodiversity Risk
-            </span>
-            <span className="bg-stone-800/80 text-white px-4 py-1.5 rounded-full text-sm font-semibold backdrop-blur-md shadow-lg flex items-center gap-2 border border-stone-600">
-              <Thermometer className="w-4 h-4" /> {species.careDifficulty} Care
-            </span>
-          </motion.div>
-          <motion.h1 
-            key={`title-${species.id}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
-          >
-            {species.name}
-          </motion.h1>
-          <motion.p 
-            key={`subtitle-${species.id}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="text-xl md:text-2xl text-stone-300 italic font-serif"
-          >
-            {species.scientificName}
-          </motion.p>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-8 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-12 relative z-30">
-        
-        {/* Main Content (Left Column) */}
-        <div className="lg:col-span-2 space-y-12">
+        <div className="absolute bottom-0 inset-x-0 z-20">
+          <div className="mx-auto max-w-7xl px-8 md:px-12 pb-8 md:pb-12">
+            <motion.div
+              key={`tags-${pet?.pet_id}`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex items-center gap-3 mb-4 flex-wrap"
+            >
+              <span
+                className={getSpeciesDangerBadgeClasses(
+                  pet?.pet_invasive_risk || "Unknown",
+                )}
+              >
+                <ShieldAlert className="w-4 h-4" />
+                {pet?.pet_invasive_risk || "Unknown"} Biodiversity Risk
+              </span>
 
-          {/* User Suitability Explanation */}
-          {suitability && (
-            <section className={`p-8 rounded-3xl border-2 shadow-sm ${
-              suitability.isSuitable ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'
-            }`}>
-              <h2 className={`text-2xl font-bold mb-6 flex items-center gap-2 ${
-                suitability.isSuitable ? 'text-emerald-900' : 'text-rose-900'
-              }`}>
-                {suitability.isSuitable ? <Heart className="w-6 h-6 text-emerald-600 fill-current" /> : <AlertTriangle className="w-6 h-6 text-rose-600" />}
-                {suitability.isSuitable ? 'Why it fits you' : 'Why this may not fit you'}
-              </h2>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {suitability.isSuitable ? (
-                  suitability.fits.map((fit, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-emerald-100">
-                      <CheckCircle2 className="text-emerald-500 w-5 h-5 shrink-0" />
-                      <span className="font-medium text-emerald-900">{fit}</span>
-                    </div>
-                  ))
-                ) : (
-                  suitability.reasons.map((reason, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-white p-4 rounded-xl shadow-sm border border-rose-100">
-                      <AlertTriangle className="text-rose-500 w-5 h-5 shrink-0" />
-                      <span className="font-medium text-rose-900">{reason}</span>
-                    </div>
-                  ))
+              <span
+                className={getSpeciesCareBadgeClasses(
+                  pet?.pet_care_level || "Unknown",
+                )}
+              >
+                <HandHeart className="w-4 h-4" />
+                {pet?.pet_care_level || "Unknown"} Care
+              </span>
+
+              <span
+                className={getSpeciesDangerBadgeClasses(
+                  dangerLevel || "Unknown",
+                )}
+              >
+                <Skull className="w-4 h-4" />
+                {dangerLevel || "Unknown"} Danger
+              </span>
+
+              {pet.pet_banned && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-4 py-1.5 text-sm font-semibold text-red-700">
+                  <Ban className="w-4 h-4" />
+                  Banned in Malaysia
+                </span>
+              )}
+            </motion.div>
+
+            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-3xl">
+                <motion.h1
+                  key={`title-${pet?.pet_id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="text-4xl md:text-6xl font-extrabold text-white mb-2 drop-shadow-xl"
+                >
+                  {primaryCommonName}
+                </motion.h1>
+
+                <motion.p
+                  key={`subtitle-${pet?.pet_id}`}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                  className={`text-xl md:text-2xl text-stone-300 italic font-serif ${
+                    otherCommonNames.length > 0 ? "mb-2" : ""
+                  }`}
+                >
+                  {pet?.pet_scientific_name}
+                </motion.p>
+
+                {otherCommonNames.length > 0 && (
+                  <motion.p
+                    key={`aka-${pet?.pet_id}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.45 }}
+                    className="text-lg md:text-xl text-stone-200 font-serif"
+                  >
+                    <span className="font-semibold">A.K.A:</span>{" "}
+                    {otherCommonNames.join(", ")}
+                  </motion.p>
                 )}
               </div>
-            </section>
-          )}
-          
-          {/* Quick Stats */}
-          <section className="bg-white rounded-3xl p-8 shadow-xl border border-stone-100 flex flex-col sm:flex-row gap-8 justify-around relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-2 h-full bg-stone-300"></div>
-            <div className="flex flex-col items-center text-center group">
-              <div className="bg-stone-50 p-4 rounded-full mb-4">
-                <Ruler className="w-8 h-8 text-stone-600" />
-              </div>
-              <h3 className="text-sm font-bold text-stone-500 uppercase tracking-widest mb-1">Adult Size</h3>
-              <p className="text-xl font-bold text-stone-900">{species.adultSize}</p>
+
+              {pet.pet_cost != null && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                  className="shrink-0 self-start md:self-end rounded-2xl border border-white/20 bg-white/15 px-6 py-5 backdrop-blur-md shadow-lg min-w-[180px]"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-300">
+                    Estimated Price
+                  </p>
+                  <p className="mt-1 text-3xl md:text-4xl font-extrabold text-white leading-none">
+                    {formatCurrencyMYR(pet.pet_cost)}
+                  </p>
+                </motion.div>
+              )}
             </div>
-            <div className="hidden sm:block w-px bg-stone-200"></div>
-            <div className="flex flex-col items-center text-center group">
-              <div className="bg-stone-50 p-4 rounded-full mb-4">
-                <Clock className="w-8 h-8 text-stone-600" />
-              </div>
-              <h3 className="text-sm font-bold text-stone-500 uppercase tracking-widest mb-1">Lifespan</h3>
-              <p className="text-xl font-bold text-stone-900">{species.lifespan}</p>
-            </div>
-          </section>
-
-          {/* About */}
-          <section>
-            <h2 className="text-3xl font-bold text-stone-900 mb-6 flex items-center gap-3">
-              <Info className="text-emerald-600 w-8 h-8" /> About the {species.name}
-            </h2>
-            <p className="text-lg text-stone-700 leading-relaxed bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
-              {species.shortDesc}
-            </p>
-          </section>
-
-          {/* Alternatives Section - NEW! */}
-          {alternatives.length > 0 && (
-            <section>
-              <h2 className="text-3xl font-bold text-stone-900 mb-6 flex items-center gap-3">
-                <HeartHandshake className="text-sky-600 w-8 h-8" /> Safer / Better-fit Alternatives
-              </h2>
-              <div className="grid grid-cols-1 gap-4">
-                {alternatives.map(alt => (
-                  <Link 
-                    key={alt.id} 
-                    to={`/species/${alt.id}`}
-                    className="bg-white rounded-2xl p-4 md:p-5 flex flex-col md:flex-row gap-5 items-start md:items-center hover:shadow-lg transition-all group border border-stone-200"
-                  >
-                    <img src={alt.imageUrl} alt={alt.name} className="w-full md:w-32 h-32 md:h-24 rounded-xl object-cover shadow-sm group-hover:scale-105 transition-transform" />
-                    
-                    <div className="flex-1 w-full">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-bold text-stone-900 group-hover:text-emerald-600 transition-colors text-xl">{alt.name}</h4>
-                        <ArrowRight className="w-5 h-5 text-stone-400 group-hover:text-emerald-500 transition-colors hidden md:block" />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                        <div className="flex flex-col bg-stone-50 p-2 rounded-lg">
-                          <span className="text-stone-500 font-medium text-xs flex items-center gap-1"><Maximize className="w-3 h-3"/> Size</span>
-                          <span className="font-bold text-stone-800 truncate">{alt.adultSize}</span>
-                        </div>
-                        <div className="flex flex-col bg-stone-50 p-2 rounded-lg">
-                          <span className="text-stone-500 font-medium text-xs flex items-center gap-1"><Thermometer className="w-3 h-3"/> Care</span>
-                          <span className="font-bold text-stone-800">{alt.careDifficulty}</span>
-                        </div>
-                        <div className="flex flex-col bg-stone-50 p-2 rounded-lg">
-                          <span className="text-stone-500 font-medium text-xs flex items-center gap-1"><Wallet className="w-3 h-3"/> Cost</span>
-                          <span className="font-bold text-stone-800 capitalize">{alt.minBudget}</span>
-                        </div>
-                        <div className="flex flex-col bg-stone-50 p-2 rounded-lg">
-                          <span className="text-stone-500 font-medium text-xs flex items-center gap-1"><ShieldAlert className="w-3 h-3"/> Risk</span>
-                          <span className={`font-bold ${alt.biodiversityRisk === 'Low' ? 'text-emerald-600' : 'text-amber-600'}`}>{alt.biodiversityRisk}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Legal Alerts */}
-          {species.legalAlerts.length > 0 && (
-            <section>
-              <h2 className="text-3xl font-bold text-stone-900 mb-6 flex items-center gap-3">
-                <Target className="text-rose-600 w-8 h-8" /> Compliance Alerts
-              </h2>
-              <div className="bg-rose-50 border-l-4 border-rose-500 rounded-r-3xl p-6 md:p-8 shadow-md">
-                <ul className="space-y-4">
-                  {species.legalAlerts.map((alert, i) => (
-                    <li key={i} className="flex gap-4">
-                      <AlertTriangle className="text-rose-500 w-6 h-6 shrink-0 mt-0.5" />
-                      <span className="text-rose-900 font-medium text-lg leading-snug">{alert}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-8 pt-6 border-t border-rose-200/50">
-                  <Link to="/safe-exit" className="inline-flex items-center gap-2 text-rose-700 font-bold hover:text-rose-800 transition bg-white px-4 py-2 rounded-xl shadow-sm">
-                    Learn about safe rehoming <ExternalLink className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-            </section>
-          )}
-
-          {/* Visible Health Checklist */}
-          <section>
-            <h2 className="text-3xl font-bold text-stone-900 mb-6 flex items-center gap-3">
-              <CheckCircle2 className="text-sky-600 w-8 h-8" /> Visible Health Checklist
-            </h2>
-            <div className="bg-white rounded-3xl p-8 shadow-sm border border-stone-100">
-              <p className="text-stone-600 mb-6 text-lg">Before buying, visually inspect the pet for these signs of good health:</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {species.healthChecklist.map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 bg-sky-50/50 p-4 rounded-2xl">
-                    <CheckCircle2 className="text-sky-500 w-6 h-6 shrink-0" />
-                    <span className="text-stone-800 font-medium">{item}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
+          </div>
         </div>
+      </div>
 
-        {/* Sidebar (Right Column) */}
-        <div className="space-y-8">
-          
-          {/* Care Tips */}
-          <div className="bg-emerald-900 text-white rounded-3xl p-8 shadow-2xl sticky top-24">
-            <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-emerald-50">
-              <Leaf className="w-6 h-6 text-emerald-400" /> Care Requirements
-            </h3>
-            <div className="space-y-6">
-              {species.careTips.map((tip, i) => (
-                <div key={i} className="bg-emerald-800/50 p-5 rounded-2xl border border-emerald-700">
-                  <h4 className="font-bold text-lg text-emerald-100 mb-2">{tip.title}</h4>
-                  <p className="text-emerald-50/80 leading-relaxed text-sm">{tip.desc}</p>
-                </div>
-              ))}
-              
-              <div className="bg-emerald-950 p-5 rounded-2xl border border-emerald-700 space-y-3">
-                <h4 className="font-bold text-emerald-100 mb-2 border-b border-emerald-800 pb-2">Minimum Setup:</h4>
-                <div className="flex justify-between text-sm">
-                  <span className="text-emerald-400">Budget</span>
-                  <span className="font-semibold text-white capitalize">{species.minBudget}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-emerald-400">Space</span>
-                  <span className="font-semibold text-white capitalize">{species.minSpace}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-emerald-400">Time/Week</span>
-                  <span className="font-semibold text-white capitalize">{species.minTime}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-emerald-400">Experience</span>
-                  <span className="font-semibold text-white capitalize">{species.minExperience}</span>
-                </div>
-              </div>
+      <section className="px-4 py-12">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1.6fr_1fr]">
+          <div className="space-y-8">
+            {suitability &&
+              (suitability.reasons.length > 0 ||
+                suitability.fits.length > 0) && (
+                <section
+                  className={`rounded-3xl border-2 p-8 shadow-sm ${
+                    suitability.isSuitable
+                      ? "border-emerald-200 bg-emerald-50"
+                      : "border-rose-200 bg-rose-50"
+                  }`}
+                >
+                  <h2
+                    className={`mb-6 flex items-center gap-3 text-3xl font-bold ${
+                      suitability.isSuitable
+                        ? "text-emerald-900"
+                        : "text-rose-900"
+                    }`}
+                  >
+                    {suitability.isSuitable ? (
+                      <Heart className="h-8 w-8 fill-current text-emerald-600" />
+                    ) : (
+                      <AlertTriangle className="h-8 w-8 text-rose-600" />
+                    )}
+                    {suitability.isSuitable
+                      ? "Why it fits you"
+                      : "Why this may not fit you"}
+                  </h2>
 
-            </div>
-            
-            {!answers && (
-              <div className="mt-10 pt-8 border-t border-emerald-800 text-center">
-                <p className="text-emerald-200 text-sm mb-4">Thinking of getting this pet? See if you have what it takes.</p>
-                <Link to="/quiz" className="block w-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold text-lg py-4 rounded-xl transition-all shadow-lg hover:shadow-emerald-500/20 mb-3">
-                  Take Compatibility Quiz
-                </Link>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {suitability.isSuitable
+                      ? suitability.fits.map((fit, index) => (
+                          <div
+                            key={`${fit}-${index}`}
+                            className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm"
+                          >
+                            <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-500" />
+                            <span className="text-lg font-semibold text-emerald-900">
+                              {fit}
+                            </span>
+                          </div>
+                        ))
+                      : suitability.reasons.map((reason, index) => (
+                          <div
+                            key={`${reason}-${index}`}
+                            className="flex items-center gap-3 rounded-2xl border border-rose-100 bg-white p-5 shadow-sm"
+                          >
+                            <AlertTriangle className="h-6 w-6 shrink-0 text-rose-500" />
+                            <span className="text-lg font-semibold text-rose-900">
+                              {reason}
+                            </span>
+                          </div>
+                        ))}
+                  </div>
+                </section>
+              )}
+
+            {recommendedAlternatives?.length > 0 && (
+              <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+                <div className="mb-5 flex items-center gap-2 text-emerald-800">
+                  <Fish className="h-5 w-5" />
+                  <h2 className="text-2xl font-bold">
+                    Recommended Alternatives
+                  </h2>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {recommendedAlternatives.map((item) => (
+                    <Link
+                      key={item.pet_id}
+                      to={`/species/${item.pet_id}`}
+                      className="rounded-2xl border border-stone-200 p-4 transition hover:border-emerald-400 hover:bg-emerald-50"
+                    >
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        {item.hasLowerRisk && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+                            <ShieldAlert className="h-3.5 w-3.5" />
+                            Lower Risk
+                          </span>
+                        )}
+
+                        {item.hasLowerCare && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800">
+                            <HandHeart className="h-3.5 w-3.5" />
+                            Easier Care
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="font-bold text-stone-900">
+                        {displayText(
+                          item.pet_vernacular_name,
+                          item.pet_scientific_name
+                            ? item.pet_scientific_name
+                            : "Unknown Species",
+                        )}
+                      </h3>
+
+                      <p className="mt-1 text-sm italic text-stone-600">
+                        {displayText(item.pet_scientific_name)}
+                      </p>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {item.pet_invasive_risk && (
+                          <span
+                            className={getDangerBadgeClasses(
+                              item.pet_invasive_risk,
+                            )}
+                          >
+                            <ShieldAlert className="w-3 h-3" />
+                            {item.pet_invasive_risk} Risk
+                          </span>
+                        )}
+
+                        {item.pet_care_level && (
+                          <span
+                            className={getCareBadgeClasses(item.pet_care_level)}
+                          >
+                            <HandHeart className="w-3 h-3" />
+                            {item.pet_care_level} Care
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
+
+            <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+              <div className="mb-4 flex items-center gap-2 text-emerald-800">
+                <Info className="h-5 w-5" />
+                <h2 className="text-2xl font-bold">About this pet</h2>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                    Vernacular name
+                  </p>
+                  <p className="mt-1 text-stone-800">
+                    {displayText(pet.pet_vernacular_name)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                    Scientific name
+                  </p>
+                  <p className="mt-1 text-stone-800">
+                    {displayText(pet.pet_scientific_name)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                    Genus
+                  </p>
+                  <p className="mt-1 text-stone-800">
+                    {displayText(pet.pet_genus)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                    Family
+                  </p>
+                  <p className="mt-1 text-stone-800">
+                    {displayText(pet.pet_family)}
+                  </p>
+                </div>
+
+                {pet.pet_body_shape && (
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                      Body shape
+                    </p>
+                    <p className="mt-1 text-stone-800">
+                      {formatPetBodyShape(pet.pet_body_shape)}
+                    </p>
+                  </div>
+                )}
+
+                {pet.pet_migration_type && (
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                      Migration type
+                    </p>
+                    <p className="mt-1 text-stone-800">
+                      {displayText(pet.pet_migration_type)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {pet.pet_traits && (
+              <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+                <div className="mb-4 flex items-center gap-2 text-emerald-800">
+                  <Dna className="h-5 w-5" />
+                  <h2 className="text-2xl font-bold">Traits</h2>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <span className="leading-7 text-stone-700">
+                    {formatPetTraits(pet.pet_traits)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {pet.pet_diet &&
+              (pet.pet_diet.main_type || pet.pet_diet.remarks) && (
+                <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2 text-emerald-800">
+                    <Leaf className="h-5 w-5" />
+                    <h2 className="text-2xl font-bold">Diet</h2>
+                  </div>
+
+                  <div className="space-y-4">
+                    {pet.pet_diet.main_type && (
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                          Main diet type
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-semibold text-emerald-800">
+                            {displayText(pet.pet_diet.main_type)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {pet.pet_diet.remarks && (
+                      <div>
+                        <p className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+                          Feeding notes
+                        </p>
+                        <p className="mt-1 leading-7 text-stone-700">
+                          {displayText(pet.pet_diet.remarks)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            <div className="rounded-3xl border border-stone-200 bg-white p-7 shadow-sm">
+              <div className="mb-4 flex items-center gap-2 text-emerald-800">
+                <MessageSquareText className="h-5 w-5" />
+                <h2 className="text-2xl font-bold">Notes</h2>
+              </div>
+              <p className="leading-7 text-stone-700">
+                {displayText(
+                  pet.pet_comments,
+                  "No additional comments are available for this pet.",
+                )}
+              </p>
+            </div>
           </div>
 
-        </div>
+          <aside className="space-y-6">
+            <div className="rounded-3xl border border-rose-800 bg-gradient-to-br from-rose-950 via-red-950 to-stone-950 p-6 text-white shadow-sm">
+              <div className="mb-4 flex items-center gap-2 text-rose-100">
+                <ShieldAlert className="h-5 w-5 text-rose-300" />
+                <h3 className="text-xl font-bold">Safety Summary</h3>
+              </div>
 
-      </div>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">
+                    Danger
+                  </p>
+                  <p className="mt-1 text-rose-50">
+                    {displayText(pet.pet_danger)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">
+                    Native Status
+                  </p>
+                  <p className="mt-1 text-rose-50">
+                    {displayText(pet.pet_is_native)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">
+                    Legal Status
+                  </p>
+                  <p className="mt-1 text-rose-50">
+                    {pet.pet_banned ? "Banned" : "Not banned"}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-wide text-rose-300">
+                    Common Aquarium Species
+                  </p>
+                  <div className="mt-1 flex items-center gap-2 text-rose-50">
+                    {pet.pet_aquarium ? (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                        Yes
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-4 w-4 text-rose-300" />
+                        No / unknown
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Care Tips */}
+            <div className="bg-emerald-900 text-white rounded-3xl p-8 shadow-sm sticky top-24">
+              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2 text-emerald-50">
+                <Leaf className="w-6 h-6 text-emerald-400" /> Quick Facts
+              </h3>
+              <div className="space-y-6">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {pet.pet_max_length && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-3 flex items-center gap-2 text-emerald-200">
+                        <Ruler className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">Max Length</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {pet.pet_max_length}
+                      </p>
+                      <p className="mt-1 text-sm text-emerald-300">cm</p>
+                    </div>
+                  )}
+
+                  {pet.pet_max_weight && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <Scale className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">Max Weight</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {pet.pet_max_weight}
+                      </p>
+                      <p className="mt-1 text-sm text-emerald-300">kg</p>
+                    </div>
+                  )}
+
+                  {pet.pet_longevity && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <Clock className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">Longevity</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {pet.pet_longevity}
+                      </p>
+                      <p className="mt-1 text-sm text-emerald-300">years</p>
+                    </div>
+                  )}
+
+                  {pet.pet_temperature && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <Thermometer className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">Temperature</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {displayText(pet.pet_temperature)}
+                      </p>
+                    </div>
+                  )}
+
+                  {pet.pet_ph_range && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <TestTubeDiagonal className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">pH</h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {displayText(pet.pet_ph_range)}
+                      </p>
+                    </div>
+                  )}
+
+                  {pet.pet_water_hardness && (
+                    <div className="rounded-2xl border border-emerald-700 bg-emerald-800/40 p-4 flex flex-col items-center justify-center text-center">
+                      <div className="mb-2 flex items-center gap-2 text-emerald-200">
+                        <Droplet className="h-4 w-4" />
+                        <h4 className="text-sm font-semibold">
+                          Water Hardness
+                        </h4>
+                      </div>
+                      <p className="text-2xl font-bold text-white">
+                        {displayText(pet.pet_water_hardness)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {(pet.pet_cost != null ||
+                  pet.pet_tank_size ||
+                  pet.pet_care_level) && (
+                  <div className="bg-emerald-950 p-5 rounded-2xl border border-emerald-700 space-y-3">
+                    <h4 className="font-bold text-emerald-100 mb-2 border-b border-emerald-800 pb-2">
+                      Minimum Setup:
+                    </h4>
+                    {pet.pet_cost != null && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-400">Pet Price (RM)</span>
+                        <span className="font-semibold text-white capitalize">
+                          {pet.pet_cost}
+                        </span>
+                      </div>
+                    )}
+                    {pet.pet_tank_size && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-400">
+                          Tank Size (Gallons)
+                        </span>
+                        <span className="font-semibold text-white capitalize">
+                          {pet.pet_tank_size}
+                        </span>
+                      </div>
+                    )}
+                    {pet.pet_care_level && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-emerald-400">Experience</span>
+                        <span className="font-semibold text-white capitalize">
+                          {pet.pet_care_level}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
     </div>
   );
 }

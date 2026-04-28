@@ -1,113 +1,138 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router';
-import { useUser, LifestyleAnswers } from '../context/UserContext';
-import { ArrowRight, ArrowLeft, HelpCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState } from "react";
+import { useNavigate, Link, useLocation, Navigate } from "react-router";
+import { useUser, LifestyleAnswers } from "../context/UserContext";
+import { ArrowRight, ArrowLeft, HelpCircle } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 const questions = [
   {
-    id: 'age',
+    id: "age",
     title: "What is your age group?",
     options: [
-      { label: 'Under 18', value: 'under_18' },
-      { label: '18 - 35', value: '18_35' },
-      { label: '36 - 55', value: '36_55' },
-      { label: '56+', value: '56_plus' },
-    ]
+      { label: "Under 18", value: "under_18" },
+      { label: "18 - 35", value: "18_35" },
+      { label: "36 - 55", value: "36_55" },
+      { label: "56+", value: "56_plus" },
+    ],
   },
   {
-    id: 'time',
+    id: "time",
     title: "How much free time can you dedicate to pet care weekly?",
     options: [
-      { label: 'A few minutes (Low)', value: 'low' },
-      { label: 'A few hours (Medium)', value: 'medium' },
-      { label: 'Daily dedication (High)', value: 'high' }
-    ]
+      { label: "A few minutes (Low)", value: "low" },
+      { label: "A few hours (Medium)", value: "medium" },
+      { label: "Daily dedication (High)", value: "high" },
+    ],
   },
   {
-    id: 'budget',
+    id: "budget",
     title: "What is your available budget for setup and ongoing care?",
     options: [
-      { label: 'Under RM 100 (Low)', value: 'low' },
-      { label: 'RM 100 - RM 500 (Medium)', value: 'medium' },
-      { label: 'RM 500+ (High)', value: 'high' }
-    ]
+      { label: "Under RM 100 (Low)", value: "low" },
+      { label: "RM 100 - RM 500 (Medium)", value: "medium" },
+      { label: "RM 500+ (High)", value: "high" },
+    ],
   },
   {
-    id: 'space',
+    id: "space",
     title: "What is the maximum habitat size you can accommodate?",
     options: [
-      { label: 'Small table / Desktop (Small)', value: 'small' },
-      { label: 'Dedicated corner / Stand (Medium)', value: 'medium' },
-      { label: 'Large room / Outdoor pond (Large)', value: 'large' }
-    ]
+      { label: "Small table / Desktop (Small)", value: "small" },
+      { label: "Dedicated corner / Stand (Medium)", value: "medium" },
+      { label: "Large room / Outdoor pond (Large)", value: "large" },
+    ],
   },
   {
-    id: 'lifespan',
+    id: "lifespan",
     title: "What is your desired pet lifespan commitment?",
     options: [
-      { label: '1 - 5 years', value: 'short' },
-      { label: '5 - 15 years', value: 'medium' },
-      { label: '15+ years (Long term)', value: 'long' }
-    ]
+      { label: "1 - 5 years", value: "short" },
+      { label: "5 - 15 years", value: "medium" },
+      { label: "15+ years (Long term)", value: "long" },
+    ],
   },
   {
-    id: 'experience',
+    id: "experience",
     title: "What is your care experience level with aquatic pets?",
     options: [
-      { label: 'First-time owner (Beginner)', value: 'beginner' },
-      { label: 'Have kept some before (Intermediate)', value: 'intermediate' },
-      { label: 'Experienced hobbyist (Advanced)', value: 'advanced' }
-    ]
-  }
+      { label: "First-time owner (Beginner)", value: "beginner" },
+      { label: "Have kept some before (Intermediate)", value: "intermediate" },
+      { label: "Experienced hobbyist (Advanced)", value: "advanced" },
+    ],
+  },
 ];
+
+type QuizLocationState = {
+  retake?: boolean;
+};
 
 export function Quiz() {
   const navigate = useNavigate();
-  const { setAnswers } = useUser();
+  const location = useLocation();
+  const { setAnswers, answers, loading } = useUser();
+
+  const isRetake = Boolean(
+    (location.state as QuizLocationState | null)?.retake,
+  );
+
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<Partial<LifestyleAnswers>>({});
 
+  if (loading) {
+    return (
+      <div className="bg-stone-50 min-h-screen flex items-center justify-center text-stone-600">
+        Loading quiz...
+      </div>
+    );
+  }
+
+  if (answers && !isRetake) {
+    return <Navigate to="/quiz-results" replace />;
+  }
+
   const handleSelect = (value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [questions[currentStep].id]: value
+      [questions[currentStep].id]: value,
     }));
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < questions.length - 1) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
     } else {
-      setAnswers(formData as LifestyleAnswers);
-      navigate('/quiz-results');
+      await setAnswers(formData as LifestyleAnswers);
+      navigate("/quiz-results", { replace: true });
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 0) setCurrentStep(prev => prev - 1);
+    if (currentStep > 0) setCurrentStep((prev) => prev - 1);
   };
 
-  const isCurrentAnswered = !!formData[questions[currentStep].id as keyof LifestyleAnswers];
+  const isCurrentAnswered =
+    !!formData[questions[currentStep].id as keyof LifestyleAnswers];
   const progress = ((currentStep + 1) / questions.length) * 100;
 
   return (
     <div className="bg-stone-50 min-h-screen flex flex-col font-sans text-stone-900 relative">
       <div className="max-w-3xl w-full mx-auto px-4 py-8 md:py-16 flex-1 flex flex-col">
-        
-        {/* Header & Progress */}
         <div className="mb-12">
           <div className="flex justify-between items-end mb-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-stone-900">Lifestyle Compatibility Screening</h1>
-              <p className="text-stone-600 mt-2 text-lg">Let's find the right aquatic pet for you.</p>
+              <h1 className="text-3xl font-extrabold text-stone-900">
+                Lifestyle Compatibility Screening
+              </h1>
+              <p className="text-stone-600 mt-2 text-lg">
+                Let's find the right aquatic pet for you.
+              </p>
             </div>
             <div className="text-emerald-600 font-bold text-lg">
               {currentStep + 1} / {questions.length}
             </div>
           </div>
           <div className="w-full bg-stone-200 h-3 rounded-full overflow-hidden">
-            <motion.div 
+            <motion.div
               className="bg-emerald-500 h-full"
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
@@ -116,7 +141,6 @@ export function Quiz() {
           </div>
         </div>
 
-        {/* Question Area */}
         <div className="flex-1 flex flex-col justify-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -130,18 +154,21 @@ export function Quiz() {
               <h2 className="text-3xl md:text-4xl font-bold mb-8 text-stone-900 leading-tight">
                 {questions[currentStep].title}
               </h2>
-              
+
               <div className="space-y-4">
-                {questions[currentStep].options.map(option => {
-                  const isSelected = formData[questions[currentStep].id as keyof LifestyleAnswers] === option.value;
+                {questions[currentStep].options.map((option) => {
+                  const isSelected =
+                    formData[
+                      questions[currentStep].id as keyof LifestyleAnswers
+                    ] === option.value;
                   return (
                     <button
                       key={option.value}
                       onClick={() => handleSelect(option.value)}
                       className={`w-full text-left p-6 rounded-2xl border-2 transition-all text-xl font-medium ${
-                        isSelected 
-                          ? 'border-emerald-500 bg-emerald-50 text-emerald-900 shadow-md' 
-                          : 'border-stone-200 bg-white hover:border-emerald-300 hover:bg-stone-50 text-stone-700'
+                        isSelected
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-900 shadow-md"
+                          : "border-stone-200 bg-white hover:border-emerald-300 hover:bg-stone-50 text-stone-700"
                       }`}
                     >
                       {option.label}
@@ -153,13 +180,14 @@ export function Quiz() {
           </AnimatePresence>
         </div>
 
-        {/* Navigation */}
         <div className="mt-12 flex justify-between items-center pt-6 border-t border-stone-200">
           <button
             onClick={handleBack}
             disabled={currentStep === 0}
             className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-colors ${
-              currentStep === 0 ? 'text-stone-300 cursor-not-allowed' : 'text-stone-600 hover:bg-stone-200'
+              currentStep === 0
+                ? "text-stone-300 cursor-not-allowed"
+                : "text-stone-600 hover:bg-stone-200"
             }`}
           >
             <ArrowLeft className="w-5 h-5" /> Back
@@ -168,17 +196,21 @@ export function Quiz() {
             onClick={handleNext}
             disabled={!isCurrentAnswered}
             className={`flex items-center gap-2 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-md ${
-              isCurrentAnswered 
-                ? 'bg-emerald-600 text-white hover:bg-emerald-700' 
-                : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+              isCurrentAnswered
+                ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                : "bg-stone-200 text-stone-400 cursor-not-allowed"
             }`}
           >
-            {currentStep === questions.length - 1 ? 'See Results' : 'Continue'} <ArrowRight className="w-5 h-5" />
+            {currentStep === questions.length - 1 ? "See Results" : "Continue"}{" "}
+            <ArrowRight className="w-5 h-5" />
           </button>
         </div>
 
         <div className="mt-8 text-center">
-          <Link to="/identify" className="inline-flex items-center gap-2 text-stone-500 hover:text-emerald-600 font-medium transition-colors">
+          <Link
+            to="/identify"
+            className="inline-flex items-center gap-2 text-stone-500 hover:text-emerald-600 font-medium transition-colors"
+          >
             <HelpCircle className="w-5 h-5" />
             Don't know your pet's name? Click to identify it first.
           </Link>

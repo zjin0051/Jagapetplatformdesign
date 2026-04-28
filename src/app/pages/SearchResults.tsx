@@ -1,161 +1,320 @@
-import { useEffect, useState } from 'react';
-import { useSearchParams, Link, useNavigate } from 'react-router';
-import { Search, Fish, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
-import { searchSpecies } from '../utils/searchUtils';
-import type { SearchResult } from '../utils/searchUtils';
-import { motion } from 'motion/react';
+import { useEffect, useState, useMemo } from "react";
+import { useSearchParams, Link, useNavigate } from "react-router";
+import {
+  Search,
+  Fish,
+  AlertCircle,
+  ArrowLeft,
+  Sparkles,
+  HandHeart,
+  ShieldAlert,
+  Skull,
+  ScanEye,
+  Ban,
+} from "lucide-react";
+import { motion } from "motion/react";
+import type { Pet, SortOption } from "../types/pet.types";
+import {
+  getPetCommonNames,
+  displayText,
+  normalizeDangerBadge,
+  getDangerBadgeClasses,
+  getCareBadgeClasses,
+  getNativeBadgeClasses,
+} from "../utils/petDisplay.ts";
+import { usePetSearch } from "../hooks/usePetSearch";
+import { useSortedPets } from "../hooks/useSortedPets";
+import { usePagination } from "../hooks/usePagination";
 
 export function SearchResults() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const query = searchParams.get('q') || '';
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const query = searchParams.get("q") || "";
 
-  useEffect(() => {
-    if (query) {
-      const searchResults = searchSpecies(query);
-      setResults(searchResults);
-    }
-  }, [query]);
+  const [sortBy, setSortBy] = useState<SortOption>("aquarium");
+
+  const { results, loading, error } = usePetSearch(query);
+  const sortedResults = useSortedPets(results, sortBy);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems,
+    goToPage,
+    goNext,
+    goPrevious,
+  } = usePagination(sortedResults, 9, [query, sortBy]);
 
   return (
-    <div className="min-h-screen bg-stone-50 pb-24">
-      {/* Header */}
-      <div className="bg-white border-b border-stone-200">
-        <div className="max-w-5xl mx-auto px-4 py-8">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 text-stone-600 hover:text-emerald-600 transition mb-6 group"
-          >
-            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition" />
-            <span className="font-semibold">Back</span>
-          </button>
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-stone-50 px-4 py-10">
+      <div className="mx-auto max-w-6xl">
+        <button
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/");
+            }
+          }}
+          className="group mb-6 flex items-center gap-2 text-stone-600 transition hover:text-emerald-600"
+        >
+          <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" />
+          Back
+        </button>
 
-          <div className="flex items-center gap-3 mb-2">
-            <Search className="w-8 h-8 text-emerald-600" />
-            <h1 className="text-3xl font-bold text-stone-900">Search Results</h1>
+        <div className="mb-8 rounded-[2rem] bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 p-8 text-white shadow-xl">
+          <div className="mb-3 flex items-center gap-3">
+            <Search className="h-7 w-7" />
+            <h1 className="text-3xl font-black tracking-tight">
+              Search Results
+            </h1>
           </div>
-          <p className="text-stone-600 text-lg">
-            Searching for: <span className="font-semibold text-stone-900">"{query}"</span>
+          <p className="text-emerald-50">
+            Searching for: <span className="font-semibold">"{query}"</span>
           </p>
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        {results.length > 0 ? (
-          <>
-            {/* Did you mean section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
-            >
-              <div className="flex items-center gap-2 mb-6">
-                <Sparkles className="w-6 h-6 text-emerald-600" />
-                <h2 className="text-2xl font-bold text-stone-900">
-                  Did you mean one of these species?
-                </h2>
-              </div>
-              <p className="text-stone-600 mb-8">
-                We found {results.length} {results.length === 1 ? 'species' : 'species'} that closely match your search. Click on a species to view its full profile.
-              </p>
-            </motion.div>
-
-            {/* Results Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {results.map((result, index) => (
-                <motion.div
-                  key={result.species.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link
-                    to={`/species/${result.species.id}`}
-                    className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer h-full"
-                  >
-                    <div className="relative h-64 overflow-hidden">
-                      <img 
-                        src={result.species.imageUrl} 
-                        alt={result.species.name} 
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      />
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide backdrop-blur-md shadow-sm ${
-                          result.species.biodiversityRisk === 'High' ? 'bg-rose-500/90 text-white' :
-                          result.species.biodiversityRisk === 'Medium' ? 'bg-amber-500/90 text-white' :
-                          'bg-emerald-500/90 text-white'
-                        }`}>
-                          {result.species.biodiversityRisk} Risk
-                        </span>
-                        <span className="bg-white/90 text-stone-800 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-md flex items-center gap-1 shadow-sm">
-                          {result.species.category === 'fish' ? <Fish className="w-3 h-3"/> : null} 
-                          {result.species.careDifficulty} Care
-                        </span>
-                      </div>
-                      {result.score !== undefined && result.score < 0.2 && (
-                        <div className="absolute top-4 right-4">
-                          <span className="bg-emerald-500/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" />
-                            Best Match
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-6 flex-1 flex flex-col">
-                      <h3 className="text-xl font-bold text-stone-900 mb-1 group-hover:text-emerald-700 transition">
-                        {result.species.name}
-                      </h3>
-                      <p className="text-sm text-stone-500 italic mb-4 font-serif">
-                        {result.species.scientificName}
-                      </p>
-                      <p className="text-stone-600 text-sm mb-6 flex-1 line-clamp-3">
-                        {result.species.shortDesc}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
-                          View Profile & Care Guide →
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+        {loading ? (
+          <div className="rounded-3xl border border-stone-200 bg-white p-8 shadow-sm">
+            <p className="text-stone-600">Searching pets...</p>
+          </div>
+        ) : error ? (
+          <div className="rounded-3xl border border-red-200 bg-red-50 p-8 shadow-sm">
+            <div className="mb-3 flex items-center gap-2 text-red-700">
+              <AlertCircle className="h-5 w-5" />
+              <h2 className="text-xl font-bold">Search error</h2>
             </div>
+            <p className="text-red-800">{error}</p>
+          </div>
+        ) : results.length > 0 ? (
+          <>
+            <div className="mb-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-6">
+              <div className="mb-2 flex items-center gap-2 text-emerald-700">
+                <Sparkles className="h-5 w-5" />
+                <h2 className="text-xl font-bold">Matching pets</h2>
+              </div>
+              <p className="text-stone-700">
+                We found {results.length} matching result
+                {results.length === 1 ? "" : "s"} for your search.
+              </p>
+            </div>
+
+            <div className="mb-6 flex items-center gap-3">
+              <label
+                htmlFor="sort"
+                className="text-xl font-semibold text-emerald-700"
+              >
+                Sort by:
+              </label>
+              <select
+                id="sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="rounded-full border border-stone-300 bg-white px-4 py-2 text-base font-medium text-stone-700 shadow-sm outline-none transition focus:border-emerald-500"
+              >
+                <option value="aquarium">Most Common</option>
+                <option value="alphabet_asc">Alphabet: A to Z</option>
+                <option value="alphabet_desc">Alphabet: Z to A</option>
+                <option value="invasive_risk_desc">
+                  Invasive risk: High to Low
+                </option>
+                <option value="invasive_risk_asc">
+                  Invasive risk: Low to High
+                </option>
+                <option value="care_level_desc">
+                  Care level: Advanced to Beginner
+                </option>
+                <option value="care_level_asc">
+                  Care level: Beginner to Advanced
+                </option>
+                <option value="native_status_desc">
+                  Native status: Invasive to Native
+                </option>
+                <option value="native_status_asc">
+                  Native status: Native to Invasive
+                </option>
+                <option value="cost_desc">Cost: High to Low</option>
+                <option value="cost_asc">Cost: Low to High</option>
+              </select>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {paginatedItems.map((pet, index) => {
+                const danger = normalizeDangerBadge(pet.pet_danger);
+                const { primaryCommonName, otherCommonNames } =
+                  getPetCommonNames(pet);
+
+                return (
+                  <motion.div
+                    key={pet.pet_id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Link
+                      to={`/species/${pet.pet_id}`}
+                      className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl border border-stone-100 transition-all flex flex-col group cursor-pointer h-full"
+                    >
+                      <div className="relative h-64 overflow-hidden">
+                        <img
+                          src={
+                            pet.pet_image_ref
+                              ? `/pet_image/${pet.pet_image_ref}`
+                              : "/pet_image/pet_placeholder.png"
+                          }
+                          alt={
+                            pet.pet_vernacular_name ?? "Pet Image Placeholder"
+                          }
+                          className="w-full h-full object-fit group-hover:scale1-105 transition duration-500"
+                        />
+                        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+                          {pet.pet_invasive_risk && (
+                            <span
+                              className={getDangerBadgeClasses(
+                                pet.pet_invasive_risk,
+                              )}
+                            >
+                              <ShieldAlert className="w-3 h-3" />
+                              {pet.pet_invasive_risk} Biodiversity Risk
+                            </span>
+                          )}
+                          {pet.pet_care_level && (
+                            <span
+                              className={getCareBadgeClasses(
+                                pet.pet_care_level,
+                              )}
+                            >
+                              <HandHeart className="w-3 h-3" />
+                              {pet.pet_care_level} Care
+                            </span>
+                          )}
+                          {pet.pet_banned && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+                              <Ban className="w-4 h-4" />
+                              Banned in Malaysia
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-6 flex-1 flex flex-col">
+                        <h3 className="text-xl font-bold text-stone-900 mb-1 group-hover:text-emerald-700 transition">
+                          {primaryCommonName}
+                        </h3>
+                        <p className="text-sm text-stone-500 italic mb-2 font-serif">
+                          {pet.pet_scientific_name}
+                        </p>
+                        {otherCommonNames.length > 0 && (
+                          <p className="text-sm text-stone-500 mb-3">
+                            <span className="font-semibold">A.K.A:</span>{" "}
+                            {otherCommonNames.join(", ")}
+                          </p>
+                        )}
+                        <div className="mb-4 flex flex-wrap gap-2">
+                          <span className={getDangerBadgeClasses(danger)}>
+                            <Skull className="w-3 h-3" />
+                            {danger} Danger
+                          </span>
+                          {pet.pet_is_native && (
+                            <span
+                              className={getNativeBadgeClasses(
+                                pet.pet_is_native,
+                              )}
+                            >
+                              <Fish className="w-3 h-3" />
+                              {pet.pet_is_native}
+                            </span>
+                          )}
+                          {pet.pet_aquarium && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                              <ScanEye className="w-3 h-3" />
+                              Common
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-stone-600 text-sm mb-6 line-clamp-3">
+                          {displayText(
+                            pet.pet_comments,
+                            "No description is available for this pet yet.",
+                          )}
+                        </p>
+                        <div className="mt-auto flex items-center justify-between">
+                          <div className="text-emerald-700 font-semibold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+                            View Profile & Care Guide →
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                <button
+                  onClick={goPrevious}
+                  disabled={currentPage === 1}
+                  className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-emerald-500 hover:text-emerald-700"
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                        currentPage === page
+                          ? "bg-emerald-600 text-white"
+                          : "border border-stone-300 bg-white text-stone-700 hover:border-emerald-500 hover:text-emerald-700"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ),
+                )}
+
+                <button
+                  onClick={goNext}
+                  disabled={currentPage === totalPages}
+                  className="rounded-full border border-stone-300 bg-white px-4 py-2 text-sm font-semibold text-stone-700 transition disabled:cursor-not-allowed disabled:opacity-50 hover:border-emerald-500 hover:text-emerald-700"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+            <p className="mt-4 text-center text-base text-stone-600">
+              Page {currentPage} of {totalPages}
+            </p>
           </>
         ) : (
-          /* No Results */
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-20"
-          >
-            <div className="flex justify-center mb-6">
-              <div className="w-24 h-24 rounded-full bg-stone-100 flex items-center justify-center">
-                <AlertCircle className="w-12 h-12 text-stone-400" />
-              </div>
+          <div className="rounded-[2rem] border border-stone-200 bg-white p-10 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-stone-100">
+              <AlertCircle className="h-7 w-7 text-stone-500" />
             </div>
-            <h2 className="text-2xl font-bold text-stone-900 mb-4">
-              No species found
-            </h2>
-            <p className="text-stone-600 mb-8 max-w-md mx-auto">
-              We couldn't find any species matching "{query}". Try searching with different keywords or check the spelling.
+            <h2 className="text-2xl font-bold text-stone-900">No pets found</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-stone-600">
+              We could not find any pets matching "{query}". Try a scientific
+              name, vernacular name, genus, or family.
             </p>
-            <div className="flex gap-4 justify-center">
+
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link
                 to="/"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-full font-semibold transition shadow-md"
+                className="rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700"
               >
-                Browse All Species
+                Browse Home
               </Link>
               <button
                 onClick={() => navigate(-1)}
-                className="bg-white border-2 border-stone-300 hover:border-emerald-600 text-stone-700 hover:text-emerald-700 px-6 py-3 rounded-full font-semibold transition"
+                className="rounded-full border-2 border-stone-300 px-6 py-3 font-semibold text-stone-700 transition hover:border-emerald-600 hover:text-emerald-700"
               >
                 Go Back
               </button>
             </div>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>
