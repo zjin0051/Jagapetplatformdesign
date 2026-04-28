@@ -160,7 +160,7 @@ export function HealthScreening() {
                 exit={{ opacity: 0 }}
                 className={`p-12 text-center border-4 border-dashed m-6 rounded-2xl transition-colors ${
                   dragActive
-                    ? "border-pink-500 bg-pink-50"
+                    ? "border-amber-500 bg-amber-50"
                     : "border-stone-200 hover:bg-stone-50"
                 }`}
                 onDragEnter={handleDrag}
@@ -168,8 +168,8 @@ export function HealthScreening() {
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <div className="mx-auto w-24 h-24 mb-6 bg-pink-100 rounded-full flex items-center justify-center">
-                  <HeartPulse className="w-12 h-12 text-pink-600" />
+                <div className="mx-auto w-24 h-24 mb-6 bg-amber-100 rounded-full flex items-center justify-center">
+                  <HeartPulse className="w-12 h-12 text-amber-600" />
                 </div>
 
                 <h3 className="text-2xl font-bold text-stone-800 mb-2">
@@ -183,7 +183,7 @@ export function HealthScreening() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-4 rounded-full font-bold shadow-lg transition-all transform hover:-translate-y-1 inline-flex items-center gap-2"
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 rounded-full font-bold shadow-lg transition-all transform hover:-translate-y-1 inline-flex items-center gap-2"
                 >
                   <Camera className="w-5 h-5" /> Select Photo
                 </button>
@@ -214,10 +214,10 @@ export function HealthScreening() {
                     alt="Screening"
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-pink-500/20 scan-line"></div>
+                  <div className="absolute inset-0 bg-amber-500/20 scan-line"></div>
                 </div>
 
-                <Loader2 className="w-10 h-10 text-pink-600 animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-amber-600 animate-spin mb-4" />
 
                 <h3 className="text-2xl font-bold text-stone-800">
                   Screening Photo...
@@ -278,8 +278,8 @@ export function HealthScreening() {
                       <>
                         <div>
                           <div className="flex items-center gap-3 mb-2">
-                            <CheckCircle className="text-pink-500 w-6 h-6" />
-                            <span className="text-pink-700 font-bold uppercase tracking-wider text-sm">
+                            <CheckCircle className="text-amber-500 w-6 h-6" />
+                            <span className="text-amber-700 font-bold uppercase tracking-wider text-sm">
                               Health Screening Result
                             </span>
                           </div>

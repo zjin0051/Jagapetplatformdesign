@@ -170,7 +170,7 @@ const handleScreenHealth = async (req: any, res: any) => {
     type: file.mimetype || "application/octet-stream",
   });
 
-  formData.append("img", blob, file.originalFilename || "pet.jpg");
+  formData.append("file", blob, file.originalFilename || "pet.jpg");
 
   const modelResponse = await fetch(modelUrl, {
     method: "POST",
