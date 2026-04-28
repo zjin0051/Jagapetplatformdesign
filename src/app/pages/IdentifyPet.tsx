@@ -16,6 +16,7 @@ type IdentificationResult = {
   common_name: string;
   confidence: string;
   notes: string;
+  visible_health_status: string;
 };
 
 type IdentifyApiResponse = {
@@ -40,6 +41,7 @@ const parseModelResult = (resultText: string): IdentificationResult => {
     common_name: parsed.common_name?.trim() || "Unknown",
     confidence: parsed.confidence?.trim() || "Unknown",
     notes: parsed.notes?.trim() || "No notes provided.",
+    visible_health_status: parsed.visible_health_status?.trim() || "Unknown",
   };
 };
 
@@ -388,7 +390,7 @@ export function IdentifyPet() {
                                 Quick Health Check
                               </h3>
                               <ul className="space-y-2">
-                                {matchedSpecies.healthChecklist.map(
+                                {/* {matchedSpecies.healthChecklist.map(
                                   (item, i) => (
                                     <li
                                       key={i}
@@ -398,7 +400,8 @@ export function IdentifyPet() {
                                       {item}
                                     </li>
                                   ),
-                                )}
+                                )} */}
+                                {result.visible_health_status}
                               </ul>
                             </div>
 
