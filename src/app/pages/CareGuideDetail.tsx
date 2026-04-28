@@ -526,10 +526,10 @@ export function CareGuideDetail() {
             {careGuide.commonIllness.map((illness, index) => (
               <div
                 key={index}
-                className="bg-rose-50 rounded-xl p-5 border-l-4 border-rose-500"
+                className="bg-rose-50 rounded-lg px-3 py-2 border-l-2 border-rose-500"
               >
-                <h4 className="text-lg font-bold text-rose-900 mb-4 flex items-center gap-2">
-                  <span className="bg-rose-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm shrink-0">
+                <h4 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+                  <span className="bg-rose-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0">
                     {index + 1}
                   </span>
                   {illness.name}
