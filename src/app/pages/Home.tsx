@@ -24,7 +24,7 @@ import {
   getNativeBadgeClasses,
 } from "../utils/petDisplay";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { RecommendedPet } from "../types/pet.types";
 
 function shuffleArray<T>(items: T[]) {
@@ -52,9 +52,7 @@ export function Home() {
   const [highRiskDeck, setHighRiskDeck] = useState<string[]>([]);
   const [highRiskCursor, setHighRiskCursor] = useState(0);
 
-  const handleIdentifyPhotoSelect = (
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleIdentifyPhotoSelect = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) {
@@ -246,27 +244,29 @@ export function Home() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="max-w-xl mx-auto shadow-2xl"
           >
-            <input
-              ref={identifyFileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleIdentifyPhotoSelect}
-            />
+            <>
+              <input
+                ref={identifyFileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleIdentifyPhotoSelect}
+              />
 
-            <div className="relative">
-              <SearchAutocomplete />
-
-              <button
-                type="button"
-                onClick={() => identifyFileInputRef.current?.click()}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-stone-500 hover:bg-stone-100 hover:text-emerald-700 transition"
-                aria-label="Identify pet by photo"
-                title="Identify pet by photo"
-              >
-                <Camera className="h-5 w-5" />
-              </button>
-            </div>
+              <SearchAutocomplete
+                rightAction={
+                  <button
+                    type="button"
+                    onClick={() => identifyFileInputRef.current?.click()}
+                    className="rounded-full p-2 text-stone-500 hover:bg-stone-100 hover:text-emerald-700 transition"
+                    aria-label="Identify pet by photo"
+                    title="Identify pet by photo"
+                  >
+                    <Camera className="h-5 w-5" />
+                  </button>
+                }
+              />
+            </>
           </motion.div>
         </div>
       </section>

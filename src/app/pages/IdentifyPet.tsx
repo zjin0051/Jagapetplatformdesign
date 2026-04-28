@@ -82,6 +82,7 @@ export function IdentifyPet() {
   const [result, setResult] = useState<IdentificationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const autoIdentifyStartedRef = useRef(false);
   const [speciesList, setSpeciesList] = useState<LocalSpecies[]>([]);
   const [speciesError, setSpeciesError] = useState<string | null>(null);
   const location = useLocation();
@@ -230,13 +231,15 @@ export function IdentifyPet() {
   };
 
   useEffect(() => {
-    if (!initialImageFile) {
+    if (!initialImageFile || autoIdentifyStartedRef.current) {
       return;
     }
 
+    autoIdentifyStartedRef.current = true;
+
     handleFile(initialImageFile);
 
-    window.history.replaceState({}, document.title);
+    window.history.replaceState({}, document.title, window.location.pathname);
   }, [initialImageFile]);
 
   const matchedSpecies = result ? findLocalSpecies(result, speciesList) : null;
