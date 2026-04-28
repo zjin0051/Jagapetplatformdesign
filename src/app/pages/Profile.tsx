@@ -618,7 +618,7 @@ export function Profile() {
 
                     <div className="grid grid-cols-1 mt-6">
                       <Link
-                        to={`/species/${pet.petId}`}
+                        to={`/care-guide/${pet.petId}`}
                         className="bg-white rounded-2xl border border-stone-200 p-4 text-center font-bold text-emerald-700 hover:bg-emerald-50 transition-all"
                       >
                         Full Guide

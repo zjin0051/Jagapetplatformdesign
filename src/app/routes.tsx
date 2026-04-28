@@ -12,6 +12,7 @@ import { SearchResults } from "./pages/SearchResults";
 import { ApiTestLab } from "./pages/ApiTestLab";
 import { Auth } from "./pages/Auth";
 import { Profile } from "./pages/Profile";
+import { CareGuideDetail } from "./pages/CareGuideDetail";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: "api-test-lab", element: <ApiTestLab /> },
       { path: "login", element: <Auth /> },
       { path: "profile", element: <Profile /> },
+      { path: "/care-guide/:id", element: <CareGuideDetail /> },
     ],
   },
 ]);
