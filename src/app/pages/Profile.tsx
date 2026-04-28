@@ -75,55 +75,6 @@ interface CareTask {
   lastCompleted?: string | null;
 }
 
-type ProfilePetCache = {
-  speciesOptions: SpeciesOption[];
-  userPets: UserPet[];
-  careTasks: CareTask[];
-  savedAt: number;
-};
-
-const PROFILE_PET_CACHE_KEY = "profile-pet-cache";
-const PROFILE_PET_CACHE_MAX_AGE = 1000 * 60 * 10; // 10 minutes
-
-function saveProfilePetCache(cache: Omit<ProfilePetCache, "savedAt">) {
-  try {
-    sessionStorage.setItem(
-      PROFILE_PET_CACHE_KEY,
-      JSON.stringify({
-        ...cache,
-        savedAt: Date.now(),
-      }),
-    );
-  } catch (error) {
-    console.warn("Could not save profile pet cache:", error);
-
-    // Optional: remove old cache so the app does not keep failing
-    sessionStorage.removeItem(PROFILE_PET_CACHE_KEY);
-  }
-}
-
-function getProfilePetCache(): ProfilePetCache | null {
-  const cached = sessionStorage.getItem(PROFILE_PET_CACHE_KEY);
-
-  if (!cached) return null;
-
-  try {
-    const parsed = JSON.parse(cached) as ProfilePetCache;
-
-    const isExpired = Date.now() - parsed.savedAt > PROFILE_PET_CACHE_MAX_AGE;
-
-    if (isExpired) {
-      sessionStorage.removeItem(PROFILE_PET_CACHE_KEY);
-      return null;
-    }
-
-    return parsed;
-  } catch {
-    sessionStorage.removeItem(PROFILE_PET_CACHE_KEY);
-    return null;
-  }
-}
-
 const TASK_ICONS: Record<string, React.ReactNode> = {
   "water-change": <Droplets className="w-5 h-5" />,
   feeding: <Utensils className="w-5 h-5" />,
@@ -139,17 +90,6 @@ const TASK_NAMES: Record<string, string> = {
   "health-check": "Health Check",
   "temperature-check": "Temperature Check",
 };
-
-async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, options);
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(data?.error || "Request failed");
-  }
-
-  return data as T;
-}
 
 function formatFrequency(task: CareTask) {
   const unit = task.intervalUnit;
@@ -183,15 +123,25 @@ function formatFrequency(task: CareTask) {
 }
 
 export function Profile() {
-  const { user, answers, logout, loading } = useUser();
+  const {
+    user,
+    answers,
+    logout,
+    loading,
+    speciesOptions,
+    userPets,
+    careTasks,
+    petsLoading,
+    petError,
+    loadPetData,
+    addUserPet,
+    removeUserPet,
+    completeCareTask,
+    clearPetError,
+  } = useUser();
 
   const [activeTab, setActiveTab] = useState<"profile" | "pets">("profile");
 
-  const [speciesOptions, setSpeciesOptions] = useState<SpeciesOption[]>([]);
-  const [userPets, setUserPets] = useState<UserPet[]>([]);
-  const [careTasks, setCareTasks] = useState<CareTask[]>([]);
-
-  const [petsLoading, setPetsLoading] = useState(false);
   const [formError, setFormError] = useState("");
 
   const [showAddPet, setShowAddPet] = useState(false);
@@ -203,7 +153,7 @@ export function Profile() {
   useEffect(() => {
     if (!user || loading) return;
 
-    loadDatabaseData();
+    loadPetData();
   }, [user, loading]);
 
   const tasksByPetListId = useMemo(() => {
@@ -220,44 +170,6 @@ export function Profile() {
   if (loading) return <div className="p-8">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
 
-  async function loadDatabaseData() {
-    setFormError("");
-
-    const cached = getProfilePetCache();
-
-    if (cached) {
-      setSpeciesOptions(cached.speciesOptions);
-      setUserPets(cached.userPets);
-      setCareTasks(cached.careTasks);
-      setPetsLoading(false);
-      return;
-    }
-
-    try {
-      setPetsLoading(true);
-
-      const [species, petData] = await Promise.all([
-        fetchJson<SpeciesOption[]>("/api/species"),
-        fetchJson<{ pets: UserPet[]; tasks: CareTask[] }>("/api/user-pets"),
-      ]);
-
-      setSpeciesOptions(species);
-      setUserPets(petData.pets);
-      setCareTasks(petData.tasks);
-
-      saveProfilePetCache({
-        speciesOptions: species,
-        userPets: petData.pets,
-        careTasks: petData.tasks,
-      });
-    } catch (error) {
-      console.error(error);
-      setFormError("Could not load your pet data.");
-    } finally {
-      setPetsLoading(false);
-    }
-  }
-
   const rows = [
     ["Age group", answers?.age, "age"],
     ["Free time", answers?.time, "time"],
@@ -273,34 +185,18 @@ export function Profile() {
     try {
       setSavingPet(true);
       setFormError("");
+      clearPetError();
 
-      const data = await fetchJson<{ pets: UserPet[]; tasks: CareTask[] }>(
-        "/api/user-pets",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            petId: selectedSpeciesId,
-            nickname: petNickname.trim(),
-            age: petAge.trim() ? Number(petAge) : null,
-          }),
-        },
+      await addUserPet(
+        selectedSpeciesId,
+        petNickname.trim(),
+        petAge.trim() ? Number(petAge) : null,
       );
 
-      setUserPets(data.pets);
-      setCareTasks(data.tasks);
-      saveProfilePetCache({
-        speciesOptions,
-        userPets: data.pets,
-        careTasks: data.tasks,
-      });
       setSelectedSpeciesId("");
       setPetNickname("");
       setPetAge("");
       setShowAddPet(false);
-      setFormError("");
     } catch (error) {
       console.error(error);
       setFormError(
@@ -314,63 +210,28 @@ export function Profile() {
   const handleRemovePet = async (petListId: string) => {
     try {
       setFormError("");
+      clearPetError();
 
-      await fetchJson<{ ok: boolean }>(
-        `/api/user-pets?petListId=${encodeURIComponent(petListId)}`,
-        {
-          method: "DELETE",
-        },
-      );
-
-      const updatedPets = userPets.filter((pet) => pet.petListId !== petListId);
-      const updatedTasks = careTasks.filter(
-        (task) => task.petListId !== petListId,
-      );
-
-      setUserPets(updatedPets);
-      setCareTasks(updatedTasks);
-
-      saveProfilePetCache({
-        speciesOptions,
-        userPets: updatedPets,
-        careTasks: updatedTasks,
-      });
-
-      setFormError("");
+      await removeUserPet(petListId);
     } catch (error) {
       console.error(error);
-      setFormError("Could not remove pet.");
+      setFormError(
+        error instanceof Error ? error.message : "Could not remove pet.",
+      );
     }
   };
 
   const handleCompleteTask = async (taskId: string) => {
     try {
       setFormError("");
+      clearPetError();
 
-      const updatedTask = await fetchJson<CareTask>("/api/user-pet-tasks", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ taskId }),
-      });
-
-      const updatedTasks = careTasks.map((task) =>
-        task.id === taskId ? updatedTask : task,
-      );
-
-      setCareTasks(updatedTasks);
-
-      saveProfilePetCache({
-        speciesOptions,
-        userPets,
-        careTasks: updatedTasks,
-      });
-
-      setFormError("");
+      await completeCareTask(taskId);
     } catch (error) {
       console.error(error);
-      setFormError("Could not update task.");
+      setFormError(
+        error instanceof Error ? error.message : "Could not update task.",
+      );
     }
   };
 
@@ -426,12 +287,11 @@ export function Profile() {
         </button>
       </div>
 
-      {formError && (
+      {(formError || petError) && (
         <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">
-          {formError}
+          {formError || petError}
         </div>
       )}
-
       {activeTab === "profile" && (
         <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
           <h2 className="text-xl font-semibold mb-4">
