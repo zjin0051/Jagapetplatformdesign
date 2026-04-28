@@ -84,7 +84,7 @@ const TASK_ICONS: Record<string, React.ReactNode> = {
 };
 
 const TASK_NAMES: Record<string, string> = {
-  "water-change": "Water Change",
+  "water-change": "25% Water Change",
   feeding: "Feeding",
   "filter-clean": "Clean Filter",
   "health-check": "Health Check",

@@ -58,30 +58,37 @@ function parseFrequency(
 }
 
 function buildDefaultTasks(careProfile: any) {
+  const feedingFreq = Number(careProfile?.pet_care_feeding_freq ?? 1);
+  const waterChangeFreq = Number(careProfile?.pet_care_water_chg_freq ?? 7);
+
   return [
     {
       type: "feeding",
-      frequency: parseFrequency(careProfile?.feeding_frequency, {
-        count: 1,
+      frequency: {
+        count:
+          Number.isFinite(feedingFreq) && feedingFreq > 0 ? feedingFreq : 1,
         interval: 1,
-        unit: "day",
-      }),
+        unit: "day" as const,
+      },
     },
     {
       type: "water-change",
-      frequency: parseFrequency(careProfile?.cleaning_frequency, {
+      frequency: {
         count: 1,
-        interval: 1,
-        unit: "week",
-      }),
+        interval:
+          Number.isFinite(waterChangeFreq) && waterChangeFreq > 0
+            ? waterChangeFreq
+            : 1,
+        unit: "week" as const,
+      },
     },
     {
       type: "health-check",
-      frequency: parseFrequency(careProfile?.vet_checkup_frequency, {
+      frequency: {
         count: 1,
         interval: 1,
-        unit: "month",
-      }),
+        unit: "week" as const,
+      },
     },
   ];
 }
@@ -219,11 +226,12 @@ export default async function handler(req: any, res: any) {
       try {
         const careRows = await sql`
           select
-            feeding_frequency,
-            cleaning_frequency,
-            vet_checkup_frequency
-          from public.pet_care_profile
-          where pet_id = ${String(petId)}
+            pc.pet_care_feeding_freq,
+            pc.pet_care_water_chg_freq
+          from public.pet p
+          left join public.pet_care pc
+            on pc.pet_genus = p.pet_genus
+          where p.pet_id = ${String(petId)}
           limit 1
         `;
 
