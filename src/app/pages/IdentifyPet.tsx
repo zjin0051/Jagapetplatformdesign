@@ -9,19 +9,26 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { speciesData } from "../data/species";
 
 type IdentificationResult = {
   scientific_name: string;
   common_name: string;
   confidence: string;
   notes: string;
-  visible_health_status: string;
 };
 
 type IdentifyApiResponse = {
   result: string;
   usage: unknown;
+};
+
+type LocalSpecies = {
+  petId: string;
+  id: string;
+  name: string;
+  scientificName: string | null;
+  imageUrl: string | null;
+  biodiversityRisk: string | null;
 };
 
 const normalizeName = (value: string | null | undefined) =>
@@ -41,24 +48,28 @@ const parseModelResult = (resultText: string): IdentificationResult => {
     common_name: parsed.common_name?.trim() || "Unknown",
     confidence: parsed.confidence?.trim() || "Unknown",
     notes: parsed.notes?.trim() || "No notes provided.",
-    visible_health_status: parsed.visible_health_status?.trim() || "Unknown",
   };
 };
 
-const findLocalSpecies = (analysis: IdentificationResult) => {
+const findLocalSpecies = (
+  analysis: IdentificationResult,
+  speciesList: LocalSpecies[],
+) => {
   const scientificName = normalizeName(analysis.scientific_name);
   const commonName = normalizeName(analysis.common_name);
 
   return (
-    speciesData.find((species) => {
+    speciesList.find((species) => {
       const localScientific = normalizeName(species.scientificName);
       const localCommon = normalizeName(species.name);
 
       return (
         scientificName === localScientific ||
         commonName === localCommon ||
-        (commonName && localCommon.includes(commonName)) ||
-        (commonName && commonName.includes(localCommon))
+        Boolean(commonName && localCommon.includes(commonName)) ||
+        Boolean(commonName && commonName.includes(localCommon)) ||
+        Boolean(scientificName && localScientific.includes(scientificName)) ||
+        Boolean(scientificName && scientificName.includes(localScientific))
       );
     }) ?? null
   );
@@ -72,6 +83,45 @@ export function IdentifyPet() {
   const [result, setResult] = useState<IdentificationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [speciesList, setSpeciesList] = useState<LocalSpecies[]>([]);
+  const [speciesError, setSpeciesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSpecies = async () => {
+      try {
+        const response = await fetch("/api/species");
+
+        const data = (await response.json()) as
+          | LocalSpecies[]
+          | {
+              error?: string;
+            };
+
+        if (!response.ok) {
+          throw new Error(
+            "error" in data && data.error
+              ? data.error
+              : "Failed to load species database.",
+          );
+        }
+
+        if (!Array.isArray(data)) {
+          throw new Error("Species database returned an invalid format.");
+        }
+
+        setSpeciesList(data);
+        setSpeciesError(null);
+      } catch (speciesLoadError) {
+        setSpeciesError(
+          speciesLoadError instanceof Error
+            ? speciesLoadError.message
+            : "Failed to load species database.",
+        );
+      }
+    };
+
+    fetchSpecies();
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -178,7 +228,7 @@ export function IdentifyPet() {
     await handleFile(e.target.files?.[0]);
   };
 
-  const matchedSpecies = result ? findLocalSpecies(result) : null;
+  const matchedSpecies = result ? findLocalSpecies(result, speciesList) : null;
 
   return (
     <div className="bg-stone-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8 font-sans">
@@ -332,17 +382,6 @@ export function IdentifyPet() {
                           </p>
                         </div>
 
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
-                            <p className="text-xs uppercase tracking-widest text-stone-500 font-semibold mb-2">
-                              Confidence
-                            </p>
-                            <p className="text-lg font-bold text-stone-900">
-                              {result.confidence || "Unknown"}
-                            </p>
-                          </div>
-                        </div>
-
                         <div className="rounded-2xl border border-stone-200 bg-stone-50 p-5">
                           <h3 className="text-lg font-bold text-stone-900 mb-2">
                             Notes
@@ -367,34 +406,17 @@ export function IdentifyPet() {
                                 <AlertTriangle className="w-6 h-6 shrink-0 mt-0.5" />
                                 <div>
                                   <h4 className="font-bold mb-1">
-                                    {matchedSpecies.biodiversityRisk}{" "}
+                                    {matchedSpecies.biodiversityRisk ||
+                                      "Unknown"}{" "}
                                     Biodiversity Risk
                                   </h4>
                                   <p className="text-sm opacity-90">
-                                    {matchedSpecies.legalAlerts[0]}
+                                    This risk level is based on the invasive
+                                    risk information in Shell & Fin pet
+                                    database.
                                   </p>
                                 </div>
                               </div>
-                            </div>
-
-                            <div>
-                              <h3 className="text-lg font-bold text-stone-900 mb-3 border-b border-stone-100 pb-2">
-                                Quick Health Check
-                              </h3>
-                              <ul className="space-y-2">
-                                {/* {matchedSpecies.healthChecklist.map(
-                                  (item, i) => (
-                                    <li
-                                      key={i}
-                                      className="flex items-start gap-2 text-stone-700 text-sm"
-                                    >
-                                      <CheckCircle className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
-                                      {item}
-                                    </li>
-                                  ),
-                                )} */}
-                                {result.visible_health_status}
-                              </ul>
                             </div>
 
                             <Link

@@ -17,8 +17,7 @@ Return ONLY valid JSON in this exact format:
   "scientific_name": "",
   "common_name": "",
   "confidence": "",
-  "notes": "",
-  "visible_health_status": ""
+  "notes": ""
 }
 
 Use the most likely scientific name.
