@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Navigate, Link } from "react-router";
 import {
   User,
@@ -73,6 +73,48 @@ interface CareTask {
   interval: number;
   intervalUnit: "day" | "week" | "month" | "year";
   lastCompleted?: string | null;
+}
+
+type ProfilePetCache = {
+  speciesOptions: SpeciesOption[];
+  userPets: UserPet[];
+  careTasks: CareTask[];
+  savedAt: number;
+};
+
+const PROFILE_PET_CACHE_KEY = "profile-pet-cache";
+const PROFILE_PET_CACHE_MAX_AGE = 1000 * 60 * 10; // 10 minutes
+
+function saveProfilePetCache(cache: Omit<ProfilePetCache, "savedAt">) {
+  sessionStorage.setItem(
+    PROFILE_PET_CACHE_KEY,
+    JSON.stringify({
+      ...cache,
+      savedAt: Date.now(),
+    }),
+  );
+}
+
+function getProfilePetCache(): ProfilePetCache | null {
+  const cached = sessionStorage.getItem(PROFILE_PET_CACHE_KEY);
+
+  if (!cached) return null;
+
+  try {
+    const parsed = JSON.parse(cached) as ProfilePetCache;
+
+    const isExpired = Date.now() - parsed.savedAt > PROFILE_PET_CACHE_MAX_AGE;
+
+    if (isExpired) {
+      sessionStorage.removeItem(PROFILE_PET_CACHE_KEY);
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    sessionStorage.removeItem(PROFILE_PET_CACHE_KEY);
+    return null;
+  }
 }
 
 const TASK_ICONS: Record<string, React.ReactNode> = {
@@ -158,6 +200,16 @@ export function Profile() {
   }, [user, loading]);
 
   async function loadDatabaseData() {
+    const cached = getProfilePetCache();
+
+    if (cached) {
+      setSpeciesOptions(cached.speciesOptions);
+      setUserPets(cached.userPets);
+      setCareTasks(cached.careTasks);
+      setPetsLoading(false);
+      return;
+    }
+
     try {
       setPetsLoading(true);
       setFormError("");
@@ -170,6 +222,12 @@ export function Profile() {
       setSpeciesOptions(species);
       setUserPets(petData.pets);
       setCareTasks(petData.tasks);
+
+      saveProfilePetCache({
+        speciesOptions: species,
+        userPets: petData.pets,
+        careTasks: petData.tasks,
+      });
     } catch (error) {
       console.error(error);
       setFormError("Could not load your pet data.");
@@ -214,6 +272,11 @@ export function Profile() {
 
       setUserPets(data.pets);
       setCareTasks(data.tasks);
+      saveProfilePetCache({
+        speciesOptions,
+        userPets: data.pets,
+        careTasks: data.tasks,
+      });
       setSelectedSpeciesId("");
       setPetNickname("");
       setPetAge("");
@@ -239,10 +302,19 @@ export function Profile() {
         },
       );
 
-      setUserPets((pets) => pets.filter((pet) => pet.petListId !== petListId));
-      setCareTasks((tasks) =>
-        tasks.filter((task) => task.petListId !== petListId),
+      const updatedPets = userPets.filter((pet) => pet.petListId !== petListId);
+      const updatedTasks = careTasks.filter(
+        (task) => task.petListId !== petListId,
       );
+
+      setUserPets(updatedPets);
+      setCareTasks(updatedTasks);
+
+      saveProfilePetCache({
+        speciesOptions,
+        userPets: updatedPets,
+        careTasks: updatedTasks,
+      });
     } catch (error) {
       console.error(error);
       setFormError("Could not remove pet.");
@@ -261,9 +333,17 @@ export function Profile() {
         body: JSON.stringify({ taskId }),
       });
 
-      setCareTasks((tasks) =>
-        tasks.map((task) => (task.id === taskId ? updatedTask : task)),
+      const updatedTasks = careTasks.map((task) =>
+        task.id === taskId ? updatedTask : task,
       );
+
+      setCareTasks(updatedTasks);
+
+      saveProfilePetCache({
+        speciesOptions,
+        userPets,
+        careTasks: updatedTasks,
+      });
     } catch (error) {
       console.error(error);
       setFormError("Could not update task.");
@@ -279,6 +359,30 @@ export function Profile() {
 
     return Math.floor((Date.now() - dateValue) / (1000 * 60 * 60 * 24));
   };
+
+  const isCompletedToday = (dateString?: string | null) => {
+    if (!dateString) return false;
+
+    const completedDate = new Date(dateString);
+    const today = new Date();
+
+    return (
+      completedDate.getFullYear() === today.getFullYear() &&
+      completedDate.getMonth() === today.getMonth() &&
+      completedDate.getDate() === today.getDate()
+    );
+  };
+
+  const tasksByPetListId = useMemo(() => {
+    return careTasks.reduce<Record<string, CareTask[]>>((groups, task) => {
+      if (!groups[task.petListId]) {
+        groups[task.petListId] = [];
+      }
+
+      groups[task.petListId].push(task);
+      return groups;
+    }, {});
+  }, [careTasks]);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
@@ -482,9 +586,7 @@ export function Profile() {
           ) : (
             <div className="space-y-6">
               {userPets.map((pet) => {
-                const petTasks = careTasks.filter(
-                  (task) => task.petListId === pet.petListId,
-                );
+                const petTasks = tasksByPetListId[pet.petListId] || [];
 
                 return (
                   <div
@@ -553,6 +655,9 @@ export function Profile() {
                             const daysSince = calculateDaysSince(
                               task.lastCompleted,
                             );
+                            const completedToday = isCompletedToday(
+                              task.lastCompleted,
+                            );
 
                             return (
                               <div
@@ -590,12 +695,13 @@ export function Profile() {
 
                                 {task.lastCompleted ? (
                                   <p className="text-sm text-emerald-700 font-semibold mb-3">
-                                    Last done:{" "}
-                                    {daysSince === 0
-                                      ? "Today"
-                                      : daysSince === null
-                                        ? "Recently"
-                                        : `${daysSince} days ago`}
+                                    {completedToday
+                                      ? "Completed today"
+                                      : `Last done: ${
+                                          daysSince === null
+                                            ? "Recently"
+                                            : `${daysSince} days ago`
+                                        }`}
                                   </p>
                                 ) : (
                                   <p className="text-sm text-amber-700 font-semibold mb-3">
@@ -605,9 +711,16 @@ export function Profile() {
 
                                 <button
                                   onClick={() => handleCompleteTask(task.id)}
-                                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold transition-all"
+                                  disabled={completedToday}
+                                  className={`w-full py-3 rounded-xl font-bold transition-all ${
+                                    completedToday
+                                      ? "bg-stone-300 text-stone-600 cursor-not-allowed"
+                                      : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                  }`}
                                 >
-                                  Mark as Done Today
+                                  {completedToday
+                                    ? "Done for Today"
+                                    : "Mark as Done Today"}
                                 </button>
                               </div>
                             );

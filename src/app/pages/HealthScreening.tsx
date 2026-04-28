@@ -38,6 +38,17 @@ type SpeciesOption = {
   pet_scientific_name?: string | null;
 };
 
+type HealthScreeningCache = {
+  selectedImage: string | null;
+  selectedFileName: string | null;
+  result: string | null;
+  matchedCareGuidePetId: string | null;
+  careGuideLookupDone: boolean;
+  error: string | null;
+};
+
+const HEALTH_SCREENING_CACHE_KEY = "health-screening-cache";
+
 function normalizeText(value: string | null | undefined) {
   return String(value || "")
     .trim()
@@ -55,6 +66,22 @@ function getSpeciesScientificName(species: SpeciesOption) {
 
 function getSpeciesCommonName(species: SpeciesOption) {
   return species.name || species.pet_vernacular_name || null;
+}
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      resolve(String(reader.result));
+    };
+
+    reader.onerror = () => {
+      reject(new Error("Could not read image file."));
+    };
+
+    reader.readAsDataURL(file);
+  });
 }
 
 function parseIdentificationResult(
@@ -138,18 +165,29 @@ export function HealthScreening() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    return () => {
-      if (selectedImage) {
-        URL.revokeObjectURL(selectedImage);
-      }
-    };
-  }, [selectedImage]);
+    const cached = sessionStorage.getItem(HEALTH_SCREENING_CACHE_KEY);
+
+    if (!cached) return;
+
+    try {
+      const parsed = JSON.parse(cached) as HealthScreeningCache;
+
+      setSelectedImage(parsed.selectedImage);
+      setSelectedFileName(parsed.selectedFileName);
+      setResult(parsed.result);
+      setMatchedCareGuidePetId(parsed.matchedCareGuidePetId);
+      setCareGuideLookupDone(parsed.careGuideLookupDone);
+      setError(parsed.error);
+    } catch {
+      sessionStorage.removeItem(HEALTH_SCREENING_CACHE_KEY);
+    }
+  }, []);
+
+  const saveScreeningCache = (cache: HealthScreeningCache) => {
+    sessionStorage.setItem(HEALTH_SCREENING_CACHE_KEY, JSON.stringify(cache));
+  };
 
   const resetForm = () => {
-    if (selectedImage) {
-      URL.revokeObjectURL(selectedImage);
-    }
-
     setSelectedImage(null);
     setSelectedFileName(null);
     setResult(null);
@@ -157,6 +195,8 @@ export function HealthScreening() {
     setCareGuideLookupDone(false);
     setError(null);
     setIsScreening(false);
+
+    sessionStorage.removeItem(HEALTH_SCREENING_CACHE_KEY);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -226,7 +266,11 @@ export function HealthScreening() {
     }
   };
 
-  const handleImageAnalysis = async (file: File) => {
+  const handleImageAnalysis = async (
+    file: File,
+    imageDataUrl: string,
+    fileName: string,
+  ) => {
     setError(null);
     setResult(null);
     setMatchedCareGuidePetId(null);
@@ -242,13 +286,32 @@ export function HealthScreening() {
       setResult(healthResult);
       setMatchedCareGuidePetId(careGuidePetId);
       setCareGuideLookupDone(true);
+
+      saveScreeningCache({
+        selectedImage: imageDataUrl,
+        selectedFileName: fileName,
+        result: healthResult,
+        matchedCareGuidePetId: careGuidePetId,
+        careGuideLookupDone: true,
+        error: null,
+      });
     } catch (screeningError) {
-      setError(
+      const message =
         screeningError instanceof Error
           ? screeningError.message
-          : "We couldn't screen this image right now. Please try again.",
-      );
+          : "We couldn't screen this image right now. Please try again.";
+
+      setError(message);
       setCareGuideLookupDone(true);
+
+      saveScreeningCache({
+        selectedImage: imageDataUrl,
+        selectedFileName: fileName,
+        result: null,
+        matchedCareGuidePetId: null,
+        careGuideLookupDone: true,
+        error: message,
+      });
     } finally {
       setIsScreening(false);
     }
@@ -262,15 +325,12 @@ export function HealthScreening() {
       return;
     }
 
-    if (selectedImage) {
-      URL.revokeObjectURL(selectedImage);
-    }
+    const imageDataUrl = await fileToDataUrl(file);
 
-    const objectUrl = URL.createObjectURL(file);
-    setSelectedImage(objectUrl);
+    setSelectedImage(imageDataUrl);
     setSelectedFileName(file.name);
 
-    await handleImageAnalysis(file);
+    await handleImageAnalysis(file, imageDataUrl, file.name);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -484,7 +544,7 @@ export function HealthScreening() {
                         <div className="pt-2">
                           {matchedCareGuidePetId ? (
                             <Link
-                              to={`/species/${encodeURIComponent(
+                              to={`/care-guide/${encodeURIComponent(
                                 matchedCareGuidePetId,
                               )}`}
                               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl font-bold text-center transition-colors inline-flex items-center justify-center gap-2 shadow-md"
