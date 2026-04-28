@@ -7,7 +7,7 @@ import {
   Image as ImageIcon,
   Loader2,
 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 
 type IdentificationResult = {
@@ -24,7 +24,6 @@ type IdentifyApiResponse = {
 
 type LocalSpecies = {
   petId: string;
-  id: string;
   name: string;
   scientificName: string | null;
   imageUrl: string | null;
@@ -85,6 +84,8 @@ export function IdentifyPet() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [speciesList, setSpeciesList] = useState<LocalSpecies[]>([]);
   const [speciesError, setSpeciesError] = useState<string | null>(null);
+  const location = useLocation();
+  const initialImageFile = location.state?.imageFile as File | undefined;
 
   useEffect(() => {
     const fetchSpecies = async () => {
@@ -227,6 +228,16 @@ export function IdentifyPet() {
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     await handleFile(e.target.files?.[0]);
   };
+
+  useEffect(() => {
+    if (!initialImageFile) {
+      return;
+    }
+
+    handleFile(initialImageFile);
+
+    window.history.replaceState({}, document.title);
+  }, [initialImageFile]);
 
   const matchedSpecies = result ? findLocalSpecies(result, speciesList) : null;
 
@@ -420,7 +431,7 @@ export function IdentifyPet() {
                             </div>
 
                             <Link
-                              to={`/species/${matchedSpecies.id}`}
+                              to={`/species/${matchedSpecies.petId}`}
                               className="block text-center w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold transition shadow-lg"
                             >
                               View Full Care Guide

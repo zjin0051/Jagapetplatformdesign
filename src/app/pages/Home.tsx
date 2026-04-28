@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   AlertTriangle,
   ShieldCheck,
@@ -24,7 +24,7 @@ import {
   getNativeBadgeClasses,
 } from "../utils/petDisplay";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RecommendedPet } from "../types/pet.types";
 
 function shuffleArray<T>(items: T[]) {
@@ -38,17 +38,41 @@ function shuffleArray<T>(items: T[]) {
 
 export function Home() {
   const { recommendations, loading, error } = usePetRecommendationPool();
+  const navigate = useNavigate();
   const {
     highRiskSpecies,
     loading: highRiskLoading,
     error: highRiskError,
   } = useHighRiskSpecies();
+  const identifyFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [deck, setDeck] = useState<string[]>([]);
   const [cursor, setCursor] = useState(0);
 
   const [highRiskDeck, setHighRiskDeck] = useState<string[]>([]);
   const [highRiskCursor, setHighRiskCursor] = useState(0);
+
+  const handleIdentifyPhotoSelect = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      return;
+    }
+
+    navigate("/identify", {
+      state: {
+        imageFile: file,
+      },
+    });
+
+    event.target.value = "";
+  };
 
   useEffect(() => {
     if (!recommendations.length) return;
@@ -208,13 +232,41 @@ export function Home() {
             Malaysia.
           </motion.p>
 
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
             className="max-w-xl mx-auto shadow-2xl"
           >
             <SearchAutocomplete />
+          </motion.div> */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="max-w-xl mx-auto shadow-2xl"
+          >
+            <input
+              ref={identifyFileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleIdentifyPhotoSelect}
+            />
+
+            <div className="relative">
+              <SearchAutocomplete />
+
+              <button
+                type="button"
+                onClick={() => identifyFileInputRef.current?.click()}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-2 text-stone-500 hover:bg-stone-100 hover:text-emerald-700 transition"
+                aria-label="Identify pet by photo"
+                title="Identify pet by photo"
+              >
+                <Camera className="h-5 w-5" />
+              </button>
+            </div>
           </motion.div>
         </div>
       </section>
