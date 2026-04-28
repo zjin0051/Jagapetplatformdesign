@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link, Navigate } from "react-router";
+import { useParams, Link, Navigate, useNavigate } from "react-router";
 import {
   ArrowLeft,
   Utensils,
@@ -72,6 +72,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 export function CareGuideDetail() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
   const [careGuide, setCareGuide] = useState<CareGuide | null>(null);
@@ -186,13 +187,19 @@ export function CareGuideDetail() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-6 flex items-center justify-between">
-          <Link
-            to={`/species/${careGuide.petId}`}
+          <button
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate("/");
+              }
+            }}
             className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-700 font-bold transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back to Profile
-          </Link>
+            Back
+          </button>
           <div className="text-right">
             <h1 className="text-3xl md:text-4xl font-extrabold text-stone-900">
               {commonNames.primaryCommonName}
