@@ -199,6 +199,20 @@ export function Profile() {
     loadDatabaseData();
   }, [user, loading]);
 
+  const tasksByPetListId = useMemo(() => {
+    return careTasks.reduce<Record<string, CareTask[]>>((groups, task) => {
+      if (!groups[task.petListId]) {
+        groups[task.petListId] = [];
+      }
+
+      groups[task.petListId].push(task);
+      return groups;
+    }, {});
+  }, [careTasks]);
+
+  if (loading) return <div className="p-8">Loading...</div>;
+  if (!user) return <Navigate to="/login" replace />;
+
   async function loadDatabaseData() {
     setFormError("");
 
@@ -236,9 +250,6 @@ export function Profile() {
       setPetsLoading(false);
     }
   }
-
-  if (loading) return <div className="p-8">Loading...</div>;
-  if (!user) return <Navigate to="/login" replace />;
 
   const rows = [
     ["Age group", answers?.age, "age"],
@@ -378,17 +389,6 @@ export function Profile() {
       completedDate.getDate() === today.getDate()
     );
   };
-
-  const tasksByPetListId = useMemo(() => {
-    return careTasks.reduce<Record<string, CareTask[]>>((groups, task) => {
-      if (!groups[task.petListId]) {
-        groups[task.petListId] = [];
-      }
-
-      groups[task.petListId].push(task);
-      return groups;
-    }, {});
-  }, [careTasks]);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
