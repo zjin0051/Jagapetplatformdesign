@@ -22,6 +22,7 @@ import {
   Heart,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { getPetCommonNames } from "../utils/petDisplay";
 
 type CommonIllness = {
   name: string;
@@ -115,6 +116,11 @@ export function CareGuideDetail() {
     return <Navigate to="/profile" replace />;
   }
 
+  const commonNames = getPetCommonNames({
+    pet_vernacular_name: careGuide.vernacularName,
+    pet_scientific_name: careGuide.scientificName,
+  } as any);
+
   interface AccordionSectionProps {
     title: string;
     icon: React.ReactNode;
@@ -189,14 +195,14 @@ export function CareGuideDetail() {
           </Link>
           <div className="text-right">
             <h1 className="text-3xl md:text-4xl font-extrabold text-stone-900">
-              {careGuide.name}
+              {commonNames.primaryCommonName}
             </h1>
             <p className="text-stone-600 italic text-sm">
               {careGuide.scientificName}
             </p>
             {careGuide.vernacularName && (
               <p className="text-emerald-700 font-semibold text-sm">
-                {careGuide.vernacularName}
+                {commonNames.otherCommonNames.join(", ")}
               </p>
             )}
           </div>
@@ -228,7 +234,13 @@ export function CareGuideDetail() {
                       Common Name
                     </td>
                     <td className="py-3 px-4 text-stone-900 font-medium">
-                      {careGuide.vernacularName}
+                      {commonNames.primaryCommonName}
+
+                      {commonNames.otherCommonNames.length > 0 && (
+                        <span className="block text-sm text-stone-500 mt-1">
+                          Other names: {commonNames.otherCommonNames.join(", ")}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 )}
@@ -332,15 +344,17 @@ export function CareGuideDetail() {
                     </td>
                   </tr>
                 )}
-                <tr className="hover:bg-blue-50 transition-colors">
-                  <td className="py-3 px-4 font-bold text-stone-700 flex items-center gap-2">
-                    <Droplets className="w-5 h-5 text-blue-600" />
-                    Water Depth
-                  </td>
-                  <td className="py-3 px-4 text-stone-900">
-                    {careGuide.waterDepth}
-                  </td>
-                </tr>
+                {careGuide.tankSize && (
+                  <tr className="hover:bg-blue-50 transition-colors">
+                    <td className="py-3 px-4 font-bold text-stone-700 flex items-center gap-2">
+                      <Droplets className="w-5 h-5 text-blue-600" />
+                      Water Depth
+                    </td>
+                    <td className="py-3 px-4 text-stone-900">
+                      {careGuide.waterDepth}
+                    </td>
+                  </tr>
+                )}
                 {careGuide.tankSize && (
                   <tr className="hover:bg-blue-50 transition-colors">
                     <td className="py-3 px-4 font-bold text-stone-700 flex items-center gap-2">
@@ -504,7 +518,7 @@ export function CareGuideDetail() {
 
         {/* Common Illnesses */}
         <AccordionSection
-          title="Common Illnesses & Treatment"
+          title="Common Illnesses"
           icon={<AlertCircle className="w-7 h-7" />}
           color="rose"
         >
@@ -520,35 +534,6 @@ export function CareGuideDetail() {
                   </span>
                   {illness.name}
                 </h4>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <tbody className="divide-y divide-rose-200">
-                      <tr className="hover:bg-rose-100 transition-colors">
-                        <td className="py-3 px-4 font-bold text-rose-800 w-32 align-top">
-                          <div className="flex items-center gap-2">
-                            <AlertCircle className="w-4 h-4" />
-                            Symptoms
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-stone-700">
-                          {illness.symptoms}
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-rose-100 transition-colors">
-                        <td className="py-3 px-4 font-bold text-rose-800 w-32 align-top">
-                          <div className="flex items-center gap-2">
-                            <Heart className="w-4 h-4" />
-                            Treatment
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-stone-700">
-                          {illness.treatment}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
               </div>
             ))}
 
