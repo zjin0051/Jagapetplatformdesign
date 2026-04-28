@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Link } from "react-router";
 import {
   Camera,
@@ -11,6 +11,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useHealthScreening } from "../context/HealthScreeningContext";
 
 type HealthScreenResponse = {
   result?: string;
@@ -37,16 +38,6 @@ type SpeciesOption = {
   scientificName?: string | null;
   pet_scientific_name?: string | null;
 };
-
-type HealthScreeningCache = {
-  selectedFileName: string | null;
-  result: string | null;
-  matchedCareGuidePetId: string | null;
-  careGuideLookupDone: boolean;
-  error: string | null;
-};
-
-const HEALTH_SCREENING_CACHE_KEY = "health-screening-cache";
 
 function normalizeText(value: string | null | undefined) {
   return String(value || "")
@@ -151,56 +142,24 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 
 export function HealthScreening() {
   const [dragActive, setDragActive] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [isScreening, setIsScreening] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-  const [matchedCareGuidePetId, setMatchedCareGuidePetId] = useState<
-    string | null
-  >(null);
-  const [careGuideLookupDone, setCareGuideLookupDone] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const { screening, setScreening, resetScreening } = useHealthScreening();
+
+  const {
+    selectedImage,
+    selectedFileName,
+    result,
+    matchedCareGuidePetId,
+    careGuideLookupDone,
+    error,
+  } = screening;
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    const cached = sessionStorage.getItem(HEALTH_SCREENING_CACHE_KEY);
-
-    if (!cached) return;
-
-    try {
-      const parsed = JSON.parse(cached) as HealthScreeningCache;
-
-      setSelectedImage(null);
-      setSelectedFileName(parsed.selectedFileName);
-      setResult(parsed.result);
-      setMatchedCareGuidePetId(parsed.matchedCareGuidePetId);
-      setCareGuideLookupDone(parsed.careGuideLookupDone);
-      setError(parsed.error);
-    } catch {
-      sessionStorage.removeItem(HEALTH_SCREENING_CACHE_KEY);
-    }
-  }, []);
-
-  function saveScreeningCache(cache: HealthScreeningCache) {
-    try {
-      sessionStorage.setItem(HEALTH_SCREENING_CACHE_KEY, JSON.stringify(cache));
-    } catch (error) {
-      console.warn("Could not save health screening cache:", error);
-      sessionStorage.removeItem(HEALTH_SCREENING_CACHE_KEY);
-    }
-  }
-
   const resetForm = () => {
-    setSelectedImage(null);
-    setSelectedFileName(null);
-    setResult(null);
-    setMatchedCareGuidePetId(null);
-    setCareGuideLookupDone(false);
-    setError(null);
+    resetScreening();
     setIsScreening(false);
-
-    sessionStorage.removeItem(HEALTH_SCREENING_CACHE_KEY);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -270,11 +229,15 @@ export function HealthScreening() {
     }
   };
 
-  const handleImageAnalysis = async (file: File, fileName: string) => {
-    setError(null);
-    setResult(null);
-    setMatchedCareGuidePetId(null);
-    setCareGuideLookupDone(false);
+  const handleImageAnalysis = async (file: File) => {
+    setScreening((previous) => ({
+      ...previous,
+      result: null,
+      matchedCareGuidePetId: null,
+      careGuideLookupDone: false,
+      error: null,
+    }));
+
     setIsScreening(true);
 
     try {
@@ -283,26 +246,26 @@ export function HealthScreening() {
         findCareGuidePetIdFromImage(file),
       ]);
 
-      setResult(healthResult);
-      setMatchedCareGuidePetId(careGuidePetId);
-      setCareGuideLookupDone(true);
-
-      saveScreeningCache({
-        selectedFileName: fileName,
+      setScreening((previous) => ({
+        ...previous,
         result: healthResult,
         matchedCareGuidePetId: careGuidePetId,
         careGuideLookupDone: true,
         error: null,
-      });
+      }));
     } catch (screeningError) {
       const message =
         screeningError instanceof Error
           ? screeningError.message
           : "We couldn't screen this image right now. Please try again.";
 
-      setError(message);
-      setCareGuideLookupDone(true);
-      sessionStorage.removeItem(HEALTH_SCREENING_CACHE_KEY);
+      setScreening((previous) => ({
+        ...previous,
+        result: null,
+        matchedCareGuidePetId: null,
+        careGuideLookupDone: true,
+        error: message,
+      }));
     } finally {
       setIsScreening(false);
     }
@@ -312,16 +275,25 @@ export function HealthScreening() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setError("Please choose an image file such as JPG, PNG, or HEIC.");
+      setScreening((previous) => ({
+        ...previous,
+        error: "Please choose an image file such as JPG, PNG, or HEIC.",
+      }));
       return;
     }
 
     const imageDataUrl = await fileToDataUrl(file);
 
-    setSelectedImage(imageDataUrl);
-    setSelectedFileName(file.name);
+    setScreening({
+      selectedImage: imageDataUrl,
+      selectedFileName: file.name,
+      result: null,
+      matchedCareGuidePetId: null,
+      careGuideLookupDone: false,
+      error: null,
+    });
 
-    await handleImageAnalysis(file, file.name);
+    await handleImageAnalysis(file);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -372,7 +344,7 @@ export function HealthScreening() {
           />
 
           <AnimatePresence mode="wait">
-            {!selectedImage && (
+            {!selectedImage && !result && (
               <motion.div
                 key="upload"
                 initial={{ opacity: 0 }}
@@ -449,7 +421,7 @@ export function HealthScreening() {
               </motion.div>
             )}
 
-            {!isScreening && (result || error) && (
+            {selectedImage && !isScreening && (result || error) && (
               <motion.div
                 key="result"
                 initial={{ opacity: 0, y: 20 }}
