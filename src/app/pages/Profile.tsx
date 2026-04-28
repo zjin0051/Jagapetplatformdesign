@@ -86,13 +86,20 @@ const PROFILE_PET_CACHE_KEY = "profile-pet-cache";
 const PROFILE_PET_CACHE_MAX_AGE = 1000 * 60 * 10; // 10 minutes
 
 function saveProfilePetCache(cache: Omit<ProfilePetCache, "savedAt">) {
-  sessionStorage.setItem(
-    PROFILE_PET_CACHE_KEY,
-    JSON.stringify({
-      ...cache,
-      savedAt: Date.now(),
-    }),
-  );
+  try {
+    sessionStorage.setItem(
+      PROFILE_PET_CACHE_KEY,
+      JSON.stringify({
+        ...cache,
+        savedAt: Date.now(),
+      }),
+    );
+  } catch (error) {
+    console.warn("Could not save profile pet cache:", error);
+
+    // Optional: remove old cache so the app does not keep failing
+    sessionStorage.removeItem(PROFILE_PET_CACHE_KEY);
+  }
 }
 
 function getProfilePetCache(): ProfilePetCache | null {

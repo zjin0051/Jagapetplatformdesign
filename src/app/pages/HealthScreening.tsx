@@ -39,7 +39,6 @@ type SpeciesOption = {
 };
 
 type HealthScreeningCache = {
-  selectedImage: string | null;
   selectedFileName: string | null;
   result: string | null;
   matchedCareGuidePetId: string | null;
@@ -172,7 +171,7 @@ export function HealthScreening() {
     try {
       const parsed = JSON.parse(cached) as HealthScreeningCache;
 
-      setSelectedImage(parsed.selectedImage);
+      setSelectedImage(null);
       setSelectedFileName(parsed.selectedFileName);
       setResult(parsed.result);
       setMatchedCareGuidePetId(parsed.matchedCareGuidePetId);
@@ -183,9 +182,14 @@ export function HealthScreening() {
     }
   }, []);
 
-  const saveScreeningCache = (cache: HealthScreeningCache) => {
-    sessionStorage.setItem(HEALTH_SCREENING_CACHE_KEY, JSON.stringify(cache));
-  };
+  function saveScreeningCache(cache: HealthScreeningCache) {
+    try {
+      sessionStorage.setItem(HEALTH_SCREENING_CACHE_KEY, JSON.stringify(cache));
+    } catch (error) {
+      console.warn("Could not save health screening cache:", error);
+      sessionStorage.removeItem(HEALTH_SCREENING_CACHE_KEY);
+    }
+  }
 
   const resetForm = () => {
     setSelectedImage(null);
@@ -266,11 +270,7 @@ export function HealthScreening() {
     }
   };
 
-  const handleImageAnalysis = async (
-    file: File,
-    imageDataUrl: string,
-    fileName: string,
-  ) => {
+  const handleImageAnalysis = async (file: File, fileName: string) => {
     setError(null);
     setResult(null);
     setMatchedCareGuidePetId(null);
@@ -288,7 +288,6 @@ export function HealthScreening() {
       setCareGuideLookupDone(true);
 
       saveScreeningCache({
-        selectedImage: imageDataUrl,
         selectedFileName: fileName,
         result: healthResult,
         matchedCareGuidePetId: careGuidePetId,
@@ -303,15 +302,7 @@ export function HealthScreening() {
 
       setError(message);
       setCareGuideLookupDone(true);
-
-      saveScreeningCache({
-        selectedImage: imageDataUrl,
-        selectedFileName: fileName,
-        result: null,
-        matchedCareGuidePetId: null,
-        careGuideLookupDone: true,
-        error: message,
-      });
+      sessionStorage.removeItem(HEALTH_SCREENING_CACHE_KEY);
     } finally {
       setIsScreening(false);
     }
@@ -330,7 +321,7 @@ export function HealthScreening() {
     setSelectedImage(imageDataUrl);
     setSelectedFileName(file.name);
 
-    await handleImageAnalysis(file, imageDataUrl, file.name);
+    await handleImageAnalysis(file, file.name);
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -458,7 +449,7 @@ export function HealthScreening() {
               </motion.div>
             )}
 
-            {selectedImage && !isScreening && (result || error) && (
+            {!isScreening && (result || error) && (
               <motion.div
                 key="result"
                 initial={{ opacity: 0, y: 20 }}
@@ -467,11 +458,20 @@ export function HealthScreening() {
               >
                 <div className="flex flex-col md:flex-row gap-8 items-start">
                   <div className="w-full md:w-1/3">
-                    <img
-                      src={selectedImage}
-                      alt={selectedFileName || "Uploaded"}
-                      className="w-full aspect-square object-fit rounded-2xl shadow-md border-4 border-white mb-4"
-                    />
+                    {selectedImage ? (
+                      <img
+                        src={selectedImage}
+                        alt={selectedFileName || "Uploaded"}
+                        className="w-full aspect-square object-fit rounded-2xl shadow-md border-4 border-white mb-4"
+                      />
+                    ) : (
+                      <div className="w-full aspect-square rounded-2xl border-2 border-dashed border-stone-200 bg-stone-50 flex items-center justify-center text-center px-4 mb-4">
+                        <p className="text-sm text-stone-500">
+                          Previous screening result restored. Image preview is
+                          not saved.
+                        </p>
+                      </div>
+                    )}
 
                     {selectedFileName && (
                       <p className="text-sm text-stone-500 mb-4 truncate">
