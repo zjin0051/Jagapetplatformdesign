@@ -185,7 +185,7 @@ export function Home() {
             className="bg-rose-600 text-white px-4 py-2 rounded-full inline-flex items-center gap-2 text-sm font-semibold mb-6 shadow-lg uppercase tracking-wider"
           >
             <AlertTriangle className="w-4 h-4" />
-            Never Release Non-Native Pets Into the Wild
+            Never Release Pets Into the Wild
           </motion.div>
 
           <motion.h1

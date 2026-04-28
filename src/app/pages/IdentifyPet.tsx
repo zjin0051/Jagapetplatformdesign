@@ -341,14 +341,6 @@ export function IdentifyPet() {
                               {result.confidence || "Unknown"}
                             </p>
                           </div>
-                          <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
-                            <p className="text-xs uppercase tracking-widest text-stone-500 font-semibold mb-2">
-                              Local match
-                            </p>
-                            <p className="text-lg font-bold text-stone-900">
-                              {matchedSpecies ? "Found" : "Needs human review"}
-                            </p>
-                          </div>
                         </div>
 
                         <div className="rounded-2xl border border-stone-200 bg-stone-50 p-5">
