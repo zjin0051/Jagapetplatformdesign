@@ -54,7 +54,7 @@ async function parseJsonResponse(res: Response) {
     return JSON.parse(text);
   } catch {
     throw new Error(
-      `Expected JSON response but received: ${text || "[empty response]"}`
+      `Expected JSON response but received: ${text || "[empty response]"}`,
     );
   }
 }
@@ -68,7 +68,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/me", {
+      const res = await fetch("/api/auth?action=me", {
         credentials: "include",
       });
 
@@ -125,7 +125,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = async (username: string, password: string) => {
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch("/api/auth?action=register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -153,7 +153,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       if (!profileRes.ok) {
         throw new Error(
           profileData.error ||
-            "Profile was created, but saving quiz answers failed."
+            "Profile was created, but saving quiz answers failed.",
         );
       }
 
@@ -163,7 +163,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (username: string, password: string) => {
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch("/api/auth?action=login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -190,8 +190,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
       if (!profileRes.ok) {
         throw new Error(
-          profileData.error ||
-            "Logged in, but saving quiz answers failed."
+          profileData.error || "Logged in, but saving quiz answers failed.",
         );
       }
 
@@ -203,7 +202,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    const res = await fetch("/api/auth/logout", {
+    const res = await fetch("/api/auth?action=logout", {
       method: "POST",
       credentials: "include",
     });
@@ -232,7 +231,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       logout,
       refreshUser,
     }),
-    [user, answers, loading]
+    [user, answers, loading],
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

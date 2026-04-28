@@ -1,5 +1,4 @@
 import { neon } from "@neondatabase/serverless";
-import { SearchAutocomplete } from "../src/app/components/SearchAutocomplete";
 
 const sql = neon(process.env.DATABASE_URL!);
 
