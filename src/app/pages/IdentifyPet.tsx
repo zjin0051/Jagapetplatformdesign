@@ -169,7 +169,7 @@ export function IdentifyPet() {
       const formData = new FormData();
       formData.append("image", file);
 
-      const response = await fetch("/api/identify-pet", {
+      const response = await fetch("/api/pet-analysis?action=identify-pet", {
         method: "POST",
         body: formData,
       });
@@ -437,7 +437,7 @@ export function IdentifyPet() {
                               to={`/species/${matchedSpecies.petId}`}
                               className="block text-center w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold transition shadow-lg"
                             >
-                              View Full Care Guide
+                              View Species Profile
                             </Link>
                           </>
                         ) : (
