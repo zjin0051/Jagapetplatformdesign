@@ -396,7 +396,7 @@ export function Home() {
                             : "/pet_image/pet_placeholder.png"
                         }
                         alt={pet.pet_vernacular_name ?? "Pet image"}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        className="w-full h-full object-fit group-hover:scale-105 transition duration-500"
                       />
 
                       <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">
@@ -533,7 +533,7 @@ export function Home() {
                             : "/pet_image/pet_placeholder.png"
                         }
                         alt={pet.pet_vernacular_name ?? "Pet image"}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        className="w-full h-full object-fit group-hover:scale-105 transition duration-500"
                       />
 
                       <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2">

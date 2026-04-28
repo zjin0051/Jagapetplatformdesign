@@ -323,7 +323,7 @@ export function IdentifyPet() {
                   <img
                     src={selectedImage}
                     alt="Scanning"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-fit"
                   />
                   <div className="absolute inset-0 bg-emerald-500/20 scan-line"></div>
                 </div>
@@ -349,7 +349,7 @@ export function IdentifyPet() {
                     <img
                       src={selectedImage}
                       alt={selectedFileName || "Uploaded"}
-                      className="w-full aspect-square object-cover rounded-2xl shadow-md border-4 border-white mb-4"
+                      className="w-full aspect-square object-fit rounded-2xl shadow-md border-4 border-white mb-4"
                     />
                     {selectedFileName && (
                       <p className="text-sm text-stone-500 mb-4 truncate">

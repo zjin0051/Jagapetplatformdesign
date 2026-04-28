@@ -475,7 +475,7 @@ export function Profile() {
                               : "/pet_image/pet_placeholder.png"
                           }
                           alt={pet.speciesName}
-                          className="w-24 h-24 rounded-xl object-cover shadow-md"
+                          className="w-24 h-24 rounded-xl object-fit shadow-md"
                         />
 
                         <div>
